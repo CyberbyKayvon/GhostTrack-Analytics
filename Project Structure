@@ -1,0 +1,121 @@
+## 📁 Complete Project Structure
+```
+GhostTrack/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── docker-compose.yml
+│
+├── backend/
+│   ├── venv/
+│   ├── requirements.txt
+│   ├── .env
+│   ├── alembic.ini
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py                    # FastAPI app entry point
+│   │   ├── config.py                  # Configuration management
+│   │   │
+│   │   ├── api/                       # API endpoints
+│   │   │   ├── __init__.py
+│   │   │   ├── events.py              # Event ingestion endpoint
+│   │   │   ├── analytics.py           # Analytics data endpoints
+│   │   │   ├── auth.py                # Authentication endpoints
+│   │   │   └── threats.py             # Threat monitoring endpoints
+│   │   │
+│   │   ├── core/                      # Core functionality
+│   │   │   ├── __init__.py
+│   │   │   ├── security.py            # Authentication & authorization
+│   │   │   ├── database.py            # Database connection
+│   │   │   └── dependencies.py        # FastAPI dependencies
+│   │   │
+│   │   ├── models/                    # Database models
+│   │   │   ├── __init__.py
+│   │   │   ├── event.py               # Event model
+│   │   │   ├── threat.py              # Threat model
+│   │   │   ├── user.py                # User model
+│   │   │   └── site.py                # Site/project model
+│   │   │
+│   │   ├── services/                  # Business logic
+│   │   │   ├── __init__.py
+│   │   │   ├── bot_detection.py       # Bot detection algorithms
+│   │   │   ├── threat_analysis.py     # Threat pattern detection
+│   │   │   ├── analytics_service.py   # Analytics calculations
+│   │   │   └── ecommerce_service.py   # E-commerce specific logic
+│   │   │
+│   │   └── utils/                     # Utilities
+│   │       ├── __init__.py
+│   │       ├── helpers.py             # Helper functions
+│   │       └── validators.py          # Input validation
+│   │
+│   ├── migrations/                    # Alembic migrations
+│   │   └── versions/
+│   │
+│   └── tests/
+│       ├── __init__.py
+│       ├── test_api.py
+│       └── test_bot_detection.py
+│
+├── frontend/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── .env
+│   ├── public/
+│   │   └── index.html
+│   │
+│   └── src/
+│       ├── App.js
+│       ├── index.js
+│       ├── components/
+│       │   ├── dashboard/
+│       │   │   ├── Overview.js
+│       │   │   ├── SecurityScore.js
+│       │   │   └── ThreatFeed.js
+│       │   │
+│       │   ├── analytics/
+│       │   │   ├── VisitorChart.js
+│       │   │   ├── GeographicMap.js
+│       │   │   └── TopPages.js
+│       │   │
+│       │   ├── threats/
+│       │   │   ├── ThreatList.js
+│       │   │   ├── BlockedIPs.js
+│       │   │   └── ThreatDetails.js
+│       │   │
+│       │   └── auth/
+│       │       ├── Login.js
+│       │       └── Register.js
+│       │
+│       ├── pages/
+│       │   ├── Dashboard.js
+│       │   ├── Analytics.js
+│       │   ├── Threats.js
+│       │   └── Settings.js
+│       │
+│       ├── services/
+│       │   ├── api.js                 # API client
+│       │   └── auth.js                # Auth service
+│       │
+│       ├── utils/
+│       │   └── helpers.js
+│       │
+│       └── styles/
+│           └── App.css
+│
+├── tracker/
+│   ├── package.json
+│   ├── ghosttrack.js                  # Main tracking script
+│   ├── ghosttrack.min.js              # Minified version
+│   └── README.md
+│
+├── docs/
+│   ├── INSTALLATION.md
+│   ├── QUICKSTART.md
+│   ├── API.md
+│   ├── INTEGRATION.md                 # Shopify, WooCommerce guides
+│   └── CONTRIBUTING.md
+│
+└── scripts/
+    ├── setup.sh                       # Setup script for Unix
+    ├── setup.ps1                      # Setup script for Windows
+    └── seed_data.py                   # Sample data for testing
