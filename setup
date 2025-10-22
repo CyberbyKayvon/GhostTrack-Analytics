@@ -1,0 +1,93 @@
+# Navigate to your projects directory
+cd C:\Users\YourUsername\PycharmProjects
+
+# Create GhostTrack directory
+mkdir GhostTrack
+cd GhostTrack
+
+# Initialize Git (if not already done)
+git init
+git remote add origin https://github.com/yourusername/GhostTrack.git
+
+# Create project structure
+mkdir backend, frontend, tracker, docs, scripts, tests
+
+# Backend structure
+cd backend
+mkdir app, migrations, tests
+cd app
+mkdir api, core, models, services, utils
+New-Item __init__.py
+New-Item main.py
+New-Item config.py
+cd api
+New-Item __init__.py
+New-Item events.py
+New-Item analytics.py
+New-Item auth.py
+cd ..
+cd core
+New-Item __init__.py
+New-Item security.py
+New-Item database.py
+cd ..
+cd models
+New-Item __init__.py
+New-Item event.py
+New-Item threat.py
+New-Item user.py
+cd ..
+cd services
+New-Item __init__.py
+New-Item bot_detection.py
+New-Item threat_analysis.py
+New-Item analytics_service.py
+cd ..
+cd utils
+New-Item __init__.py
+New-Item helpers.py
+cd ..
+cd ..\..
+
+# Create requirements.txt
+New-Item requirements.txt
+
+# Create .env file
+New-Item .env
+
+# Frontend structure
+cd frontend
+npm init -y
+mkdir src, public
+cd src
+mkdir components, pages, services, utils, styles
+cd components
+mkdir dashboard, auth, analytics, threats
+cd ..\..
+
+# Tracker structure
+cd ..\tracker
+New-Item ghosttrack.js
+New-Item package.json
+cd ..
+
+# Root level files
+New-Item README.md
+New-Item .gitignore
+New-Item docker-compose.yml
+New-Item LICENSE
+
+# Create Python virtual environment
+cd backend
+python -m venv venv
+
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+# Install initial dependencies
+pip install fastapi uvicorn sqlalchemy psycopg2-binary pydantic python-dotenv pyjwt passlib python-multipart alembic redis
+
+# Create requirements.txt from installed packages
+pip freeze > requirements.txt
+
+cd ..
