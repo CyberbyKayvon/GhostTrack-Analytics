@@ -1,5 +1,5 @@
 # GhostTrack-security-analytics
-Security-first, privacy-aware web analytics for detecting bots, anomalies, and abusive behavior in real time.
+Security analytics that protects your store from bots and fraud
 
 **Path A: E-commerce Security Analytics**
 - Niche: Online stores
@@ -100,7 +100,7 @@ Dashboard (Streamlit / Flask Admin / React)
 - [ ] Deploy somewhere (DigitalOcean $12/month)
 
 ### Month 3: Testing
-- [ ] Put it on YOUR sites first
+- [ ] Put it on sites first
 - [ ] Reach out to 5-10 e-commerce friends to test
 - [ ] Gather feedback
 - [ ] Iterate
