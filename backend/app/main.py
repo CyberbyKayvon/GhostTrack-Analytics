@@ -1,12 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import init_db
 from app.api import events, analytics, auth, threats
-
 app = FastAPI(
     title="GhostTrack API",
     description="Security-first analytics API for e-commerce",
     version="0.1.0"
 )
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    print("👻 GhostTrack API Starting...")
+    print("📊 Initializing database...")
+    try:
+        init_db()
+        print("✅ GhostTrack Database ready!")
+    except Exception as e:
+        print(f"⚠️ Database warning: {e}")
 
 app.add_middleware(
     CORSMiddleware,
