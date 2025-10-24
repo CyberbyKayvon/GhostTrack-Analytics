@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9bb5262e-d909-4e0b-a395-fde10532a694" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/app/core/database.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/models/event.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/analytics.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/analytics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/events.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/events.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/test.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/tracker/ghosttrack.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracker.ghosttrack.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +56,9 @@
       <recent name="C:\Users\ktkka\PycharmProjects\GhostTrack-Analytics" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\ktkka\PycharmProjects\GhostTrack-Analytics\backend\app" />
       <recent name="C:\Users\ktkka\PycharmProjects\GhostTrack-Analytics\backend" />
+      <recent name="C:\Users\ktkka\PycharmProjects\GhostTrack-Analytics\tracker" />
       <recent name="C:\Users\ktkka\PycharmProjects\GhostTrack-Analytics\backend\app\core" />
     </key>
   </component>
