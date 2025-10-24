@@ -22,8 +22,8 @@ class EventData(BaseModel):
 @router.post("/track")
 async def track_event(event: EventData, request: Request, db: Session = Depends(get_db)):
     """
-    👻 GhostTrack Event Tracking - SAVES TO DATABASE
     Main event ingestion endpoint
+    This is where the JavaScript tracker sends data
     """
     try:
         # Create database record
@@ -35,39 +35,34 @@ async def track_event(event: EventData, request: Request, db: Session = Depends(
             user_agent=event.user_agent,
             session_id=event.session_id,
             ip_address=request.client.host if request.client else None,
-            event_metadata=event.metadata,
+            metadata=event.metadata,
             timestamp=datetime.utcnow(),
             is_bot=0,
             threat_score=0.0,
             blocked=0
         )
 
-        # Save to database
         db.add(db_event)
         db.commit()
         db.refresh(db_event)
 
-        print(
-            f"👻 GhostTrack - Event SAVED to database! ID: {db_event.id}, Type: {event.event_type}, Site: {event.site_id}")
+        print(f"✅ 📊 Event SAVED to database! ID: {db_event.id}, Type: {event.event_type}, Site: {event.site_id}")
 
         return {
             "status": "success",
-            "message": "Event tracked and saved by GhostTrack",
             "event_id": db_event.id,
-            "event_type": event.event_type,
-            "site_id": event.site_id,
             "timestamp": db_event.timestamp.isoformat()
         }
     except Exception as e:
         db.rollback()
-        print(f"❌ GhostTrack Error saving event: {str(e)}")
+        print(f"❌ Error saving event: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @router.post("/batch")
 async def track_batch_events(events: list[EventData], request: Request, db: Session = Depends(get_db)):
     """
-    👻 GhostTrack Batch Event Tracking - SAVES TO DATABASE
+    Batch event ingestion for better performance
     """
     try:
         db_events = []
@@ -80,7 +75,7 @@ async def track_batch_events(events: list[EventData], request: Request, db: Sess
                 user_agent=event.user_agent,
                 session_id=event.session_id,
                 ip_address=request.client.host if request.client else None,
-                event_metadata=event.metadata,
+                metadata=event.metadata,
                 timestamp=datetime.utcnow(),
                 is_bot=0,
                 threat_score=0.0,
@@ -88,19 +83,13 @@ async def track_batch_events(events: list[EventData], request: Request, db: Sess
             )
             db_events.append(db_event)
 
-        # Bulk save
         db.bulk_save_objects(db_events)
         db.commit()
 
-        print(f"👻 GhostTrack - Batch SAVED to database! {len(db_events)} events")
+        print(f"✅ 📊 Batch SAVED! {len(db_events)} events saved to database")
 
-        return {
-            "status": "success",
-            "message": "Batch tracked and saved by GhostTrack",
-            "processed": len(db_events),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "success", "processed": len(db_events)}
     except Exception as e:
         db.rollback()
-        print(f"❌ GhostTrack Batch Error: {str(e)}")
+        print(f"❌ Error saving batch: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

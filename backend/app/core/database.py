@@ -12,7 +12,7 @@ engine = create_engine(
 # Create session maker
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for models
+# Create base class for models
 Base = declarative_base()
 
 # Dependency for FastAPI routes
@@ -25,6 +25,5 @@ def get_db():
 
 # Function to create all tables
 def init_db():
-    from app.models import event  # Import to register models
+    from app.models import event  # Import models here to avoid circular imports
     Base.metadata.create_all(bind=engine)
-    print("✅ GhostTrack database tables created!")

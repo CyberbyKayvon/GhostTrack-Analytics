@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Float, Text
+from app.core.database import Base
 from datetime import datetime
-from app.core.database import Base  # Import Base from database.py
 
 
 class Event(Base):
@@ -14,13 +14,13 @@ class Event(Base):
     user_agent = Column(Text, nullable=True)
     session_id = Column(String(255), index=True, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    event_metadata = Column(JSON, nullable=True)
+    metadata = Column(JSON, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
 
-    # Security fields (we'll use these later for bot detection)
-    is_bot = Column(Integer, default=0)
-    threat_score = Column(Float, default=0.0)
-    blocked = Column(Integer, default=0)
+    # Security fields
+    is_bot = Column(Integer, default=0)  # 0 = human, 1 = bot
+    threat_score = Column(Float, default=0.0)  # 0-100
+    blocked = Column(Integer, default=0)  # 0 = allowed, 1 = blocked
 
     def __repr__(self):
-        return f""
+        return f"<Event {self.id}: {self.event_type} from {self.site_id}>"
