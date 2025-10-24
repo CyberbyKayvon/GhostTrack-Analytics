@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👻 GhostTrack Test Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            margin: 40px 0;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-orange {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        #output {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            min-height: 100px;
+            font-size: 1.1em;
+        }
+
+        .success { color: #38ef7d; font-weight: bold; }
+        .error { color: #f5576c; font-weight: bold; }
+
+        .event-log {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .event-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+            font-size: 0.9em;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>👻</span>
+            GhostTrack Testing Dashboard
+        </h1>
+        <p class="subtitle">🔥 Real-time event tracking & analytics testing • Click buttons to send events!</p>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="eventCount">0</div>
+                <div class="stat-label">Events Sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="responseTime">0ms</div>
+                <div class="stat-label">Avg Response</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 Basic Events</h2>
+            <div class="button-grid">
+                <button class="btn-orange" onclick="testPageview()">
+                    📄 Pageview
+                </button>
+                <button class="btn-orange" onclick="testClick()">
+                    🖱️ Click Event
+                </button>
+                <button class="btn-orange" onclick="testScroll()">
+                    📜 Scroll Event
+                </button>
+                <button class="btn-orange" onclick="testFormSubmit()">
+                    📝 Form Submit
+                </button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🛒 E-commerce Events</h2>
+            <div class="button-grid">
+                <button class="btn-success" onclick="testProductView()">
+                    👁️ Product View
+                </button>
+                <button class="btn-success" onclick="testAddToCart()">
+                    🛒 Add to Cart
+                </button>
+                <button class="btn-success" onclick="testCheckout()">
+                    💳 Checkout Started
+                </button>
+                <button class="btn-success" onclick="testPurchase()">
+                    ✅ Purchase Complete
+                </button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🎯 User Behavior</h2>
+            <div class="button-grid">
+                <button class="btn-info" onclick="testSearch()">
+                    🔍 Search
+                </button>
+                <button class="btn-info" onclick="testVideoPlay()">
+                    ▶️ Video Play
+                </button>
+                <button class="btn-info" onclick="testDownload()">
+                    💾 File Download
+                </button>
+                <button class="btn-info" onclick="testShare()">
+                    📤 Social Share
+                </button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🤖 Security Testing</h2>
+            <div class="button-grid">
+                <button class="btn-warning" onclick="testBotBehavior()">
+                    🤖 Simulate Bot
+                </button>
+                <button class="btn-danger" onclick="testRapidFire()">
+                    ⚡ Rapid Fire (10x)
+                </button>
+                <button class="btn-warning" onclick="testSuspicious()">
+                    🚨 Suspicious Activity
+                </button>
+            </div>
+        </div>
+
+        <div id="output">
+            <strong>🎯 Ready to track events!</strong><br>
+            <small>Click any button above to send an event to GhostTrack. Check your PowerShell for real-time logs!</small>
+        </div>
+
+        <div class="event-log" id="eventLog">
+            <strong>📋 Event Log:</strong>
+            <div id="logItems"></div>
+        </div>
+    </div>
+
+    <script>
+        window.ghostTrackUrl = 'http://localhost:8000/api/v1/events/track';
+        window.ghostTrackSiteId = 'ghosttrack-test-dashboard';
+        window.ghostTrackDebug = true;
+    </script>
+
+    <script src="/tracker/ghosttrack.js"></script>
+
+    <script>
+        let eventCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+        let responseTimes = [];
+
+        function updateStats() {
+            document.getElementById('eventCount').textContent = eventCount;
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('errorCount').textContent = errorCount;
+
+            if (responseTimes.length > 0) {
+                const avg = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+                document.getElementById('responseTime').textContent = Math.round(avg) + 'ms';
+            }
+        }
+
+        function addToLog(message, type = 'success') {
+            const logItems = document.getElementById('logItems');
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `
+                <span class="${type}">${type === 'success' ? '✅' : '❌'}</span>
+                <strong>${message}</strong>
+                <span class="timestamp"> • ${time}</span>
+            `;
+            logItems.insertBefore(item, logItems.firstChild);
+
+            if (logItems.children.length > 10) {
+                logItems.removeChild(logItems.lastChild);
+            }
+        }
+
+        function showMessage(msg, type = 'success') {
+            const output = document.getElementById('output');
+            const icon = type === 'success' ? '✅' : '❌';
+            const className = type === 'success' ? 'success' : 'error';
+            const time = new Date().toLocaleTimeString();
+
+            output.innerHTML = `
+                <strong class="${className}">${icon} ${msg}</strong><br>
+                <small>Time: ${time}</small><br>
+                <small>Check PowerShell for database save confirmation</small>
+            `;
+
+            eventCount++;
+            if (type === 'success') successCount++;
+            else errorCount++;
+            updateStats();
+            addToLog(msg, type);
+        }
+
+        function testPageview() {
+            const start = Date.now();
+            ghostTrack.pageview();
+            responseTimes.push(Date.now() - start);
+            showMessage('Pageview event sent!');
+        }
+
+        function testClick() {
+            const start = Date.now();
+            ghostTrack.track('button_click', {
+                button_name: 'test_button',
+                page: window.location.href,
+                timestamp: Date.now()
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Click event sent!');
+        }
+
+        function testScroll() {
+            const start = Date.now();
+            ghostTrack.track('scroll', {
+                scroll_depth: Math.floor(Math.random() * 100),
+                page: window.location.href
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Scroll event sent!');
+        }
+
+        function testFormSubmit() {
+            const start = Date.now();
+            ghostTrack.track('form_submit', {
+                form_name: 'contact_form',
+                fields: ['name', 'email', 'message']
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Form submit event sent!');
+        }
+
+        function testProductView() {
+            const start = Date.now();
+            ghostTrack.track('product_view', {
+                product_id: 'PROD-' + Math.floor(Math.random() * 1000),
+                product_name: 'Tennis Analytics Pro',
+                category: 'Sports Analytics',
+                price: 49.99
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Product view event sent!');
+        }
+
+        function testAddToCart() {
+            const start = Date.now();
+            ghostTrack.track('add_to_cart', {
+                product_id: 'PROD-' + Math.floor(Math.random() * 1000),
+                product_name: 'GhostTrack Analytics',
+                price: 49.99,
+                quantity: 1,
+                currency: 'USD'
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Add to cart event sent!');
+        }
+
+        function testCheckout() {
+            const start = Date.now();
+            ghostTrack.track('checkout_started', {
+                cart_total: 99.98,
+                item_count: 2,
+                currency: 'USD',
+                payment_method: 'card'
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Checkout started event sent!');
+        }
+
+        function testPurchase() {
+            const start = Date.now();
+            ghostTrack.track('purchase_completed', {
+                order_id: 'ORD-' + Date.now(),
+                total: 99.98,
+                currency: 'USD',
+                items: 2,
+                payment_method: 'credit_card'
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Purchase completed event sent!');
+        }
+
+        function testSearch() {
+            const start = Date.now();
+            const queries = ['tennis', 'analytics', 'ghosttrack', 'tracking', 'statistics'];
+            ghostTrack.track('search', {
+                query: queries[Math.floor(Math.random() * queries.length)],
+                results_count: Math.floor(Math.random() * 50)
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Search event sent!');
+        }
+
+        function testVideoPlay() {
+            const start = Date.now();
+            ghostTrack.track('video_play', {
+                video_id: 'VID-' + Math.floor(Math.random() * 100),
+                video_title: 'How to Use GhostTrack',
+                duration: 180
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Video play event sent!');
+        }
+
+        function testDownload() {
+            const start = Date.now();
+            ghostTrack.track('file_download', {
+                file_name: 'ghosttrack-guide.pdf',
+                file_size: '2.5MB',
+                file_type: 'pdf'
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Download event sent!');
+        }
+
+        function testShare() {
+            const start = Date.now();
+            const platforms = ['twitter', 'facebook', 'linkedin', 'email'];
+            ghostTrack.track('social_share', {
+                platform: platforms[Math.floor(Math.random() * platforms.length)],
+                content_type: 'article',
+                url: window.location.href
+            });
+            responseTimes.push(Date.now() - start);
+            showMessage('Social share event sent!');
+        }
+
+        function testBotBehavior() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    ghostTrack.track('suspicious_activity', {
+                        type: 'rapid_requests',
+                        count: i + 1,
+                        timestamp: Date.now()
+                    });
+                }, i * 100);
+            }
+            showMessage('Bot simulation sent (5 rapid events)!');
+        }
+
+        function testRapidFire() {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const start = Date.now();
+                    ghostTrack.track('rapid_test', {
+                        index: i + 1,
+                        timestamp: Date.now()
+                    });
+                    responseTimes.push(Date.now() - start);
+                }, i * 50);
+            }
+            showMessage('Rapid fire: 10 events sent!');
+        }
+
+        function testSuspicious() {
+            ghostTrack.track('suspicious_behavior', {
+                type: 'unusual_pattern',
+                details: 'Testing security detection',
+                timestamp: Date.now()
+            });
+            showMessage('Suspicious activity event sent!');
+        }
+
+        window.addEventListener('load', () => {
+            console.log('👻 GhostTrack Test Dashboard Loaded!');
+            console.log('🎯 Tracking to:', window.ghostTrackUrl);
+            console.log('🏷️ Site ID:', window.ghostTrackSiteId);
+        });
+    </script>
+</body>
+</html>
