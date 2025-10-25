@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "GhostTrack"
 
     # Database
-    DATABASE_URL: str = "postgresql://ghosttrack:ghosttrack_dev_password@localhost:5432/ghosttrack"
+    DATABASE_URL: str = "sqlite:///./ghosttrack.db"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
