@@ -3,12 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { analyticsAPI } from '../../services/api';
 
 const TrafficSources = () => {
-  const [data, setData] = useState([
-    { name: 'Direct', value: 0, color: '#667eea' },
-    { name: 'Organic Search', value: 0, color: '#48bb78' },
-    { name: 'Social Media', value: 0, color: '#ed8936' },
-    { name: 'Referral', value: 0, color: '#4299e1' }
-  ]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     fetchTrafficSources();
@@ -20,17 +15,16 @@ const TrafficSources = () => {
     try {
       const response = await analyticsAPI.getTrafficSources();
       if (response.data.sources) {
-        setData(response.data.sources);
+        // Filter out sources with 0 value
+        const filteredData = response.data.sources.filter(item => item.value > 0);
+        setData(filteredData);
       }
     } catch (error) {
       console.error('Error fetching traffic sources:', error);
     }
   };
 
-  // Calculate total for percentages
   const total = data.reduce((sum, item) => sum + item.value, 0);
-
-  // Show placeholder if no data
   const hasData = total > 0;
 
   return (
@@ -43,10 +37,10 @@ const TrafficSources = () => {
               data={data}
               cx="50%"
               cy="50%"
-              labelLine={false}
+              labelLine={true}
               label={({ name, value }) => {
                 const percent = ((value / total) * 100).toFixed(0);
-                return `${name} ${percent}%`;
+                return percent > 5 ? `${name} ${percent}%` : ''; // Only show label if > 5%
               }}
               outerRadius={80}
               fill="#8884d8"
@@ -56,8 +50,23 @@ const TrafficSources = () => {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => `${value} visits`} />
-            <Legend />
+            <Tooltip
+              formatter={(value) => `${value} visits`}
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '8px'
+              }}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={36}
+              formatter={(value, entry) => {
+                const percent = ((entry.payload.value / total) * 100).toFixed(0);
+                return `${value} (${percent}%)`;
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
       ) : (

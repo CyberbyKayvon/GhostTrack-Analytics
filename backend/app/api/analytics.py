@@ -33,18 +33,24 @@ async def get_stats(
         Event.event_type == "pageview"
     ).scalar() or 0
 
-    # Bot detections - Check both is_bot flag and suspicious_activity event type
+    # Bot detections
     bot_detections = db.query(func.count(Event.id)).filter(
-        Event.site_id == site_id
-    ).filter(
-        (Event.is_bot == True) | (Event.event_type == "suspicious_activity")
+        Event.site_id == site_id,
+        Event.is_bot == True
+    ).scalar() or 0
+
+    # Suspicious activity events
+    suspicious_activity = db.query(func.count(Event.id)).filter(
+        Event.site_id == site_id,
+        Event.event_type == "suspicious_activity"
     ).scalar() or 0
 
     return {
         "total_events": total_events,
         "unique_visitors": unique_visitors,
         "page_views": page_views,
-        "bot_detections": bot_detections
+        "bot_detections": bot_detections,
+        "suspicious_activity": suspicious_activity
     }
 
 

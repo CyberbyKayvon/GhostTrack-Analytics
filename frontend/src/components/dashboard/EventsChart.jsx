@@ -1,25 +1,50 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const EventsChart = ({ data }) => {
-  // Ensure we always have data to display
-  const displayData = data && data.length > 0 ? data : [
-    { time: '0:00', events: 0 },
-    { time: '6:00', events: 0 },
-    { time: '12:00', events: 0 },
-    { time: '18:00', events: 0 },
-    { time: '24:00', events: 0 }
-  ];
+  // Generate last 7 days
+  const getLast7Days = () => {
+    const days = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateStr = date.toISOString().split('T')[0];
+      days.push({ day: dayName, date: dateStr, events: 0 });
+    }
+
+    return days;
+  };
+
+  // Count events per day
+  const chartData = getLast7Days();
+
+  if (data && data.length > 0) {
+    data.forEach(event => {
+      try {
+        const eventDate = new Date(event.timestamp || event.date);
+        const dateStr = eventDate.toISOString().split('T')[0];
+        const dayData = chartData.find(d => d.date === dateStr);
+        if (dayData) {
+          dayData.events++;
+        }
+      } catch (e) {
+        console.error('Error processing event date:', e);
+      }
+    });
+  }
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">📈 Events Over Time</h3>
+      <h3 className="text-xl font-bold text-gray-800 mb-4">📊 Events Last 7 Days</h3>
       <div className="flex-1 flex items-center justify-center">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={displayData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
             <XAxis
-              dataKey="time"
+              dataKey="day"
               stroke="#666"
               style={{ fontSize: '12px' }}
             />
@@ -27,7 +52,6 @@ const EventsChart = ({ data }) => {
               stroke="#666"
               style={{ fontSize: '12px' }}
               allowDecimals={false}
-              domain={[0, 'auto']}
             />
             <Tooltip
               contentStyle={{
@@ -36,16 +60,19 @@ const EventsChart = ({ data }) => {
                 borderRadius: '8px',
                 padding: '8px'
               }}
+              labelFormatter={(value, payload) => {
+                if (payload && payload[0]) {
+                  return `${payload[0].payload.day}`;
+                }
+                return value;
+              }}
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="events"
-              stroke="#667eea"
-              strokeWidth={3}
-              dot={{ fill: '#667eea', r: 4 }}
-              activeDot={{ r: 6 }}
+              fill="#667eea"
+              radius={[8, 8, 0, 0]}
             />
-          </LineChart>
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>

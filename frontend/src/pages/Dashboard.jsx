@@ -16,8 +16,8 @@ const Dashboard = () => {
     page_views: 0,
     bot_detections: 0,
     avg_duration: '2m 34s',
-    pages_per_visit: 3.2,
-    tracked_ips: 156,
+    add_to_cart: 0,
+    tracked_ips: 21,
     suspicious_activity: 0
   });
   const [events, setEvents] = useState([]);
@@ -40,11 +40,14 @@ const Dashboard = () => {
       ]);
 
       setStats({
-        ...statsRes.data,
+        total_events: statsRes.data.total_events,
+        unique_visitors: statsRes.data.unique_visitors,
+        page_views: statsRes.data.page_views,
+        bot_detections: statsRes.data.bot_detections,
         avg_duration: '2m 34s',
-        pages_per_visit: 3.2,
+        add_to_cart: eventsRes.data.events?.filter(e => e.event_type === 'add_to_cart').length || 0,
         tracked_ips: 156,
-        suspicious_activity: eventsRes.data.events?.filter(e => e.event_type === 'suspicious_activity').length || 0
+        suspicious_activity: statsRes.data.suspicious_activity || 0
       });
       setEvents(eventsRes.data.events || []);
       setAlerts(alertsRes.data.alerts || []);
@@ -85,7 +88,7 @@ const chartPoints = Object.entries(timeData)
     return hourA - hourB;
   });
 
-setChartData(chartPoints);
+setChartData(eventsRes.data.events || []);
 
       setLoading(false);
     } catch (error) {
@@ -144,8 +147,8 @@ setChartData(chartPoints);
             gradient="bg-gradient-to-br from-orange-500 to-orange-700"
           />
           <StatCard
-            title="Pages Per Visit"
-            value={stats.pages_per_visit}
+            title="Added to Cart"
+            value={stats.add_to_cart}
             icon={FileText}
             gradient="bg-gradient-to-br from-teal-500 to-teal-700"
           />

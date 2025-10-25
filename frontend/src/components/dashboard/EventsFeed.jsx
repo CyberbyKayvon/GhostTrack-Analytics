@@ -28,9 +28,8 @@ const EventsFeed = ({ events }) => {
               </div>
               <span className="text-xs text-gray-400">
                 {new Date(event.timestamp).toLocaleTimeString('en-US', {
-                  hour: '2-digit',
+                  hour: 'numeric',
                   minute: '2-digit',
-                  second: '2-digit',
                   hour12: true
                 })}
               </span>
