@@ -14,7 +14,7 @@ class Event(Base):
     user_agent = Column(Text, nullable=True)
     session_id = Column(String(255), index=True, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    event_metadata = Column(JSON, nullable=True)
+    metadata = Column(JSON, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
 
     # Security fields
