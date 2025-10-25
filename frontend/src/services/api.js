@@ -18,6 +18,9 @@ export const analyticsAPI = {
 
   getEventsByType: (siteId, startDate, endDate) =>
     api.get(`/analytics/events/by-type?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`),
+
+  getTrafficSources: (siteId = 'ghosttrack-test-dashboard') =>
+    api.get(`/analytics/traffic-sources?site_id=${siteId}`),
 };
 
 export const threatsAPI = {
