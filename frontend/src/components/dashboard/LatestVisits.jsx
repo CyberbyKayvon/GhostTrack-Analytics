@@ -1,37 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Clock, Globe } from 'lucide-react';
+import { analyticsAPI } from '../../services/api';
 
 const LatestVisits = () => {
-  // Placeholder data
-  const visits = [
-    {
-      id: 1,
-      visitor: "Visitor #1267",
-      ip: "107.136.164.146",
-      pages: 2,
-      duration: "0:06:36",
-      lastPage: "Kayvon Tennis - Elite Coaching",
-      time: "Just now"
-    },
-    {
-      id: 2,
-      visitor: "Visitor #1266",
-      ip: "205.169.39.188",
-      pages: 1,
-      duration: "0:00:12",
-      lastPage: "Home Page",
-      time: "2 min ago"
-    },
-    {
-      id: 3,
-      visitor: "Visitor #1265",
-      ip: "192.168.1.105",
-      pages: 4,
-      duration: "0:08:22",
-      lastPage: "Contact Form",
-      time: "5 min ago"
+  const [visits, setVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchVisitors();
+    const interval = setInterval(fetchVisitors, 10000); // Refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchVisitors = async () => {
+    try {
+      const response = await analyticsAPI.getRecentVisitors('ghosttrack-test-dashboard', 5);
+      setVisits(response.data.visitors || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching visitors:', error);
+      setLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-lg">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits</h3>
+        <div className="text-center py-8 text-gray-400">Loading visitors...</div>
+      </div>
+    );
+  }
+
+  if (visits.length === 0) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-lg">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits</h3>
+        <div className="text-center py-8 text-gray-400">
+          <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>No recent visitors</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg">
@@ -44,7 +55,7 @@ const LatestVisits = () => {
                 <User className="w-5 h-5 text-purple-500" />
                 <span className="font-semibold text-gray-800">{visit.visitor}</span>
               </div>
-              <span className="text-xs text-gray-400">{visit.time}</span>
+              <span className="text-xs text-gray-400">{visit.time_ago}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -62,7 +73,7 @@ const LatestVisits = () => {
               <span className="text-gray-500">Pages: </span>
               <span className="font-medium text-gray-700">{visit.pages}</span>
               <span className="text-gray-400 mx-2">•</span>
-              <span className="text-gray-600">{visit.lastPage}</span>
+              <span className="text-gray-600">{visit.last_page}</span>
             </div>
           </div>
         ))}

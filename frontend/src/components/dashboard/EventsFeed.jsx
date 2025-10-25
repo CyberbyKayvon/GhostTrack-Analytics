@@ -14,20 +14,29 @@ const EventsFeed = ({ events }) => {
     <div className="bg-white p-6 rounded-xl shadow-lg">
       <h3 className="text-xl font-bold text-gray-800 mb-4">📋 Recent Events</h3>
       <div className="space-y-3 max-h-96 overflow-y-auto">
-        {events.map((event, idx) => (
-          <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-            <div className="text-ghost-purple">
-              {getEventIcon(event.event_type)}
+        {events.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">No events yet</div>
+        ) : (
+          events.map((event, idx) => (
+            <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+              <div className="text-ghost-purple">
+                {getEventIcon(event.event_type)}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">{event.event_type}</p>
+                <p className="text-sm text-gray-500">{event.url}</p>
+              </div>
+              <span className="text-xs text-gray-400">
+                {new Date(event.timestamp).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: true
+                })}
+              </span>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800">{event.event_type}</p>
-              <p className="text-sm text-gray-500">{event.url}</p>
-            </div>
-            <span className="text-xs text-gray-400">
-              {new Date(event.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

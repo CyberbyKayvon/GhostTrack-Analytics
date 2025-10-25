@@ -156,3 +156,82 @@ async def get_traffic_sources(
             {"name": "Referral", "value": sources["referral"], "color": "#4299e1"}
         ]
     }
+
+
+@router.get("/recent-visitors")
+async def get_recent_visitors(
+        site_id: str = "ghosttrack-test-dashboard",
+        limit: int = 10,
+        db: Session = Depends(get_db)
+):
+    """
+    Get recent unique visitors with their activity
+    """
+    from sqlalchemy import desc, func
+    from datetime import datetime, timedelta
+
+    # Get recent sessions (last 24 hours)
+    recent_time = datetime.utcnow() - timedelta(hours=24)
+
+    # Query for unique sessions with aggregated data
+    visitor_data = db.query(
+        Event.session_id,
+        Event.ip_address,
+        func.count(Event.id).label('page_count'),
+        func.max(Event.timestamp).label('last_seen'),
+        func.min(Event.timestamp).label('first_seen')
+    ).filter(
+        Event.site_id == site_id,
+        Event.timestamp >= recent_time
+    ).group_by(
+        Event.session_id,
+        Event.ip_address
+    ).order_by(
+        desc('last_seen')
+    ).limit(limit).all()
+
+    visitors = []
+    for idx, visitor in enumerate(visitor_data, 1):
+        # Calculate duration
+        duration_seconds = 0
+        if visitor.first_seen and visitor.last_seen:
+            duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
+
+        # Format duration
+        minutes = duration_seconds // 60
+        seconds = duration_seconds % 60
+        duration_str = f"{minutes}:{seconds:02d}"
+
+        # Get last page visited
+        last_event = db.query(Event).filter(
+            Event.session_id == visitor.session_id
+        ).order_by(desc(Event.timestamp)).first()
+
+        last_page = "Unknown"
+        if last_event and last_event.url:
+            last_page = last_event.url.split('/')[-1] or "Home Page"
+
+        # Calculate time ago
+        time_diff = datetime.utcnow() - visitor.last_seen
+        if time_diff.total_seconds() < 60:
+            time_ago = "Just now"
+        elif time_diff.total_seconds() < 3600:
+            mins = int(time_diff.total_seconds() / 60)
+            time_ago = f"{mins} min ago"
+        else:
+            hours = int(time_diff.total_seconds() / 3600)
+            time_ago = f"{hours}h ago"
+
+        visitors.append({
+            "id": idx,
+            "visitor": f"Visitor #{visitor.session_id[:8]}",
+            "ip": visitor.ip_address or "Unknown",
+            "pages": visitor.page_count,
+            "duration": duration_str,
+            "last_page": last_page,
+            "time_ago": time_ago,
+            "timestamp": visitor.last_seen.isoformat()
+        })
+
+    return {"visitors": visitors}
+

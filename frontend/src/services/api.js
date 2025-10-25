@@ -21,7 +21,11 @@ export const analyticsAPI = {
 
   getTrafficSources: (siteId = 'ghosttrack-test-dashboard') =>
     api.get(`/analytics/traffic-sources?site_id=${siteId}`),
+
+  getRecentVisitors: (siteId = 'ghosttrack-test-dashboard', limit = 10) =>
+    api.get(`/analytics/recent-visitors?site_id=${siteId}&limit=${limit}`),
 };
+
 
 export const threatsAPI = {
   getAlerts: (siteId) =>

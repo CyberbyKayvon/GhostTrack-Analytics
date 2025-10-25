@@ -49,36 +49,41 @@ const Dashboard = () => {
       setEvents(eventsRes.data.events || []);
       setAlerts(alertsRes.data.alerts || []);
 
-      // Generate chart data from events
-const hourlyData = {};
-const now = new Date();
+      // Generate chart data from events - BETTER APPROACH
+const timeData = {};
 
-// Initialize last 12 hours with zero
+// Get current hour
+const currentHour = new Date().getHours();
+
+// Initialize last 12 hours
 for (let i = 11; i >= 0; i--) {
-  const hour = (now.getHours() - i + 24) % 24;
-  const timeLabel = `${hour}:00`;
-  hourlyData[timeLabel] = 0;
+  const hour = (currentHour - i + 24) % 24;
+  timeData[hour] = 0;
 }
 
-// Count events for each hour
+// Count events per hour
 (eventsRes.data.events || []).forEach(event => {
   try {
-    const eventDate = new Date(event.timestamp);
-    const hour = eventDate.getHours();
-    const timeLabel = `${hour}:00`;
-    if (hourlyData[timeLabel] !== undefined) {
-      hourlyData[timeLabel]++;
+    const eventHour = new Date(event.timestamp).getHours();
+    if (timeData[eventHour] !== undefined) {
+      timeData[eventHour]++;
     }
   } catch (e) {
-    console.error('Error processing event timestamp:', e);
+    console.error('Error parsing timestamp:', e);
   }
 });
 
-// Convert to array format for chart
-const chartPoints = Object.entries(hourlyData).map(([time, count]) => ({
-  time,
-  events: count
-}));
+// Convert to array and format
+const chartPoints = Object.entries(timeData)
+  .map(([hour, count]) => ({
+    time: `${hour}:00`,
+    events: count
+  }))
+  .sort((a, b) => {
+    const hourA = parseInt(a.time);
+    const hourB = parseInt(b.time);
+    return hourA - hourB;
+  });
 
 setChartData(chartPoints);
 
