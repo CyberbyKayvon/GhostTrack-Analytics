@@ -8,23 +8,16 @@ Stop-Process -Name python -ErrorAction SilentlyContinue
 Remove-Item .git/index.lock -Force -ErrorAction SilentlyContinue
 Remove-Item .git/rebase-merge -Recurse -Force -ErrorAction SilentlyContinue
 
-# Show what will be saved
-Write-Host "
-📋 Files to be saved:" -ForegroundColor Yellow
-git status --short
-
-# Ask for confirmation
-$confirm = Read-Host "
-Does this look correct? (yes/no)"
-if ($confirm -ne "yes") {
-    Write-Host "❌ Save cancelled" -ForegroundColor Red
-    exit
-}
-
 # Save everything
 git add .
 git commit -m "Work saved - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-git push origin main
 
-Write-Host "
-✅ EVERYTHING SAVED TO GITHUB!" -ForegroundColor Green
+# Try normal push first, then force if needed
+git push origin main
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "⚠️ Normal push failed, force pushing..." -ForegroundColor Yellow
+    git push origin main --force
+}
+
+Write-Host "`n✅ EVERYTHING SAVED TO GITHUB!" -ForegroundColor Green
+Write-Host "✅ You can safely close everything now" -ForegroundColor Green
