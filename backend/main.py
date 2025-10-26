@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import os
 from app.core.database import init_db
+from app.core.config import settings
 from app.api import events, analytics, auth, threats
 
 # Get the directory where main.py is located
@@ -29,7 +30,7 @@ async def startup_event():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
