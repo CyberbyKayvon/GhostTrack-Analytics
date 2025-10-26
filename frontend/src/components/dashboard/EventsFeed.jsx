@@ -89,7 +89,7 @@ const EventsFeed = ({ events }) => {
                       <span className="font-semibold text-gray-800 text-sm">
                         {formatEventType(event.event_type)}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs font-bold text-blue-600">
                         {formatTime(event.timestamp)}
                       </span>
                     </div>
