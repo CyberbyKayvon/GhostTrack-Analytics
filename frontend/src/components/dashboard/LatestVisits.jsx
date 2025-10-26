@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer, MousePointer } from 'lucide-react';
+import { User, Clock, Timer, MousePointer, MapPin } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
 const LatestVisits = () => {
@@ -72,20 +72,18 @@ const LatestVisits = () => {
     try {
       const date = new Date(timestamp);
 
-      // Let browser use its native local timezone
-      // Don't specify timezone - it will automatically use user's system timezone
-      const localTimeString = date.toLocaleString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
+      // Use native Date methods to get local time
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
 
-      // Debug log to help troubleshoot
-      console.log('Timestamp from server:', timestamp);
-      console.log('Parsed as Date:', date.toString());
-      console.log('Displayed as:', localTimeString);
+      // Convert to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 should be 12
 
-      return localTimeString;
+      const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+
+      return `${hours}:${minutesStr} ${ampm}`;
     } catch (e) {
       console.error('Error formatting time:', e, timestamp);
       return 'N/A';
@@ -121,7 +119,7 @@ const LatestVisits = () => {
                 key={index}
                 className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
               >
-                {/* Top Row: Visitor ID, IP, and Browser */}
+                {/* Top Row: Visitor ID, IP, Browser, and Location */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <div className="bg-blue-500 p-1.5 rounded-full">
@@ -162,13 +160,23 @@ const LatestVisits = () => {
                   </div>
                 </div>
 
-                {/* Bottom Row: Activity count */}
-                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center">
-                  <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
-                  <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
-                  <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
-                  <span className="mx-2">•</span>
-                  <span className="text-gray-600 truncate">{visit.last_page}</span>
+                {/* Bottom Row: Activity count and Location */}
+                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
+                    <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
+                    <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
+                    <span className="mx-2">•</span>
+                    <span className="text-gray-600 truncate">{visit.last_page}</span>
+                  </div>
+
+                  {/* Location indicator */}
+                  {visit.location && (
+                    <div className="flex items-center text-gray-500">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      <span className="text-xs">{visit.location}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -53,14 +53,33 @@ const EventsFeed = ({ events }) => {
     try {
       const date = new Date(timestamp);
 
-      // User's local time, NO SECONDS
-      const localTime = date.toLocaleString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      });
+      // Get local time using native Date methods
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
 
-      return localTime;
+      // Convert to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // 0 should be 12
+
+      const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+
+      return `${hours}:${minutesStr} ${ampm}`;
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
+  const formatDateLocal = (timestamp) => {
+    try {
+      const date = new Date(timestamp);
+
+      // Format as MM/DD/YYYY
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear();
+
+      return `${month}/${day}/${year}`;
     } catch (e) {
       return 'N/A';
     }
@@ -145,6 +164,10 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-400 mt-1 flex items-center space-x-1">
                         <span className="text-lg">{browserInfo.emoji}</span>
                         <span>Session #{sessionNumber}</span>
+                      </div>
+                      {/* Date instead of 0 */}
+                      <div className="text-xs text-gray-500 mt-1">
+                        {formatDateLocal(event.timestamp)}
                       </div>
                     </div>
                   </div>

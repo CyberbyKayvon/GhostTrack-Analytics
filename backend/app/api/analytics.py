@@ -4,6 +4,7 @@ from sqlalchemy import func, distinct, desc
 from datetime import datetime, timedelta
 from app.core.database import get_db
 from app.models.event import Event
+import requests
 
 router = APIRouter()
 
@@ -32,6 +33,45 @@ def detect_browser(user_agent):
         return "IE"
     else:
         return "Other"
+
+
+def get_location_from_ip(ip_address):
+    """Get location information from IP address"""
+    if not ip_address or ip_address == "Unknown":
+        return "Unknown"
+
+    # Check for localhost/private IPs
+    if ip_address in ['127.0.0.1', 'localhost', '::1'] or ip_address.startswith('192.168.') or ip_address.startswith(
+            '10.'):
+        return "Local"
+
+    try:
+        # Use free ipapi.co service (1000 requests/day free)
+        # No API key needed for basic usage
+        response = requests.get(f'https://ipapi.co/{ip_address}/json/', timeout=2)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            # Build location string
+            city = data.get('city', '')
+            region = data.get('region', '')
+            country = data.get('country_name', '')
+
+            # Format: City, Region or City, Country or just Country
+            if city and region:
+                return f"{city}, {region}"
+            elif city and country:
+                return f"{city}, {country}"
+            elif country:
+                return country
+            else:
+                return "Unknown"
+        else:
+            return "Unknown"
+    except Exception as e:
+        print(f"Error fetching location for IP {ip_address}: {e}")
+        return "Unknown"
 
 
 @router.get("/stats")
@@ -167,7 +207,7 @@ async def get_recent_visitors(
     Get recent unique visitors with their activity
     Returns visitors with sequential numbering (001-010)
     Newest visitors get highest numbers
-    NOW COUNTS ALL EVENTS AS ACTIVITY (not just clicks)
+    Includes location information based on IP address
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
@@ -199,7 +239,6 @@ async def get_recent_visitors(
         visitor_number_padded = str(visitor_number).zfill(3)  # Format as 001, 002, 003...
 
         # Count ALL events for this session (activity count)
-        # This includes: clicks, pageviews, add_to_cart, etc.
         activity_count = db.query(func.count(Event.id)).filter(
             Event.session_id == visitor.session_id
         ).scalar() or 0
@@ -223,16 +262,20 @@ async def get_recent_visitors(
         # Detect browser
         browser = detect_browser(visitor.user_agent)
 
+        # Get location from IP
+        location = get_location_from_ip(visitor.ip_address)
+
         visitors.append({
             "id": visitor_number_padded,
             "visitor": f"#{visitor_number_padded}",
             "ip": visitor.ip_address or "Unknown",
             "browser": browser,
-            "clicks": activity_count,  # All events count as activity
+            "location": location,
+            "clicks": activity_count,
             "duration": duration_str,
             "last_page": last_page,
             "timestamp": visitor.last_seen.isoformat(),
-            "session_id": visitor.session_id  # Include session_id for frontend
+            "session_id": visitor.session_id
         })
 
     return {"visitors": visitors}
