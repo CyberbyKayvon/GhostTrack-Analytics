@@ -8,7 +8,7 @@ const LatestVisits = () => {
 
   useEffect(() => {
     fetchVisitors();
-    const interval = setInterval(fetchVisitors, 10000); // Refresh every 10 seconds
+    const interval = setInterval(fetchVisitors, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -25,30 +25,34 @@ const LatestVisits = () => {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-lg">
+      <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
         <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits</h3>
-        <div className="text-center py-8 text-gray-400">Loading visitors...</div>
+        <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
+          Loading visitors...
+        </div>
       </div>
     );
   }
 
   if (visits.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-lg">
+      <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
         <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits</h3>
-        <div className="text-center py-8 text-gray-400">
-          <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>No recent visitors</p>
+        <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
+          <div>
+            <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>No recent visitors</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits</h3>
-      <div className="space-y-4">
-        {visits.map((visit) => (
+    <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits (Last 5)</h3>
+      <div className="space-y-4 flex-1 overflow-y-auto" style={{ minHeight: '400px' }}>
+        {visits.slice(0, 5).map((visit) => (
           <div key={visit.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">

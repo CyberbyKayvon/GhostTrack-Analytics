@@ -17,12 +17,11 @@ const Dashboard = () => {
     bot_detections: 0,
     avg_duration: '2m 34s',
     add_to_cart: 0,
-    tracked_ips: 21,
+    tracked_ips: 156,
     suspicious_activity: 0
   });
   const [events, setEvents] = useState([]);
   const [alerts, setAlerts] = useState([]);
-  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,61 +34,23 @@ const Dashboard = () => {
     try {
       const [statsRes, eventsRes, alertsRes] = await Promise.all([
         analyticsAPI.getStats(),
-        analyticsAPI.getEvents('ghosttrack-test-dashboard', 20),
+        analyticsAPI.getEvents('ghosttrack-test-dashboard', 50),
         threatsAPI.getAlerts('ghosttrack-test-dashboard')
       ]);
 
       setStats({
-        total_events: statsRes.data.total_events,
-        unique_visitors: statsRes.data.unique_visitors,
-        page_views: statsRes.data.page_views,
-        bot_detections: statsRes.data.bot_detections,
+        total_events: statsRes.data.total_events || 0,
+        unique_visitors: statsRes.data.unique_visitors || 0,
+        page_views: statsRes.data.page_views || 0,
+        bot_detections: statsRes.data.bot_detections || 0,
         avg_duration: '2m 34s',
         add_to_cart: eventsRes.data.events?.filter(e => e.event_type === 'add_to_cart').length || 0,
         tracked_ips: 156,
         suspicious_activity: statsRes.data.suspicious_activity || 0
       });
+
       setEvents(eventsRes.data.events || []);
       setAlerts(alertsRes.data.alerts || []);
-
-      // Generate chart data from events - BETTER APPROACH
-const timeData = {};
-
-// Get current hour
-const currentHour = new Date().getHours();
-
-// Initialize last 12 hours
-for (let i = 11; i >= 0; i--) {
-  const hour = (currentHour - i + 24) % 24;
-  timeData[hour] = 0;
-}
-
-// Count events per hour
-(eventsRes.data.events || []).forEach(event => {
-  try {
-    const eventHour = new Date(event.timestamp).getHours();
-    if (timeData[eventHour] !== undefined) {
-      timeData[eventHour]++;
-    }
-  } catch (e) {
-    console.error('Error parsing timestamp:', e);
-  }
-});
-
-// Convert to array and format
-const chartPoints = Object.entries(timeData)
-  .map(([hour, count]) => ({
-    time: `${hour}:00`,
-    events: count
-  }))
-  .sort((a, b) => {
-    const hourA = parseInt(a.time);
-    const hourB = parseInt(b.time);
-    return hourA - hourB;
-  });
-
-setChartData(eventsRes.data.events || []);
-
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -147,7 +108,7 @@ setChartData(eventsRes.data.events || []);
             gradient="bg-gradient-to-br from-orange-500 to-orange-700"
           />
           <StatCard
-            title="Added to Cart"
+            title="Add to Cart"
             value={stats.add_to_cart}
             icon={FileText}
             gradient="bg-gradient-to-br from-teal-500 to-teal-700"
@@ -166,9 +127,14 @@ setChartData(eventsRes.data.events || []);
           />
         </div>
 
-        {/* Charts & Events Row */}
+        {/* Latest Visits & Bar Chart Row - SAME HEIGHT */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <EventsChart data={chartData} />
+          <LatestVisits />
+          <EventsChart data={events} />
+        </div>
+
+        {/* Recent Events - FULL WIDTH */}
+        <div className="mb-8">
           <EventsFeed events={events} />
         </div>
 
@@ -177,9 +143,8 @@ setChartData(eventsRes.data.events || []);
           <SecurityAlerts alerts={alerts} />
         </div>
 
-        {/* Latest Visits & Traffic Sources Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <LatestVisits />
+        {/* Traffic Sources - FULL WIDTH */}
+        <div>
           <TrafficSources />
         </div>
       </div>

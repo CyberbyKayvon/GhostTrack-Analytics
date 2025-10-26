@@ -27,11 +27,11 @@ const EventsFeed = ({ events }) => {
                 <p className="text-sm text-gray-500">{event.url}</p>
               </div>
               <span className="text-xs text-gray-400">
-                {new Date(event.timestamp).toLocaleTimeString('en-US', {
+                {new Date(event.timestamp).toLocaleString('en-US', {
                   hour: 'numeric',
                   minute: '2-digit',
                   hour12: true
-                })}
+                }).toLowerCase()}
               </span>
             </div>
           ))

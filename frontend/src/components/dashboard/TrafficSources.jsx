@@ -27,22 +27,27 @@ const TrafficSources = () => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const hasData = total > 0;
 
+  // Always show all 4 sources in legend, even if value is 0
+  const allSources = [
+    { name: 'Direct', color: '#667eea' },
+    { name: 'Organic Search', color: '#48bb78' },
+    { name: 'Social Media', color: '#ed8936' },
+    { name: 'Referral', color: '#4299e1' }
+  ];
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg">
       <h3 className="text-xl font-bold text-gray-800 mb-4">🌐 Traffic Sources</h3>
       {hasData ? (
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={350}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
-              cy="50%"
-              labelLine={true}
-              label={({ name, value }) => {
-                const percent = ((value / total) * 100).toFixed(0);
-                return percent > 5 ? `${name} ${percent}%` : ''; // Only show label if > 5%
-              }}
-              outerRadius={80}
+              cy="45%"
+              labelLine={false}
+              label={false}
+              outerRadius={90}
               fill="#8884d8"
               dataKey="value"
             >
@@ -61,19 +66,34 @@ const TrafficSources = () => {
             />
             <Legend
               verticalAlign="bottom"
-              height={36}
+              height={60}
               formatter={(value, entry) => {
-                const percent = ((entry.payload.value / total) * 100).toFixed(0);
+                const item = data.find(d => d.name === value);
+                const percent = item ? ((item.value / total) * 100).toFixed(0) : 0;
                 return `${value} (${percent}%)`;
+              }}
+              wrapperStyle={{
+                paddingTop: '20px'
               }}
             />
           </PieChart>
         </ResponsiveContainer>
       ) : (
-        <div className="h-[300px] flex items-center justify-center text-gray-400">
+        <div className="h-[350px] flex items-center justify-center text-gray-400">
           <div className="text-center">
             <p className="text-lg">No traffic data yet</p>
             <p className="text-sm mt-2">Data will appear as visitors arrive</p>
+            <div className="mt-4 space-y-1">
+              {allSources.map((source) => (
+                <div key={source.name} className="flex items-center justify-center gap-2 text-sm">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: source.color }}
+                  />
+                  <span>{source.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
