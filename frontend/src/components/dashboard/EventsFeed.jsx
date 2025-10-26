@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, MousePointer, Eye, FileText, AlertTriangle, Shield } from 'lucide-react';
+import { Activity, MousePointer, Eye, FileText, AlertTriangle, Shield, ShoppingCart } from 'lucide-react';
 
 const EventsFeed = ({ events }) => {
   const getEventIcon = (eventType) => {
@@ -9,7 +9,7 @@ const EventsFeed = ({ events }) => {
       case 'click':
         return <MousePointer className="w-4 h-4" />;
       case 'add_to_cart':
-        return <FileText className="w-4 h-4" />;
+        return <ShoppingCart className="w-4 h-4" />;
       case 'suspicious_activity':
         return <AlertTriangle className="w-4 h-4" />;
       default:
@@ -39,17 +39,18 @@ const EventsFeed = ({ events }) => {
       .join(' ');
   };
 
-  const formatTime = (timestamp) => {
+  const formatTimeLocal = (timestamp) => {
     try {
       const date = new Date(timestamp);
-      const options = {
-        timeZone: 'America/Los_Angeles',
+
+      // User's local time, NO SECONDS
+      const localTime = date.toLocaleString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        second: '2-digit',
         hour12: true
-      };
-      return date.toLocaleTimeString('en-US', options);
+      });
+
+      return localTime;
     } catch (e) {
       return 'N/A';
     }
@@ -90,11 +91,11 @@ const EventsFeed = ({ events }) => {
                         {formatEventType(event.event_type)}
                       </span>
                       <span className="text-xs font-bold text-blue-600">
-                        {formatTime(event.timestamp)}
+                        {formatTimeLocal(event.timestamp)}
                       </span>
                     </div>
                     <div className="text-xs text-gray-600 truncate">
-                      {getPageName(event.url)}
+                      Page: {getPageName(event.url)}
                     </div>
                     {event.is_bot && (
                       <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">

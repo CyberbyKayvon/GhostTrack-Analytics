@@ -4,11 +4,9 @@ import Navbar from '../components/common/Navbar';
 import StatCard from '../components/common/StatCard';
 import EventsChart from '../components/dashboard/EventsChart';
 import EventsFeed from '../components/dashboard/EventsFeed';
-import SecurityAlerts from '../components/dashboard/SecurityAlerts';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
-import TopPages from '../components/dashboard/TopPages';
-import { analyticsAPI, threatsAPI } from '../services/api';
+import { analyticsAPI } from '../services/api';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -22,7 +20,6 @@ const Dashboard = () => {
     suspicious_activity: 0
   });
   const [events, setEvents] = useState([]);
-  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,10 +30,9 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, eventsRes, alertsRes] = await Promise.all([
+      const [statsRes, eventsRes] = await Promise.all([
         analyticsAPI.getStats(),
-        analyticsAPI.getEvents('ghosttrack-test-dashboard', 50),
-        threatsAPI.getAlerts('ghosttrack-test-dashboard')
+        analyticsAPI.getEvents('ghosttrack-test-dashboard', 50)
       ]);
 
       setStats({
@@ -51,7 +47,6 @@ const Dashboard = () => {
       });
 
       setEvents(eventsRes.data.events || []);
-      setAlerts(alertsRes.data.alerts || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -128,22 +123,16 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Latest Visits (10) & Bar Chart - SAME HEIGHT, ALIGNED */}
+        {/* Latest Visits & Events Chart - Same Height Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <LatestVisits />
           <EventsChart data={events} />
         </div>
 
-        {/* Traffic Sources & Security Alerts - SHORTER, HORIZONTAL */}
+        {/* Traffic Sources & Recent Events - Full Width Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <TrafficSources />
-          <SecurityAlerts alerts={alerts} botCount={stats.bot_detections} />
-        </div>
-
-        {/* Recent Events (LEFT) & Top Pages (RIGHT) - TWO COLUMNS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <EventsFeed events={events} />
-          <TopPages />
         </div>
       </div>
     </div>

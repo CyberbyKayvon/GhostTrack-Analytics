@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer } from 'lucide-react';
+import { User, Clock, Timer, MousePointer } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
 const LatestVisits = () => {
@@ -15,7 +15,16 @@ const LatestVisits = () => {
   const fetchVisitors = async () => {
     try {
       const response = await analyticsAPI.getRecentVisitors('ghosttrack-test-dashboard', 10);
-      setVisits(response.data.visitors || []);
+      const visitors = response.data.visitors || [];
+
+      // Sort by ID in descending order to get newest (010) at top
+      const sortedVisitors = [...visitors].sort((a, b) => {
+        const numA = parseInt(String(a.id)) || 0;
+        const numB = parseInt(String(b.id)) || 0;
+        return numB - numA; // Descending order
+      });
+
+      setVisits(sortedVisitors);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching visitors:', error);
@@ -43,22 +52,20 @@ const LatestVisits = () => {
     }
   };
 
-  const formatTimePacific = (timestamp) => {
+  const formatTimeLocal = (timestamp) => {
     try {
-      // Create date from ISO string
       const date = new Date(timestamp);
 
-      // Format to Pacific Time (PST/PDT)
-      const options = {
-        timeZone: 'America/Los_Angeles',
+      // Use user's LOCAL timezone, no seconds
+      const localTimeString = date.toLocaleString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
-      };
+      });
 
-      return date.toLocaleTimeString('en-US', options);
+      return localTimeString;
     } catch (e) {
-      console.error('Error formatting time:', e);
+      console.error('Error formatting time:', e, timestamp);
       return 'N/A';
     }
   };
@@ -89,17 +96,18 @@ const LatestVisits = () => {
               key={index}
               className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
             >
-              {/* Top Row: Visitor ID and IP */}
+              {/* Top Row: Visitor ID and IP with IP: label */}
               <div className="flex items-center space-x-2 mb-3">
                 <div className="bg-blue-500 p-1.5 rounded-full">
                   <User className="w-3 h-3 text-white" />
                 </div>
                 <span className="font-bold text-gray-800">#{visit.id}</span>
                 <span className="text-gray-400">•</span>
-                <span className="text-gray-600 text-sm">{visit.ip}</span>
+                <span className="text-gray-500 text-xs font-medium">IP:</span>
+                <span className="text-gray-700 text-sm font-mono">{visit.ip}</span>
               </div>
 
-              {/* Time and Duration Row with Labels - Aligned */}
+              {/* Time and Duration Row - NO SECONDS */}
               <div className="grid grid-cols-2 gap-4 mb-2">
                 <div>
                   <div className="text-xs text-gray-500 font-medium mb-1 flex items-center">
@@ -107,7 +115,7 @@ const LatestVisits = () => {
                     Time
                   </div>
                   <div className="text-sm font-semibold text-blue-600">
-                    {formatTimePacific(visit.timestamp)}
+                    {formatTimeLocal(visit.timestamp)}
                   </div>
                 </div>
                 <div>
@@ -121,9 +129,13 @@ const LatestVisits = () => {
                 </div>
               </div>
 
-              {/* Bottom Row: Pages info */}
-              <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
-                <span className="font-medium text-gray-700">{visit.pages}</span> {visit.pages === 1 ? 'page' : 'pages'} • {visit.last_page}
+              {/* Bottom Row: Clicks info */}
+              <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center">
+                <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
+                <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
+                <span className="ml-1">{visit.clicks === 1 ? 'click' : 'clicks'}</span>
+                <span className="mx-2">•</span>
+                <span className="text-gray-600">{visit.last_page}</span>
               </div>
             </div>
           ))}

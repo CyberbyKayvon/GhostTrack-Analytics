@@ -137,14 +137,17 @@ async def get_recent_visitors(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent unique visitors with their activity - with sequential 001, 002, 003 numbering
+    Get recent unique visitors with their activity
+    Returns visitors with sequential numbering (001-010)
+    Newest visitors get highest numbers
+    Counts CLICK events specifically (event_type == 'click')
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
+    # Get visitor data ordered by most recent first
     visitor_data = db.query(
         Event.session_id,
         Event.ip_address,
-        func.count(Event.id).label('page_count'),
         func.max(Event.timestamp).label('last_seen'),
         func.min(Event.timestamp).label('first_seen')
     ).filter(
@@ -154,13 +157,25 @@ async def get_recent_visitors(
         Event.session_id,
         Event.ip_address
     ).order_by(
-        desc('last_seen')
+        desc('last_seen')  # Most recent first
     ).limit(limit).all()
 
     visitors = []
+    total_visitors = len(visitor_data)
 
-    # Simple sequential numbering from 1 to limit
-    for idx, visitor in enumerate(visitor_data, 1):
+    # Assign sequential numbers with newest visitor getting highest number
+    for idx, visitor in enumerate(visitor_data):
+        # Calculate visitor number: newest visitor gets limit, oldest gets 1
+        visitor_number = total_visitors - idx
+        visitor_number_padded = str(visitor_number).zfill(3)  # Format as 001, 002, 003...
+
+        # Count ONLY click events for this session
+        # This ensures only actual user clicks are counted, not pageviews or other events
+        click_count = db.query(func.count(Event.id)).filter(
+            Event.session_id == visitor.session_id,
+            Event.event_type == "click"  # Only count click events
+        ).scalar() or 0
+
         duration_seconds = 0
         if visitor.first_seen and visitor.last_seen:
             duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
@@ -177,59 +192,14 @@ async def get_recent_visitors(
         if last_event and last_event.url:
             last_page = last_event.url.split('/')[-1] or "Home Page"
 
-        # Format visitor number as 001, 002, 003, etc.
-        visitor_number_padded = str(idx).zfill(3)
-
         visitors.append({
             "id": visitor_number_padded,
             "visitor": f"#{visitor_number_padded}",
             "ip": visitor.ip_address or "Unknown",
-            "pages": visitor.page_count,
+            "clicks": click_count,  # Number of click events
             "duration": duration_str,
             "last_page": last_page,
             "timestamp": visitor.last_seen.isoformat()
         })
 
     return {"visitors": visitors}
-
-
-@router.get("/top-pages")
-async def get_top_pages(
-        site_id: str = "ghosttrack-test-dashboard",
-        limit: int = 10,
-        db: Session = Depends(get_db)
-):
-    """
-    Get top visited pages
-    """
-    recent_time = datetime.utcnow() - timedelta(days=7)
-
-    page_stats = db.query(
-        Event.url,
-        func.count(Event.id).label('views'),
-        func.count(distinct(Event.session_id)).label('unique_visitors')
-    ).filter(
-        Event.site_id == site_id,
-        Event.event_type == "pageview",
-        Event.timestamp >= recent_time,
-        Event.url.isnot(None)
-    ).group_by(
-        Event.url
-    ).order_by(
-        desc('views')
-    ).limit(limit).all()
-
-    pages = []
-    for page in page_stats:
-        page_name = page.url.split('/')[-1] or "Home"
-        if page_name.endswith('.html'):
-            page_name = page_name[:-5]
-
-        pages.append({
-            "page": page_name.title(),
-            "url": page.url,
-            "views": page.views,
-            "unique_visitors": page.unique_visitors
-        })
-
-    return {"pages": pages}
