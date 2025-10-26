@@ -2,84 +2,82 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const EventsChart = ({ data }) => {
-  // Process events data to show ACTUAL last 7 days chronologically
   const chartData = useMemo(() => {
-    console.log('=== EVENTS CHART DEBUG ===');
-    console.log('Total events received:', data?.length);
+    console.log('=== CHART DEBUG START ===');
+    console.log('Total events:', data?.length);
 
-    if (data && data.length > 0) {
-      console.log('First 3 event timestamps:', data.slice(0, 3).map(e => e.timestamp));
+    if (!data || data.length === 0) {
+      console.log('No data provided');
+      return [];
     }
 
-    // Get last 7 days in USER'S LOCAL timezone
-    const last7Days = [];
+    // Show sample of event timestamps
+    console.log('Sample timestamps:', data.slice(0, 3).map(e => ({
+      timestamp: e.timestamp,
+      parsed: new Date(e.timestamp).toString()
+    })));
+
+    // Create 7 days - SIMPLIFIED
     const today = new Date();
+    const days = [];
 
     for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0); // Start of day
+      const date = new Date();
+      date.setDate(today.getDate() - i);
 
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999); // End of day
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-      const dayName = date.toLocaleDateString('en-US', {
-        weekday: 'short'
-      });
-
-      const dateDisplay = date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-
-      last7Days.push({
-        dayName: dayName,
-        dateDisplay: dateDisplay,
+      days.push({
+        dayName,
+        monthDay,
         events: 0,
         isToday: i === 0,
-        dateStart: date.getTime(),
-        dateEnd: endOfDay.getTime()
+        // Store just the date string for comparison (YYYY-MM-DD)
+        dateStr: date.toISOString().split('T')[0]
       });
     }
 
-    console.log('Chart days:', last7Days.map(d => `${d.dayName} (${d.dateDisplay})`));
+    console.log('Chart days:', days.map(d => `${d.dayName} (${d.dateStr})`));
 
-    // Count events for each day
-    if (data && data.length > 0) {
-      data.forEach((event, index) => {
-        try {
-          const eventDate = new Date(event.timestamp);
-          const eventTime = eventDate.getTime();
+    // Count events - MUCH SIMPLER matching
+    let matched = 0;
+    let unmatched = 0;
 
-          // Find which day this event belongs to
-          const dayData = last7Days.find(d => eventTime >= d.dateStart && eventTime <= d.dateEnd);
+    data.forEach((event, idx) => {
+      try {
+        const eventDate = new Date(event.timestamp);
+        const eventDateStr = eventDate.toISOString().split('T')[0];
 
-          if (dayData) {
-            dayData.events++;
-          } else {
-            if (index < 3) { // Only log first few mismatches
-              console.log('Event outside 7-day range:', event.timestamp, new Date(event.timestamp).toLocaleString());
-            }
+        const day = days.find(d => d.dateStr === eventDateStr);
+
+        if (day) {
+          day.events++;
+          matched++;
+        } else {
+          unmatched++;
+          if (idx < 5) {
+            console.log(`Event ${idx} (${eventDateStr}) not in range`);
           }
-        } catch (e) {
-          console.error('Error processing event:', e, event);
         }
-      });
-    }
+      } catch (e) {
+        console.error('Error processing event:', e);
+      }
+    });
 
-    // Log the final counts
-    console.log('Events per day:', last7Days.map(d => `${d.dayName}: ${d.events}`));
-    console.log('=== END DEBUG ===');
+    console.log(`Matched: ${matched}, Unmatched: ${unmatched}`);
+    console.log('Events by day:', days.map(d => `${d.dayName}: ${d.events}`));
+    console.log('=== CHART DEBUG END ===');
 
-    return last7Days.map(day => ({
-      day: day.dayName,
-      dateStr: day.dateDisplay,
-      events: day.events,
-      isToday: day.isToday
+    return days.map(d => ({
+      day: d.dayName,
+      dateStr: d.monthDay,
+      events: d.events,
+      isToday: d.isToday
     }));
   }, [data]);
 
-  const totalEvents = chartData.reduce((sum, d) => sum + d.events, 0);
+  const totalInRange = chartData.reduce((sum, d) => sum + d.events, 0);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
@@ -88,7 +86,7 @@ const EventsChart = ({ data }) => {
         Events Last 7 Days
       </h3>
 
-      <div className="text-xs text-gray-500 mb-4 flex items-center gap-3">
+      <div className="text-xs text-gray-500 mb-4 flex items-center gap-3 flex-wrap">
         <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
           📍 Today: {new Date().toLocaleDateString('en-US', {
             weekday: 'short',
@@ -96,9 +94,15 @@ const EventsChart = ({ data }) => {
             day: 'numeric'
           })}
         </span>
-        {data && (
-          <span className="text-gray-600">
-            Total: {data.length} events ({totalEvents} in last 7 days)
+        <span className="text-gray-600">
+          Total: {data?.length || 0} events
+        </span>
+        <span className={`font-semibold ${totalInRange > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          ({totalInRange} in last 7 days)
+        </span>
+        {totalInRange === 0 && data && data.length > 0 && (
+          <span className="text-red-600 text-xs">
+            ⚠️ All events are older than 7 days! Check console.
           </span>
         )}
       </div>
@@ -132,8 +136,7 @@ const EventsChart = ({ data }) => {
               formatter={(value) => [`${value} events`, 'Events']}
               labelFormatter={(label, payload) => {
                 if (payload && payload[0]) {
-                  const item = payload[0].payload;
-                  return `${item.day}, ${item.dateStr}`;
+                  return `${payload[0].payload.day}, ${payload[0].payload.dateStr}`;
                 }
                 return label;
               }}
@@ -158,7 +161,7 @@ const EventsChart = ({ data }) => {
 
       {(!data || data.length === 0) && (
         <div className="text-center py-4 text-gray-400 text-sm">
-          No events recorded yet. Start tracking to see your activity.
+          No events recorded yet.
         </div>
       )}
     </div>

@@ -8,6 +8,32 @@ from app.models.event import Event
 router = APIRouter()
 
 
+def detect_browser(user_agent):
+    """Detect browser from user agent string"""
+    if not user_agent:
+        return "Unknown"
+
+    ua = user_agent.lower()
+
+    # Check in order of specificity
+    if 'edg/' in ua or 'edge' in ua:
+        return "Edge"
+    elif 'chrome' in ua and 'safari' in ua:
+        return "Chrome"
+    elif 'firefox' in ua:
+        return "Firefox"
+    elif 'safari' in ua and 'chrome' not in ua:
+        return "Safari"
+    elif 'opera' in ua or 'opr/' in ua:
+        return "Opera"
+    elif 'brave' in ua:
+        return "Brave"
+    elif 'msie' in ua or 'trident' in ua:
+        return "IE"
+    else:
+        return "Other"
+
+
 @router.get("/stats")
 async def get_stats(
         site_id: str = "ghosttrack-test-dashboard",
@@ -74,7 +100,8 @@ async def get_events(
                 "url": event.url,
                 "timestamp": event.timestamp.isoformat(),
                 "session_id": event.session_id,
-                "is_bot": event.is_bot
+                "is_bot": event.is_bot,
+                "user_agent": event.user_agent
             }
             for event in events
         ]
@@ -140,7 +167,7 @@ async def get_recent_visitors(
     Get recent unique visitors with their activity
     Returns visitors with sequential numbering (001-010)
     Newest visitors get highest numbers
-    Counts CLICK events specifically (event_type == 'click')
+    NOW COUNTS ALL EVENTS AS ACTIVITY (not just clicks)
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
@@ -148,6 +175,7 @@ async def get_recent_visitors(
     visitor_data = db.query(
         Event.session_id,
         Event.ip_address,
+        Event.user_agent,
         func.max(Event.timestamp).label('last_seen'),
         func.min(Event.timestamp).label('first_seen')
     ).filter(
@@ -155,7 +183,8 @@ async def get_recent_visitors(
         Event.timestamp >= recent_time
     ).group_by(
         Event.session_id,
-        Event.ip_address
+        Event.ip_address,
+        Event.user_agent
     ).order_by(
         desc('last_seen')  # Most recent first
     ).limit(limit).all()
@@ -169,11 +198,10 @@ async def get_recent_visitors(
         visitor_number = total_visitors - idx
         visitor_number_padded = str(visitor_number).zfill(3)  # Format as 001, 002, 003...
 
-        # Count ONLY click events for this session
-        # This ensures only actual user clicks are counted, not pageviews or other events
-        click_count = db.query(func.count(Event.id)).filter(
-            Event.session_id == visitor.session_id,
-            Event.event_type == "click"  # Only count click events
+        # Count ALL events for this session (activity count)
+        # This includes: clicks, pageviews, add_to_cart, etc.
+        activity_count = db.query(func.count(Event.id)).filter(
+            Event.session_id == visitor.session_id
         ).scalar() or 0
 
         duration_seconds = 0
@@ -192,14 +220,19 @@ async def get_recent_visitors(
         if last_event and last_event.url:
             last_page = last_event.url.split('/')[-1] or "Home Page"
 
+        # Detect browser
+        browser = detect_browser(visitor.user_agent)
+
         visitors.append({
             "id": visitor_number_padded,
             "visitor": f"#{visitor_number_padded}",
             "ip": visitor.ip_address or "Unknown",
-            "clicks": click_count,  # Number of click events
+            "browser": browser,
+            "clicks": activity_count,  # All events count as activity
             "duration": duration_str,
             "last_page": last_page,
-            "timestamp": visitor.last_seen.isoformat()
+            "timestamp": visitor.last_seen.isoformat(),
+            "session_id": visitor.session_id  # Include session_id for frontend
         })
 
     return {"visitors": visitors}
