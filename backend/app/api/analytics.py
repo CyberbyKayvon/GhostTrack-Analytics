@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional
+from sqlalchemy import func, distinct, desc
 from datetime import datetime, timedelta
 from app.core.database import get_db
 from app.models.event import Event
-from sqlalchemy import func, distinct
 
 router = APIRouter()
 
@@ -33,7 +32,7 @@ async def get_stats(
         Event.event_type == "pageview"
     ).scalar() or 0
 
-    # Bot detections
+    # Bot detections - Count bot events
     bot_detections = db.query(func.count(Event.id)).filter(
         Event.site_id == site_id,
         Event.is_bot == True
@@ -61,11 +60,11 @@ async def get_events(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent events
+    Get recent events for a site
     """
     events = db.query(Event).filter(
         Event.site_id == site_id
-    ).order_by(Event.timestamp.desc()).limit(limit).all()
+    ).order_by(desc(Event.timestamp)).limit(limit).all()
 
     return {
         "events": [
@@ -82,36 +81,6 @@ async def get_events(
     }
 
 
-@router.get("/events/by-type")
-async def get_events_by_type(
-        site_id: str = "ghosttrack-test-dashboard",
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        db: Session = Depends(get_db)
-):
-    """
-    Get events grouped by type
-    """
-    query = db.query(
-        Event.event_type,
-        func.count(Event.id).label('count')
-    ).filter(Event.site_id == site_id)
-
-    if start_date:
-        query = query.filter(Event.timestamp >= datetime.fromisoformat(start_date))
-    if end_date:
-        query = query.filter(Event.timestamp <= datetime.fromisoformat(end_date))
-
-    results = query.group_by(Event.event_type).all()
-
-    return {
-        "event_types": [
-            {"type": result.event_type, "count": result.count}
-            for result in results
-        ]
-    }
-
-
 @router.get("/traffic-sources")
 async def get_traffic_sources(
         site_id: str = "ghosttrack-test-dashboard",
@@ -120,7 +89,6 @@ async def get_traffic_sources(
     """
     Get traffic sources breakdown
     """
-    # Get all events with referrers
     events = db.query(Event.referrer).filter(
         Event.site_id == site_id,
         Event.referrer.isnot(None)
@@ -133,7 +101,6 @@ async def get_traffic_sources(
         "referral": 0
     }
 
-    # Categorize traffic sources
     for event in events:
         referrer = (event.referrer or "").lower()
 
@@ -146,7 +113,6 @@ async def get_traffic_sources(
         else:
             sources["referral"] += 1
 
-    # Count direct visits (no referrer)
     direct_count = db.query(func.count(Event.id)).filter(
         Event.site_id == site_id,
         Event.referrer.is_(None)
@@ -171,15 +137,10 @@ async def get_recent_visitors(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent unique visitors with their activity
+    Get recent unique visitors with their activity - with sequential 001, 002, 003 numbering
     """
-    from sqlalchemy import desc, func
-    from datetime import datetime, timedelta
-
-    # Get recent sessions (last 24 hours)
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
-    # Query for unique sessions with aggregated data
     visitor_data = db.query(
         Event.session_id,
         Event.ip_address,
@@ -197,18 +158,17 @@ async def get_recent_visitors(
     ).limit(limit).all()
 
     visitors = []
+
+    # Simple sequential numbering from 1 to limit
     for idx, visitor in enumerate(visitor_data, 1):
-        # Calculate duration
         duration_seconds = 0
         if visitor.first_seen and visitor.last_seen:
             duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
 
-        # Format duration
         minutes = duration_seconds // 60
         seconds = duration_seconds % 60
         duration_str = f"{minutes}:{seconds:02d}"
 
-        # Get last page visited
         last_event = db.query(Event).filter(
             Event.session_id == visitor.session_id
         ).order_by(desc(Event.timestamp)).first()
@@ -217,27 +177,59 @@ async def get_recent_visitors(
         if last_event and last_event.url:
             last_page = last_event.url.split('/')[-1] or "Home Page"
 
-        # Calculate time ago
-        time_diff = datetime.utcnow() - visitor.last_seen
-        if time_diff.total_seconds() < 60:
-            time_ago = "Just now"
-        elif time_diff.total_seconds() < 3600:
-            mins = int(time_diff.total_seconds() / 60)
-            time_ago = f"{mins} min ago"
-        else:
-            hours = int(time_diff.total_seconds() / 3600)
-            time_ago = f"{hours}h ago"
+        # Format visitor number as 001, 002, 003, etc.
+        visitor_number_padded = str(idx).zfill(3)
 
         visitors.append({
-            "id": idx,
-            "visitor": f"Visitor #{visitor.session_id[:8]}",
+            "id": visitor_number_padded,
+            "visitor": f"#{visitor_number_padded}",
             "ip": visitor.ip_address or "Unknown",
             "pages": visitor.page_count,
             "duration": duration_str,
             "last_page": last_page,
-            "time_ago": time_ago,
             "timestamp": visitor.last_seen.isoformat()
         })
 
     return {"visitors": visitors}
 
+
+@router.get("/top-pages")
+async def get_top_pages(
+        site_id: str = "ghosttrack-test-dashboard",
+        limit: int = 10,
+        db: Session = Depends(get_db)
+):
+    """
+    Get top visited pages
+    """
+    recent_time = datetime.utcnow() - timedelta(days=7)
+
+    page_stats = db.query(
+        Event.url,
+        func.count(Event.id).label('views'),
+        func.count(distinct(Event.session_id)).label('unique_visitors')
+    ).filter(
+        Event.site_id == site_id,
+        Event.event_type == "pageview",
+        Event.timestamp >= recent_time,
+        Event.url.isnot(None)
+    ).group_by(
+        Event.url
+    ).order_by(
+        desc('views')
+    ).limit(limit).all()
+
+    pages = []
+    for page in page_stats:
+        page_name = page.url.split('/')[-1] or "Home"
+        if page_name.endswith('.html'):
+            page_name = page_name[:-5]
+
+        pages.append({
+            "page": page_name.title(),
+            "url": page.url,
+            "views": page.views,
+            "unique_visitors": page.unique_visitors
+        })
+
+    return {"pages": pages}

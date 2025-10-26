@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Users, Eye, AlertTriangle, Clock, FileText, MapPin, Shield } from 'lucide-react';
+import { Activity, Users, Eye, Shield, Clock, FileText, MapPin, Plus } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import StatCard from '../components/common/StatCard';
 import EventsChart from '../components/dashboard/EventsChart';
@@ -7,6 +7,7 @@ import EventsFeed from '../components/dashboard/EventsFeed';
 import SecurityAlerts from '../components/dashboard/SecurityAlerts';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
+import TopPages from '../components/dashboard/TopPages';
 import { analyticsAPI, threatsAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -92,15 +93,15 @@ const Dashboard = () => {
             gradient="bg-gradient-to-br from-green-500 to-green-700"
           />
           <StatCard
-            title="Bot Detections"
-            value={stats.bot_detections}
-            icon={AlertTriangle}
+            title="Suspicious Activity"
+            value={stats.suspicious_activity}
+            icon={Shield}
             gradient="bg-gradient-to-br from-red-500 to-red-700"
           />
         </div>
 
         {/* Second Row - Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
             title="Avg Visit Duration"
             value={stats.avg_duration}
@@ -119,33 +120,30 @@ const Dashboard = () => {
             icon={MapPin}
             gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
           />
-          <StatCard
-            title="Suspicious Activity"
-            value={stats.suspicious_activity}
-            icon={Shield}
-            gradient="bg-gradient-to-br from-pink-500 to-pink-700"
-          />
+          <div className="bg-gradient-to-br from-gray-500 to-gray-700 p-6 rounded-xl shadow-lg flex items-center justify-between group hover:shadow-xl transition-all cursor-pointer">
+            <div className="flex-1">
+              <p className="text-white text-opacity-90 text-sm font-medium mb-1">Add Metric</p>
+              <Plus className="w-12 h-12 text-white opacity-70 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
         </div>
 
-        {/* Latest Visits & Bar Chart Row - SAME HEIGHT */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Latest Visits (10) & Bar Chart - SAME HEIGHT, ALIGNED */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <LatestVisits />
           <EventsChart data={events} />
         </div>
 
-        {/* Recent Events - FULL WIDTH */}
-        <div className="mb-8">
-          <EventsFeed events={events} />
-        </div>
-
-        {/* Security Alerts */}
-        <div className="mb-8">
-          <SecurityAlerts alerts={alerts} />
-        </div>
-
-        {/* Traffic Sources - FULL WIDTH */}
-        <div>
+        {/* Traffic Sources & Security Alerts - SHORTER, HORIZONTAL */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <TrafficSources />
+          <SecurityAlerts alerts={alerts} botCount={stats.bot_detections} />
+        </div>
+
+        {/* Recent Events (LEFT) & Top Pages (RIGHT) - TWO COLUMNS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <EventsFeed events={events} />
+          <TopPages />
         </div>
       </div>
     </div>
