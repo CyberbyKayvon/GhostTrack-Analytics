@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer, MousePointer, MapPin } from 'lucide-react';
+import { User, Clock, Timer, MousePointer, MapPin, Globe } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
 const LatestVisits = () => {
@@ -17,11 +17,10 @@ const LatestVisits = () => {
       const response = await analyticsAPI.getRecentVisitors('ghosttrack-test-dashboard', 10);
       const visitors = response.data.visitors || [];
 
-      // Sort by ID in descending order to get newest (010) at top
       const sortedVisitors = [...visitors].sort((a, b) => {
         const numA = parseInt(String(a.id)) || 0;
         const numB = parseInt(String(b.id)) || 0;
-        return numB - numA; // Descending order
+        return numB - numA;
       });
 
       setVisits(sortedVisitors);
@@ -70,16 +69,24 @@ const LatestVisits = () => {
 
   const formatTimeLocal = (timestamp) => {
     try {
-      const date = new Date(timestamp);
+      // Parse timestamp - if it's UTC, this will convert to local automatically
+      let date;
 
-      // Use native Date methods to get local time
+      // Handle different timestamp formats
+      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        // Already has timezone info
+        date = new Date(timestamp);
+      } else {
+        // Assume UTC and append Z
+        date = new Date(timestamp + 'Z');
+      }
+
       let hours = date.getHours();
       const minutes = date.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
 
-      // Convert to 12-hour format
       hours = hours % 12;
-      hours = hours ? hours : 12; // 0 should be 12
+      hours = hours ? hours : 12;
 
       const minutesStr = minutes < 10 ? '0' + minutes : minutes;
 
@@ -88,6 +95,25 @@ const LatestVisits = () => {
       console.error('Error formatting time:', e, timestamp);
       return 'N/A';
     }
+  };
+
+  const getRegionFromIP = (ip) => {
+    if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return 'Local';
+    }
+    return null;
+  };
+
+  const getRegion = (visit) => {
+    if (visit.location && visit.location !== 'Unknown') {
+      const parts = visit.location.split(',');
+      if (parts.length >= 1) {
+        return parts[0].trim();
+      }
+      return visit.location;
+    }
+
+    return getRegionFromIP(visit.ip);
   };
 
   if (loading) {
@@ -113,70 +139,85 @@ const LatestVisits = () => {
         <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
           {visits.map((visit, index) => {
             const browserInfo = getBrowserIcon(visit.browser || 'Unknown');
+            const region = getRegion(visit);
 
             return (
               <div
                 key={index}
                 className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
               >
-                {/* Top Row: Visitor ID, IP, Browser, and Location */}
+                {/* Row 1: ONLY Visitor ID on LEFT, IP + Location + Browser on RIGHT */}
                 <div className="flex items-center justify-between mb-3">
+                  {/* LEFT: Just the ID */}
                   <div className="flex items-center space-x-2">
                     <div className="bg-blue-500 p-1.5 rounded-full">
                       <User className="w-3 h-3 text-white" />
                     </div>
                     <span className="font-bold text-gray-800">#{visit.id}</span>
-                    <span className="text-gray-400">•</span>
+                  </div>
+
+                  {/* RIGHT: IP + Location Badge + Browser Badge */}
+                  <div className="flex items-center space-x-2">
                     <span className="text-gray-500 text-xs font-medium">IP:</span>
                     <span className="text-gray-700 text-sm font-mono">{visit.ip}</span>
-                  </div>
 
-                  {/* Browser Badge */}
-                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserInfo.color}`}>
-                    <span className="text-sm">{browserInfo.emoji}</span>
-                    <span>{browserInfo.name}</span>
-                  </div>
-                </div>
+                    {region && (
+                      <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        region === 'Local'
+                          ? 'bg-gray-100 text-gray-600'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {region === 'Local' ? (
+                          <>
+                            <Globe className="w-3 h-3" />
+                            <span>Local</span>
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="w-3 h-3" />
+                            <span>{region}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
 
-                {/* Time and Duration Row */}
-                <div className="grid grid-cols-2 gap-4 mb-2">
-                  <div>
-                    <div className="text-xs text-gray-500 font-medium mb-1 flex items-center">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Time
-                    </div>
-                    <div className="text-sm font-semibold text-blue-600">
-                      {formatTimeLocal(visit.timestamp)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 font-medium mb-1 flex items-center">
-                      <Timer className="w-3 h-3 mr-1" />
-                      Duration
-                    </div>
-                    <div className="text-sm font-semibold text-gray-700">
-                      {formatDuration(visit.duration)}
+                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserInfo.color}`}>
+                      <span className="text-sm">{browserInfo.emoji}</span>
+                      <span>{browserInfo.name}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Bottom Row: Activity count and Location */}
-                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
-                    <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
-                    <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
-                    <span className="mx-2">•</span>
-                    <span className="text-gray-600 truncate">{visit.last_page}</span>
+                {/* Row 2: Time and Duration - SIDE BY SIDE */}
+                <div className="flex items-center space-x-6 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-3 h-3 text-gray-500" />
+                    <div>
+                      <div className="text-xs text-gray-500 font-medium">Time</div>
+                      <div className="text-sm font-semibold text-blue-600">
+                        {formatTimeLocal(visit.timestamp)}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Location indicator */}
-                  {visit.location && (
-                    <div className="flex items-center text-gray-500">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      <span className="text-xs">{visit.location}</span>
+                  <div className="flex items-center space-x-2">
+                    <Timer className="w-3 h-3 text-gray-500" />
+                    <div>
+                      <div className="text-xs text-gray-500 font-medium">Duration</div>
+                      <div className="text-sm font-semibold text-gray-700">
+                        {formatDuration(visit.duration)}
+                      </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+
+                {/* Row 3: Activity and Page */}
+                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center">
+                  <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
+                  <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
+                  <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
+                  <span className="mx-2">•</span>
+                  <span className="text-gray-600 truncate">{visit.last_page}</span>
                 </div>
               </div>
             );

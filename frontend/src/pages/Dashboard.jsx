@@ -129,7 +129,7 @@ const Dashboard = () => {
           <EventsChart data={events} />
         </div>
 
-        {/* Traffic Sources & Recent Events - Full Width Sections */}
+        {/* Traffic Sources & Recent Events - Aligned Bottom Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <TrafficSources />
           <EventsFeed events={events} />

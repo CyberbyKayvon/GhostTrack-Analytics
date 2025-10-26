@@ -51,16 +51,22 @@ const EventsFeed = ({ events }) => {
 
   const formatTimeLocal = (timestamp) => {
     try {
-      const date = new Date(timestamp);
+      // Handle UTC conversion properly
+      let date;
 
-      // Get local time using native Date methods
+      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        date = new Date(timestamp);
+      } else {
+        // Assume UTC and append Z
+        date = new Date(timestamp + 'Z');
+      }
+
       let hours = date.getHours();
       const minutes = date.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
 
-      // Convert to 12-hour format
       hours = hours % 12;
-      hours = hours ? hours : 12; // 0 should be 12
+      hours = hours ? hours : 12;
 
       const minutesStr = minutes < 10 ? '0' + minutes : minutes;
 
@@ -72,14 +78,22 @@ const EventsFeed = ({ events }) => {
 
   const formatDateLocal = (timestamp) => {
     try {
-      const date = new Date(timestamp);
+      let date;
 
-      // Format as MM/DD/YYYY
+      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        date = new Date(timestamp);
+      } else {
+        date = new Date(timestamp + 'Z');
+      }
+
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const year = date.getFullYear();
 
-      return `${month}/${day}/${year}`;
+      const monthStr = month < 10 ? '0' + month : month;
+      const dayStr = day < 10 ? '0' + day : day;
+
+      return `${monthStr}/${dayStr}/${year}`;
     } catch (e) {
       return 'N/A';
     }
@@ -111,7 +125,6 @@ const EventsFeed = ({ events }) => {
     return { emoji: '❓', name: 'Other' };
   };
 
-  // Create a mapping of session IDs to short numbers
   const sessionMap = React.useMemo(() => {
     const map = new Map();
     let counter = 1;
@@ -160,20 +173,19 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-500 flex items-center space-x-2">
                         <span>Page: {getPageName(event.url)}</span>
                       </div>
-                      {/* Session info with browser icon */}
                       <div className="text-xs text-gray-400 mt-1 flex items-center space-x-1">
                         <span className="text-lg">{browserInfo.emoji}</span>
                         <span>Session #{sessionNumber}</span>
                       </div>
-                      {/* Date instead of 0 */}
-                      <div className="text-xs text-gray-500 mt-1">
-                        {formatDateLocal(event.timestamp)}
-                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-bold text-blue-600">
+                  {/* RIGHT SIDE - ONLY TIME AND DATE, NO OTHER TEXT/NUMBERS */}
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <div className="text-sm font-bold text-blue-600">
                       {formatTimeLocal(event.timestamp)}
+                    </div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      {formatDateLocal(event.timestamp)}
                     </div>
                     {event.is_bot && (
                       <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
