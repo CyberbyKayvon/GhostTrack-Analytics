@@ -42,8 +42,10 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(threats.router, prefix="/api/v1/threats", tags=["threats"])
 
 # Serve the tracker JavaScript file
-app.mount("/tracker", StaticFiles(directory=str(BASE_DIR.parent / "tracker")), name="tracker")
-
+tracker_dir = BASE_DIR.parent / "tracker"
+if tracker_dir.exists():
+    app.mount("/tracker", StaticFiles(directory=str(tracker_dir)), name="tracker")
+    
 # Serve test dashboard
 @app.get("/test")
 async def serve_test_dashboard():
