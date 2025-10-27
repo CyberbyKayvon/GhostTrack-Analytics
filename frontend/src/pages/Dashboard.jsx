@@ -31,9 +31,9 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const [statsRes, eventsRes] = await Promise.all([
-        analyticsAPI.getStats('kayvontennis-com'),
-        analyticsAPI.getEvents('kayvontennis-com', 50)
-      ]);;
+        analyticsAPI.getStats(),  // Will use default 'kayvontennis-com'
+        analyticsAPI.getEvents()  // Will use default 'kayvontennis-com'
+      ]);
 
       setStats({
         total_events: statsRes.data.total_events || 0,
