@@ -59,9 +59,10 @@ async def get_stats(
     ).scalar() or 0
 
     # Bot detections - Count bot events
+    # FIXED: Changed from True to 1 for integer comparison
     bot_detections = db.query(func.count(Event.id)).filter(
         Event.site_id == site_id,
-        Event.is_bot == True
+        Event.is_bot == 1
     ).scalar() or 0
 
     # Suspicious activity events
