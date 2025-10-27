@@ -3,19 +3,21 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { Globe } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
-const TrafficSources = () => {
+const TrafficSources = ({ siteId }) => {
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTrafficSources();
-    const interval = setInterval(fetchTrafficSources, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    if (siteId) {
+      fetchTrafficSources();
+      const interval = setInterval(fetchTrafficSources, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [siteId]);
 
   const fetchTrafficSources = async () => {
     try {
-      const response = await analyticsAPI.getTrafficSources('ghosttrack-test-dashboard');
+      const response = await analyticsAPI.getTrafficSources(siteId);
       setSources(response.data.sources || []);
       setLoading(false);
     } catch (error) {

@@ -10,28 +10,27 @@ const api = axios.create({
 });
 
 export const analyticsAPI = {
-  getStats: (siteId = 'kayvontennis-com') =>
+  getStats: (siteId) =>
     api.get(`/analytics/stats?site_id=${siteId}`),
 
-  getEvents: (siteId = 'kayvontennis-com', limit = 50) =>
+  getEvents: (siteId, limit = 50) =>
     api.get(`/analytics/events?site_id=${siteId}&limit=${limit}`),
 
   getEventsByType: (siteId, startDate, endDate) =>
     api.get(`/analytics/events/by-type?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`),
 
-  getTrafficSources: (siteId = 'kayvontennis-com') =>
+  getTrafficSources: (siteId) =>
     api.get(`/analytics/traffic-sources?site_id=${siteId}`),
 
-  getRecentVisitors: (siteId = 'kayvontennis-com', limit = 10) =>
+  getRecentVisitors: (siteId, limit = 10) =>
     api.get(`/analytics/recent-visitors?site_id=${siteId}&limit=${limit}`),
 };
 
-
 export const threatsAPI = {
-  getAlerts: (siteId = 'kayvontennis-com') =>
+  getAlerts: (siteId) =>
     api.get(`/threats/alerts?site_id=${siteId}`),
 
-  getSuspiciousActivity: (siteId = 'kayvontennis-com') =>
+  getSuspiciousActivity: (siteId) =>
     api.get(`/threats/suspicious?site_id=${siteId}`),
 };
 

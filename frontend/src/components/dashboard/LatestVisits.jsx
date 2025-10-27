@@ -14,7 +14,7 @@ const LatestVisits = () => {
 
   const fetchVisitors = async () => {
     try {
-      const response = await analyticsAPI.getRecentVisitors('ghosttrack-test-dashboard', 10);
+      const response = await analyticsAPI.getRecentVisitors('kayvontennis-com', 10);
       const visitors = response.data.visitors || [];
 
       const sortedVisitors = [...visitors].sort((a, b) => {

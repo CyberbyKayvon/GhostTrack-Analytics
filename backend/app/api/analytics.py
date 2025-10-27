@@ -47,9 +47,10 @@ async def get_stats(
         Event.site_id == site_id
     ).scalar() or 0
 
-    # Unique visitors (distinct session IDs)
-    unique_visitors = db.query(func.count(distinct(Event.session_id))).filter(
-        Event.site_id == site_id
+    # Unique visitors (distinct visitor IDs - PERSISTENT)
+    unique_visitors = db.query(func.count(distinct(Event.visitor_id))).filter(
+        Event.site_id == site_id,
+        Event.visitor_id != 'unknown'
     ).scalar() or 0
 
     # Page views (pageview events)
@@ -58,8 +59,7 @@ async def get_stats(
         Event.event_type == "pageview"
     ).scalar() or 0
 
-    # Bot detections - Count bot events
-    # FIXED: Changed from True to 1 for integer comparison
+    # Bot detections
     bot_detections = db.query(func.count(Event.id)).filter(
         Event.site_id == site_id,
         Event.is_bot == 1
@@ -100,6 +100,7 @@ async def get_events(
                 "event_type": event.event_type,
                 "url": event.url,
                 "timestamp": event.timestamp.isoformat(),
+                "visitor_id": event.visitor_id,
                 "session_id": event.session_id,
                 "is_bot": event.is_bot,
                 "user_agent": event.user_agent
@@ -165,46 +166,61 @@ async def get_recent_visitors(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent unique visitors with their activity
-    Returns visitors with sequential numbering (001-010)
-    Newest visitors get highest numbers
-    NOW COUNTS ALL EVENTS AS ACTIVITY (not just clicks)
+    Get recent unique visitors with PERSISTENT visitor IDs
+    Each visitor_id gets a unique number that never changes
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
-    # Get visitor data ordered by most recent first
+    # Get ALL visitors for this site (not just recent) to assign persistent numbers
+    all_visitors = db.query(
+        Event.visitor_id,
+        func.min(Event.timestamp).label('first_seen_ever')
+    ).filter(
+        Event.site_id == site_id,
+        Event.visitor_id != 'unknown'
+    ).group_by(
+        Event.visitor_id
+    ).order_by(
+        'first_seen_ever'  # Oldest visitor gets #001
+    ).all()
+
+    # Create visitor ID to number mapping (PERSISTENT)
+    visitor_number_map = {}
+    for idx, visitor_record in enumerate(all_visitors):
+        visitor_number = idx + 1  # Start from 1
+        visitor_number_map[visitor_record.visitor_id] = str(visitor_number).zfill(3)
+
+    # Now get RECENT activity from last 24 hours, grouped by visitor_id
     visitor_data = db.query(
-        Event.session_id,
+        Event.visitor_id,
         Event.ip_address,
         Event.user_agent,
         func.max(Event.timestamp).label('last_seen'),
         func.min(Event.timestamp).label('first_seen')
     ).filter(
         Event.site_id == site_id,
-        Event.timestamp >= recent_time
+        Event.timestamp >= recent_time,
+        Event.visitor_id != 'unknown'
     ).group_by(
-        Event.session_id,
+        Event.visitor_id,
         Event.ip_address,
         Event.user_agent
     ).order_by(
-        desc('last_seen')  # Most recent first
+        desc('last_seen')  # Most recent activity first
     ).limit(limit).all()
 
     visitors = []
-    total_visitors = len(visitor_data)
 
-    # Assign sequential numbers with newest visitor getting highest number
-    for idx, visitor in enumerate(visitor_data):
-        # Calculate visitor number: newest visitor gets limit, oldest gets 1
-        visitor_number = total_visitors - idx
-        visitor_number_padded = str(visitor_number).zfill(3)  # Format as 001, 002, 003...
+    for visitor in visitor_data:
+        # Get persistent visitor number from map
+        visitor_number_padded = visitor_number_map.get(visitor.visitor_id, '???')
 
-        # Count ALL events for this session (activity count)
-        # This includes: clicks, pageviews, add_to_cart, etc.
+        # Count ALL events for this visitor_id (across all sessions)
         activity_count = db.query(func.count(Event.id)).filter(
-            Event.session_id == visitor.session_id
+            Event.visitor_id == visitor.visitor_id
         ).scalar() or 0
 
+        # Calculate duration for THIS session (last 24 hours)
         duration_seconds = 0
         if visitor.first_seen and visitor.last_seen:
             duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
@@ -213,27 +229,29 @@ async def get_recent_visitors(
         seconds = duration_seconds % 60
         duration_str = f"{minutes}:{seconds:02d}"
 
+        # Get last page visited
         last_event = db.query(Event).filter(
-            Event.session_id == visitor.session_id
+            Event.visitor_id == visitor.visitor_id
         ).order_by(desc(Event.timestamp)).first()
 
         last_page = "Unknown"
         if last_event and last_event.url:
-            last_page = last_event.url.split('/')[-1] or "Home Page"
+            last_page = last_event.url
 
         # Detect browser
         browser = detect_browser(visitor.user_agent)
 
         visitors.append({
-            "id": visitor_number_padded,
+            "id": visitor_number_padded,  # PERSISTENT NUMBER
             "visitor": f"#{visitor_number_padded}",
             "ip": visitor.ip_address or "Unknown",
             "browser": browser,
-            "clicks": activity_count,  # All events count as activity
-            "duration": duration_str,
+            "clicks": activity_count,  # Total actions across ALL time
+            "duration": duration_str,  # Duration of most recent session
             "last_page": last_page,
             "timestamp": visitor.last_seen.isoformat(),
-            "session_id": visitor.session_id  # Include session_id for frontend
+            "visitor_id": visitor.visitor_id,  # Include for reference
+            "session_id": last_event.session_id if last_event else None
         })
 
     return {"visitors": visitors}
