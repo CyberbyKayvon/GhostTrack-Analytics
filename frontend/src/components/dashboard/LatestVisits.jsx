@@ -2,21 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { User, Clock, Timer, MousePointer, MapPin, Globe } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
-const LatestVisits = ({ siteId }) => {
+const LatestVisits = () => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (siteId) {
-      fetchVisitors();
-      const interval = setInterval(fetchVisitors, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [siteId]);
+    fetchVisitors();
+    const interval = setInterval(fetchVisitors, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchVisitors = async () => {
     try {
-      const response = await analyticsAPI.getRecentVisitors(siteId, 10);
+      const response = await analyticsAPI.getRecentVisitors('kayvontennis-com', 10);
       const visitors = response.data.visitors || [];
 
       const sortedVisitors = [...visitors].sort((a, b) => {
@@ -71,11 +69,15 @@ const LatestVisits = ({ siteId }) => {
 
   const formatTimeLocal = (timestamp) => {
     try {
+      // Parse timestamp - if it's UTC, this will convert to local automatically
       let date;
 
+      // Handle different timestamp formats
       if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        // Already has timezone info
         date = new Date(timestamp);
       } else {
+        // Assume UTC and append Z
         date = new Date(timestamp + 'Z');
       }
 
@@ -114,53 +116,10 @@ const LatestVisits = ({ siteId }) => {
     return getRegionFromIP(visit.ip);
   };
 
-  const formatPageUrl = (pageUrl) => {
-    if (!pageUrl || pageUrl === 'Unknown') return 'Homepage';
-
-    try {
-      const url = new URL(pageUrl);
-      let path = url.pathname;
-
-      // Remove leading/trailing slashes
-      path = path.replace(/^\/+|\/+$/g, '');
-
-      // If empty (homepage), return domain
-      if (!path) {
-        return url.hostname.replace('www.', '');
-      }
-
-      // Get just the page name (last segment)
-      const segments = path.split('/');
-      let pageName = segments[segments.length - 1];
-
-      // Remove file extensions
-      pageName = pageName.replace(/\.(html|htm|php|aspx)$/i, '');
-
-      // If no page name, use last meaningful segment
-      if (!pageName && segments.length > 1) {
-        pageName = segments[segments.length - 2];
-      }
-
-      // Capitalize first letter
-      pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-
-      // Truncate if too long
-      if (pageName.length > 25) {
-        pageName = pageName.substring(0, 22) + '...';
-      }
-
-      return pageName || 'Homepage';
-    } catch (e) {
-      // If URL parsing fails, just clean up the string
-      const cleaned = pageUrl.split('/').pop()?.replace(/\.(html|htm)$/i, '') || 'Homepage';
-      return cleaned.length > 25 ? cleaned.substring(0, 22) + '...' : cleaned;
-    }
-  };
-
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Users (Last 10)</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits (Last 10)</h3>
         <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
           Loading visitors...
         </div>
@@ -170,7 +129,7 @@ const LatestVisits = ({ siteId }) => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Users (Last 10)</h3>
+      <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Visits (Last 10)</h3>
 
       {visits.length === 0 ? (
         <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
@@ -258,7 +217,7 @@ const LatestVisits = ({ siteId }) => {
                   <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
                   <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
                   <span className="mx-2">•</span>
-                  <span className="text-gray-600 truncate">{formatPageUrl(visit.last_page)}</span>
+                  <span className="text-gray-600 truncate">{visit.last_page}</span>
                 </div>
               </div>
             );
