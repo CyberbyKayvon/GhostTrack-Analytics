@@ -28,9 +28,18 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ Database warning: {e}")
 
+# FIXED CORS - Allow kayvontennis.com
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://kayvontennis.com",
+        "http://kayvontennis.com",
+        "https://www.kayvontennis.com",
+        "http://www.kayvontennis.com",
+        "*"  # Allow all origins (less secure, but works for testing)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
