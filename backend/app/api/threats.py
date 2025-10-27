@@ -16,9 +16,10 @@ async def get_alerts(
     Get security alerts (bot detections)
     """
     # Get recent bot detections
+    # FIXED: Changed from True to 1 for integer comparison
     bot_events = db.query(Event).filter(
         Event.site_id == site_id,
-        Event.is_bot == True
+        Event.is_bot == 1
     ).order_by(Event.timestamp.desc()).limit(10).all()
 
     alerts = [

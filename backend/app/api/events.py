@@ -56,6 +56,9 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
         # Get real IP address
         ip_address = get_client_ip(request)
 
+        # FIXED: Convert boolean to integer for database
+        is_bot_int = 1 if is_bot else 0
+
         # Create event
         new_event = Event(
             site_id=site_id,
@@ -65,7 +68,7 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
             user_agent=user_agent,
             ip_address=ip_address,
             session_id=session_id,
-            is_bot=is_bot,
+            is_bot=is_bot_int,  # Use integer instead of boolean
             timestamp=datetime.utcnow()
         )
 
