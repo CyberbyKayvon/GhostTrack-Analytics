@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct, desc
 from datetime import datetime, timedelta
 from app.core.database import get_db
+import httpx
 from app.models.event import Event
 
 router = APIRouter()
@@ -238,3 +239,32 @@ async def get_recent_visitors(
         })
 
     return {"visitors": visitors}
+
+
+@router.get("/ip-lookup/{ip_address}")
+async def lookup_ip(ip_address: str):
+    """
+    Lookup detailed information about an IP address using IPGeolocation API
+    """
+    try:
+        # Use ipapi.co free API (no API key required)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"https://ipapi.co/{ip_address}/json/")
+
+            if response.status_code == 200:
+                data = response.json()
+
+                # Check if error in response
+                if data.get("error"):
+                    raise HTTPException(status_code=400, detail=data.get("reason", "Invalid IP address"))
+
+                return data
+            else:
+                raise HTTPException(status_code=response.status_code, detail="Failed to lookup IP address")
+
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="IP lookup service timeout")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"IP lookup service unavailable: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error looking up IP: {str(e)}")

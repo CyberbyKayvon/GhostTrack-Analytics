@@ -1,83 +1,222 @@
-// GhostTrack - Privacy-First Analytics Tracker
+// GhostTrack Analytics - Tracking Script with Persistent Session IDs
+// Place this script in your website's <head> or before </body>
+
 (function() {
-    'use strict';
-    
-    // Configuration
-    const config = {
-        url: window.ghostTrackUrl || 'http://localhost:8000/api/v1/events/track',
-        siteId: window.ghostTrackSiteId || 'default-site',
-        debug: window.ghostTrackDebug || false
-    };
-    
-    // Generate session ID
-    function getSessionId() {
-        let sessionId = sessionStorage.getItem('ghosttrack_session');
-        if (!sessionId) {
-            sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            sessionStorage.setItem('ghosttrack_session', sessionId);
-        }
-        return sessionId;
+  'use strict';
+
+  // Configuration
+  const SITE_ID = 'kayvontennis-com'; // Change this for each site
+  const API_ENDPOINT = 'http://localhost:8000/api/events/track'; // Change to your API URL
+  const SESSION_STORAGE_KEY = 'ghosttrack_session_id';
+
+  /**
+   * Generate a unique session ID
+   * This creates a persistent ID stored in localStorage
+   */
+  function getOrCreateSessionId() {
+    // Try to get existing session ID from localStorage
+    let sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+
+    if (!sessionId) {
+      // Generate a new unique session ID
+      sessionId = generateUniqueId();
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
     }
-    
-    // Send event to server
-    function sendEvent(eventType, metadata = {}) {
-        const eventData = {
-            site_id: config.siteId,
-            event_type: eventType,
-            url: window.location.href,
-            referrer: document.referrer || null,
-            user_agent: navigator.userAgent,
-            session_id: getSessionId(),
-            metadata: metadata
-        };
-        
-        if (config.debug) {
-            console.log('👻 GhostTrack - Sending event:', eventType, eventData);
-        }
-        
-        // Send to server
-        fetch(config.url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(eventData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (config.debug) {
-                console.log('✅ GhostTrack - Event tracked:', data);
-            }
-        })
-        .catch(error => {
-            if (config.debug) {
-                console.error('❌ GhostTrack - Error:', error);
-            }
+
+    return sessionId;
+  }
+
+  /**
+   * Generate a unique ID using timestamp and random values
+   */
+  function generateUniqueId() {
+    const timestamp = Date.now().toString(36);
+    const randomStr = Math.random().toString(36).substring(2, 15);
+    return `${timestamp}-${randomStr}`;
+  }
+
+  /**
+   * Detect if user is a bot
+   */
+  function isBot() {
+    const botPatterns = [
+      /bot/i, /spider/i, /crawl/i, /APIs-Google/i, /AdsBot/i,
+      /Googlebot/i, /mediapartners/i, /Google Favicon/i,
+      /FeedFetcher/i, /Google-Read-Aloud/i, /DuplexWeb-Google/i,
+      /googleweblight/i, /bing/i, /yandex/i, /baidu/i, /duckduck/i,
+      /yahoo/i, /ecosia/i, /ia_archiver/i, /semrush/i, /lighthouse/i
+    ];
+
+    const userAgent = navigator.userAgent;
+    return botPatterns.some(pattern => pattern.test(userAgent));
+  }
+
+  /**
+   * Track an event
+   */
+  function trackEvent(eventType, eventData = {}) {
+    const sessionId = getOrCreateSessionId();
+
+    const payload = {
+      site_id: SITE_ID,
+      event_type: eventType,
+      url: window.location.href,
+      referrer: document.referrer || 'direct',
+      user_agent: navigator.userAgent,
+      session_id: sessionId,  // CRITICAL: Include persistent session ID
+      is_bot: isBot(),
+      timestamp: new Date().toISOString(),
+      ...eventData
+    };
+
+    // Send to API (using sendBeacon for reliability)
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      navigator.sendBeacon(API_ENDPOINT, blob);
+    } else {
+      // Fallback to fetch
+      fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(err => console.error('Tracking error:', err));
+    }
+  }
+
+  /**
+   * Track page view on load
+   */
+  function trackPageView() {
+    trackEvent('pageview', {
+      page_title: document.title,
+      screen_width: window.screen.width,
+      screen_height: window.screen.height,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight
+    });
+  }
+
+  /**
+   * Track all clicks
+   */
+  function trackClick(event) {
+    const element = event.target;
+    const tagName = element.tagName.toLowerCase();
+
+    trackEvent('click', {
+      element_tag: tagName,
+      element_id: element.id || null,
+      element_class: element.className || null,
+      element_text: element.innerText?.substring(0, 50) || null,
+      page_title: document.title
+    });
+  }
+
+  /**
+   * Track add to cart (customize selector for your site)
+   */
+  function setupAddToCartTracking() {
+    // Example: Track clicks on buttons with class "add-to-cart"
+    document.addEventListener('click', function(e) {
+      if (e.target.matches('.add-to-cart, [data-add-to-cart]')) {
+        trackEvent('add_to_cart', {
+          product_name: e.target.getAttribute('data-product-name') || 'unknown',
+          product_id: e.target.getAttribute('data-product-id') || null,
+          page_title: document.title
         });
+      }
+    });
+  }
+
+  /**
+   * Track suspicious activity (rapid clicking, etc.)
+   */
+  function setupSuspiciousActivityDetection() {
+    let clickCount = 0;
+    let clickTimer = null;
+
+    document.addEventListener('click', function() {
+      clickCount++;
+
+      if (clickCount === 1) {
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+        }, 3000);
+      }
+
+      // If more than 10 clicks in 3 seconds, flag as suspicious
+      if (clickCount > 10) {
+        trackEvent('suspicious_activity', {
+          reason: 'rapid_clicking',
+          click_count: clickCount,
+          page_title: document.title
+        });
+        clickCount = 0;
+        clearTimeout(clickTimer);
+      }
+    });
+  }
+
+  /**
+   * Initialize tracking
+   */
+  function init() {
+    console.log('GhostTrack Analytics initialized');
+    console.log('Session ID:', getOrCreateSessionId());
+
+    // Track initial pageview
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', trackPageView);
+    } else {
+      trackPageView();
     }
-    
-    // Public API
-    window.ghostTrack = {
-        // Track pageview
-        pageview: function() {
-            sendEvent('pageview', {
-                page_title: document.title,
-                page_path: window.location.pathname
-            });
-        },
-        
-        // Track custom event
-        track: function(eventType, metadata = {}) {
-            sendEvent(eventType, metadata);
-        },
-        
-        // Update configuration
-        config: function(newConfig) {
-            Object.assign(config, newConfig);
-        }
-    };
-    
-    if (config.debug) {
-        console.log('👻 GhostTrack initialized!', config);
-    }
+
+    // Track all clicks
+    document.addEventListener('click', trackClick);
+
+    // Setup custom tracking
+    setupAddToCartTracking();
+    setupSuspiciousActivityDetection();
+
+    // Track page visibility changes (user leaving)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        trackEvent('page_hidden', {
+          page_title: document.title,
+          time_on_page: performance.now()
+        });
+      }
+    });
+
+    // Track before page unload
+    window.addEventListener('beforeunload', function() {
+      trackEvent('page_exit', {
+        page_title: document.title,
+        time_on_page: performance.now()
+      });
+    });
+  }
+
+  // Auto-initialize when script loads
+  init();
+
+  // Expose global tracking function for custom events
+  window.ghostTrack = {
+    track: trackEvent,
+    getSessionId: getOrCreateSessionId
+  };
 })();
+
+// USAGE EXAMPLES:
+//
+// 1. Track custom event:
+//    window.ghostTrack.track('custom_event', { custom_data: 'value' });
+//
+// 2. Get current session ID:
+//    const sessionId = window.ghostTrack.getSessionId();
+//
+// 3. Track search:
+//    window.ghostTrack.track('search', { query: 'tennis rackets' });

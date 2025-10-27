@@ -41,7 +41,10 @@ def get_client_ip(request: Request) -> str:
 @router.post("/track")
 async def track_event(request: Request, event_data: dict, db: Session = Depends(get_db)):
     """
-    Track a new event
+    Track a new event with improved session handling
+
+    Session IDs are now persistent and unique per browser/device.
+    The frontend generates and maintains these IDs in localStorage.
     """
     try:
         # Extract data
@@ -55,6 +58,15 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
 
         # Get real IP address
         ip_address = get_client_ip(request)
+
+        # CRITICAL: Ensure session_id is persistent
+        # If session_id is still "unknown", this indicates frontend issue
+        if session_id == "unknown":
+            # Fallback: create temporary session based on IP + User Agent
+            # But this should be fixed on frontend
+            import hashlib
+            temp_session = f"{ip_address}_{user_agent}"
+            session_id = hashlib.md5(temp_session.encode()).hexdigest()[:12]
 
         # Convert boolean to integer for database
         is_bot_int = 1 if is_bot else 0
@@ -80,7 +92,8 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
             "status": "success",
             "event_id": new_event.id,
             "message": "Event tracked successfully",
-            "ip_captured": ip_address
+            "ip_captured": ip_address,
+            "session_id": session_id
         }
 
     except Exception as e:

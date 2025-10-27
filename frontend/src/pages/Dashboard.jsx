@@ -6,6 +6,7 @@ import EventsChart from '../components/dashboard/EventsChart';
 import EventsFeed from '../components/dashboard/EventsFeed';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
+import IPLookup from '../components/dashboard/IPLookup';
 import { analyticsAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -145,9 +146,14 @@ const Dashboard = () => {
           <EventsChart data={events} />
         </div>
 
-        {/* Traffic Sources & Recent Events - Aligned Bottom Sections */}
+        {/* Traffic Sources & IP Lookup - Aligned Bottom Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <TrafficSources siteId={currentSiteId} />
+          <IPLookup />
+        </div>
+
+        {/* Recent Events - Full Width */}
+        <div className="mb-6">
           <EventsFeed events={events} />
         </div>
       </div>

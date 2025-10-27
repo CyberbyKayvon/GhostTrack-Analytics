@@ -2,6 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { User, Clock, Timer, MousePointer, MapPin, Globe } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
+// Chrome SVG Icon Component
+const ChromeIcon = ({ className = "w-3 h-3" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+    <path d="M12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6Z" fill="#FFFFFF"/>
+    <circle cx="12" cy="12" r="4" fill="#4285F4"/>
+    <path d="M12 2C17.5228 2 22 6.47715 22 12H18C18 8.68629 15.3137 6 12 6V2Z" fill="#EA4335"/>
+    <path d="M2 12C2 6.47715 6.47715 2 12 2V6C8.68629 6 6 8.68629 6 12H2Z" fill="#FBBC04"/>
+    <path d="M12 18V22C6.47715 22 2 17.5228 2 12H6C6 15.3137 8.68629 18 12 18Z" fill="#34A853"/>
+    <path d="M22 12C22 17.5228 17.5228 22 12 22V18C15.3137 18 18 15.3137 18 12H22Z" fill="#4285F4"/>
+  </svg>
+);
+
 const LatestVisits = ({ siteId }) => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,15 +48,51 @@ const LatestVisits = ({ siteId }) => {
 
   const getBrowserIcon = (browser) => {
     const icons = {
-      'Chrome': { emoji: '🌐', color: 'bg-yellow-100 text-yellow-700', name: 'Chrome' },
-      'Firefox': { emoji: '🦊', color: 'bg-orange-100 text-orange-700', name: 'Firefox' },
-      'Safari': { emoji: '🧭', color: 'bg-blue-100 text-blue-700', name: 'Safari' },
-      'Edge': { emoji: '🌊', color: 'bg-cyan-100 text-cyan-700', name: 'Edge' },
-      'Opera': { emoji: '🎭', color: 'bg-red-100 text-red-700', name: 'Opera' },
-      'Brave': { emoji: '🦁', color: 'bg-purple-100 text-purple-700', name: 'Brave' },
-      'IE': { emoji: '💤', color: 'bg-gray-100 text-gray-700', name: 'IE' },
-      'Other': { emoji: '❓', color: 'bg-gray-100 text-gray-500', name: 'Other' },
-      'Unknown': { emoji: '❓', color: 'bg-gray-100 text-gray-500', name: 'Unknown' }
+      'Chrome': {
+        icon: <ChromeIcon className="w-3 h-3" />,
+        color: 'bg-blue-100 text-blue-700',
+        name: 'Chrome'
+      },
+      'Firefox': {
+        icon: <div className="text-sm">🦊</div>,
+        color: 'bg-orange-100 text-orange-700',
+        name: 'Firefox'
+      },
+      'Safari': {
+        icon: <div className="text-sm">🧭</div>,
+        color: 'bg-blue-100 text-blue-700',
+        name: 'Safari'
+      },
+      'Edge': {
+        icon: <div className="text-sm">🌊</div>,
+        color: 'bg-cyan-100 text-cyan-700',
+        name: 'Edge'
+      },
+      'Opera': {
+        icon: <div className="text-sm">🎭</div>,
+        color: 'bg-red-100 text-red-700',
+        name: 'Opera'
+      },
+      'Brave': {
+        icon: <div className="text-sm">🦁</div>,
+        color: 'bg-purple-100 text-purple-700',
+        name: 'Brave'
+      },
+      'IE': {
+        icon: <div className="text-sm">💤</div>,
+        color: 'bg-gray-100 text-gray-700',
+        name: 'IE'
+      },
+      'Other': {
+        icon: <div className="text-sm">❓</div>,
+        color: 'bg-gray-100 text-gray-500',
+        name: 'Other'
+      },
+      'Unknown': {
+        icon: <div className="text-sm">❓</div>,
+        color: 'bg-gray-100 text-gray-500',
+        name: 'Unknown'
+      }
     };
 
     return icons[browser] || icons['Unknown'];
@@ -223,7 +272,7 @@ const LatestVisits = ({ siteId }) => {
                     )}
 
                     <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserInfo.color}`}>
-                      <span className="text-sm">{browserInfo.emoji}</span>
+                      {browserInfo.icon}
                       <span>{browserInfo.name}</span>
                     </div>
                   </div>

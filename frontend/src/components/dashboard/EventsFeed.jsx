@@ -1,6 +1,19 @@
 import React from 'react';
 import { Activity, MousePointer, Eye, ShoppingCart, AlertTriangle, Shield, Search } from 'lucide-react';
 
+// Chrome SVG Icon Component
+const ChromeIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+    <path d="M12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6Z" fill="#FFFFFF"/>
+    <circle cx="12" cy="12" r="4" fill="#4285F4"/>
+    <path d="M12 2C17.5228 2 22 6.47715 22 12H18C18 8.68629 15.3137 6 12 6V2Z" fill="#EA4335"/>
+    <path d="M2 12C2 6.47715 6.47715 2 12 2V6C8.68629 6 6 8.68629 6 12H2Z" fill="#FBBC04"/>
+    <path d="M12 18V22C6.47715 22 2 17.5228 2 12H6C6 15.3137 8.68629 18 12 18Z" fill="#34A853"/>
+    <path d="M22 12C22 17.5228 17.5228 22 12 22V18C15.3137 18 18 15.3137 18 12H22Z" fill="#4285F4"/>
+  </svg>
+);
+
 const EventsFeed = ({ events }) => {
   const getEventIcon = (eventType) => {
     switch (eventType) {
@@ -106,23 +119,47 @@ const EventsFeed = ({ events }) => {
   };
 
   const detectBrowser = (userAgent) => {
-    if (!userAgent) return { emoji: '❓', name: 'Unknown' };
+    if (!userAgent) return { icon: <Activity className="w-3 h-3" />, name: 'Unknown', color: 'bg-gray-100 text-gray-500' };
 
     const ua = userAgent.toLowerCase();
 
     if (ua.includes('edg/') || ua.includes('edge')) {
-      return { emoji: '🌊', name: 'Edge' };
+      return {
+        icon: <div className="text-sm">🌊</div>,
+        name: 'Edge',
+        color: 'bg-cyan-100 text-cyan-700'
+      };
     } else if (ua.includes('chrome') && ua.includes('safari')) {
-      return { emoji: '🌐', name: 'Chrome' };
+      return {
+        icon: <ChromeIcon className="w-3 h-3" />,
+        name: 'Chrome',
+        color: 'bg-blue-100 text-blue-700'
+      };
     } else if (ua.includes('firefox')) {
-      return { emoji: '🦊', name: 'Firefox' };
+      return {
+        icon: <div className="text-sm">🦊</div>,
+        name: 'Firefox',
+        color: 'bg-orange-100 text-orange-700'
+      };
     } else if (ua.includes('safari') && !ua.includes('chrome')) {
-      return { emoji: '🧭', name: 'Safari' };
+      return {
+        icon: <div className="text-sm">🧭</div>,
+        name: 'Safari',
+        color: 'bg-blue-100 text-blue-700'
+      };
     } else if (ua.includes('opera') || ua.includes('opr/')) {
-      return { emoji: '🎭', name: 'Opera' };
+      return {
+        icon: <div className="text-sm">🎭</div>,
+        name: 'Opera',
+        color: 'bg-red-100 text-red-700'
+      };
     }
 
-    return { emoji: '❓', name: 'Other' };
+    return {
+      icon: <Activity className="w-3 h-3" />,
+      name: 'Other',
+      color: 'bg-gray-100 text-gray-500'
+    };
   };
 
   const sessionMap = React.useMemo(() => {
@@ -173,13 +210,13 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-500 flex items-center space-x-2">
                         <span>Page: {getPageName(event.url)}</span>
                       </div>
-                      <div className="text-xs text-gray-400 mt-1 flex items-center space-x-1">
-                        <span className="text-lg">{browserInfo.emoji}</span>
+                      <div className={`text-xs text-gray-400 mt-1 flex items-center space-x-1 px-2 py-0.5 rounded ${browserInfo.color}`}>
+                        {browserInfo.icon}
                         <span>Session #{sessionNumber}</span>
                       </div>
                     </div>
                   </div>
-                  {/* RIGHT SIDE - ONLY TIME AND DATE, NO OTHER TEXT/NUMBERS */}
+                  {/* RIGHT SIDE - ONLY TIME AND DATE */}
                   <div className="text-right flex flex-col items-end gap-1">
                     <div className="text-sm font-bold text-blue-600">
                       {formatTimeLocal(event.timestamp)}
