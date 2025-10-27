@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+import hashlib
 from app.core.database import get_db
 from app.models.event import Event
 
@@ -38,35 +39,46 @@ def get_client_ip(request: Request) -> str:
     return "unknown"
 
 
+def generate_fallback_session_id(ip_address: str, user_agent: str) -> str:
+    """
+    Generate a fallback session ID based on IP + User Agent
+    This is a backup when frontend doesn't provide session_id
+    """
+    session_string = f"{ip_address}_{user_agent}_{datetime.utcnow().date()}"
+    return hashlib.md5(session_string.encode()).hexdigest()[:16]
+
+
 @router.post("/track")
 async def track_event(request: Request, event_data: dict, db: Session = Depends(get_db)):
     """
-    Track a new event with improved session handling
+    Track a new event with professional-grade accuracy
 
-    Session IDs are now persistent and unique per browser/device.
-    The frontend generates and maintains these IDs in localStorage.
+    This endpoint is designed to work with:
+    - localStorage-based session IDs (preferred)
+    - Fallback session generation (if frontend doesn't provide)
+    - Accurate IP capture through proxies/load balancers
+    - Bot detection
     """
     try:
-        # Extract data
+        # Extract data with defaults
         site_id = event_data.get("site_id", "ghosttrack-test-dashboard")
         event_type = event_data.get("event_type", "pageview")
         url = event_data.get("url", "/")
         referrer = event_data.get("referrer")
-        user_agent = event_data.get("user_agent")
-        session_id = event_data.get("session_id", "unknown")
+        user_agent = event_data.get("user_agent") or request.headers.get("User-Agent", "Unknown")
+        session_id = event_data.get("session_id")
         is_bot = event_data.get("is_bot", False)
 
-        # Get real IP address
+        # Get real IP address (works through proxies)
         ip_address = get_client_ip(request)
 
-        # CRITICAL: Ensure session_id is persistent
-        # If session_id is still "unknown", this indicates frontend issue
-        if session_id == "unknown":
-            # Fallback: create temporary session based on IP + User Agent
-            # But this should be fixed on frontend
-            import hashlib
-            temp_session = f"{ip_address}_{user_agent}"
-            session_id = hashlib.md5(temp_session.encode()).hexdigest()[:12]
+        # CRITICAL: Handle missing session_id
+        if not session_id or session_id == "unknown" or session_id == "":
+            # Generate fallback session ID
+            session_id = generate_fallback_session_id(ip_address, user_agent)
+            print(f"⚠️  No session_id provided, generated fallback: {session_id}")
+        else:
+            print(f"✅ Received session_id: {session_id}")
 
         # Convert boolean to integer for database
         is_bot_int = 1 if is_bot else 0
@@ -88,14 +100,28 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
         db.commit()
         db.refresh(new_event)
 
+        print(f"📊 Event tracked: {event_type} | Session: {session_id} | IP: {ip_address}")
+
         return {
             "status": "success",
             "event_id": new_event.id,
             "message": "Event tracked successfully",
             "ip_captured": ip_address,
-            "session_id": session_id
+            "session_id": session_id,
+            "event_type": event_type
         }
 
     except Exception as e:
         db.rollback()
+        print(f"❌ Error tracking event: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for tracking service"""
+    return {
+        "status": "healthy",
+        "service": "event-tracking",
+        "timestamp": datetime.utcnow().isoformat()
+    }

@@ -35,14 +35,3 @@ export const threatsAPI = {
 };
 
 export default api;
-
-export const analyticsAPI = {
-  // ... existing methods ...
-
-  lookupIP: async (ipAddress) => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/ip-lookup/${ipAddress}`);
-    return response;
-  },
-
-  // ... rest of methods ...
-};

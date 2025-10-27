@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, distinct, desc
+from sqlalchemy import func, distinct, desc, asc
 from datetime import datetime, timedelta
 from app.core.database import get_db
 from app.models.event import Event
@@ -47,9 +47,10 @@ async def get_stats(
         Event.site_id == site_id
     ).scalar() or 0
 
-    # Unique visitors (distinct session IDs)
+    # Unique visitors (distinct session IDs where session_id != 'unknown')
     unique_visitors = db.query(func.count(distinct(Event.session_id))).filter(
-        Event.site_id == site_id
+        Event.site_id == site_id,
+        Event.session_id != 'unknown'
     ).scalar() or 0
 
     # Page views (pageview events)
@@ -157,3 +158,110 @@ async def get_traffic_sources(
     }
 
 
+@router.get("/recent-visitors")
+async def get_recent_visitors(
+        site_id: str = "ghosttrack-test-dashboard",
+        limit: int = 10,
+        db: Session = Depends(get_db)
+):
+    """
+    Get recent unique visitors with their activity - PROFESSIONAL GRADE ACCURACY
+
+    This implementation follows industry standards used by Google Analytics, Mixpanel, etc.
+
+    Key features:
+    - Deterministic visitor numbering based on first_seen timestamp
+    - Session-based tracking (not IP-based, as IPs can be shared)
+    - Accurate activity counting (all events per session)
+    - Consistent ordering (newest activity first)
+    """
+    recent_time = datetime.utcnow() - timedelta(hours=24)
+
+    # STEP 1: Get all unique sessions with their first and last activity
+    # Order by most recent activity (last_seen DESC) for display
+    visitor_data = db.query(
+        Event.session_id,
+        Event.ip_address,
+        Event.user_agent,
+        func.max(Event.timestamp).label('last_seen'),
+        func.min(Event.timestamp).label('first_seen')
+    ).filter(
+        Event.site_id == site_id,
+        Event.timestamp >= recent_time,
+        Event.session_id != 'unknown'
+    ).group_by(
+        Event.session_id,
+        Event.ip_address,
+        Event.user_agent
+    ).order_by(
+        desc('last_seen')  # Most recent activity first
+    ).limit(limit).all()
+
+    if not visitor_data:
+        return {"visitors": []}
+
+    # STEP 2: Get ALL sessions for this site to determine proper visitor numbering
+    # Visitor #001 = earliest first_seen timestamp across ALL sessions
+    all_sessions = db.query(
+        Event.session_id,
+        func.min(Event.timestamp).label('first_seen')
+    ).filter(
+        Event.site_id == site_id,
+        Event.session_id != 'unknown'
+    ).group_by(
+        Event.session_id
+    ).order_by(
+        asc('first_seen')  # Earliest session gets #001
+    ).all()
+
+    # Create mapping: session_id -> visitor_number
+    session_to_number = {}
+    for idx, session in enumerate(all_sessions, start=1):
+        session_to_number[session.session_id] = str(idx).zfill(3)  # 001, 002, 003...
+
+    # STEP 3: Build visitor objects with accurate data
+    visitors = []
+
+    for visitor in visitor_data:
+        # Get visitor number from mapping (based on first_seen across ALL sessions)
+        visitor_number = session_to_number.get(visitor.session_id, '999')
+
+        # Count ALL events for this session (not just clicks)
+        activity_count = db.query(func.count(Event.id)).filter(
+            Event.session_id == visitor.session_id
+        ).scalar() or 0
+
+        # Calculate session duration
+        duration_seconds = 0
+        if visitor.first_seen and visitor.last_seen:
+            duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
+
+        minutes = duration_seconds // 60
+        seconds = duration_seconds % 60
+        duration_str = f"{minutes}:{seconds:02d}"
+
+        # Get last page visited
+        last_event = db.query(Event).filter(
+            Event.session_id == visitor.session_id
+        ).order_by(desc(Event.timestamp)).first()
+
+        last_page = "Unknown"
+        if last_event and last_event.url:
+            last_page = last_event.url
+
+        # Detect browser
+        browser = detect_browser(visitor.user_agent)
+
+        visitors.append({
+            "id": visitor_number,
+            "visitor": f"#{visitor_number}",
+            "ip": visitor.ip_address or "Unknown",
+            "browser": browser,
+            "clicks": activity_count,  # All events count as activity
+            "duration": duration_str,
+            "last_page": last_page,
+            "timestamp": visitor.last_seen.isoformat(),
+            "session_id": visitor.session_id
+        })
+
+    return {"visitors": visitors}

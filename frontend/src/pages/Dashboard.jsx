@@ -6,10 +6,10 @@ import EventsChart from '../components/dashboard/EventsChart';
 import EventsFeed from '../components/dashboard/EventsFeed';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
+import IPLookup from '../components/dashboard/IPLookup';
 import { analyticsAPI } from '../services/api';
 
 const Dashboard = () => {
-  // CENTRAL SITE ID - Change this to track different sites
   const [currentSiteId, setCurrentSiteId] = useState('kayvontennis-com');
 
   const [stats, setStats] = useState({
@@ -29,7 +29,7 @@ const Dashboard = () => {
     fetchDashboardData();
     const interval = setInterval(fetchDashboardData, 10000);
     return () => clearInterval(interval);
-  }, [currentSiteId]); // Re-fetch when site changes
+  }, [currentSiteId]);
 
   const fetchDashboardData = async () => {
     try {
@@ -70,19 +70,6 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 pb-8">
-        {/* Optional: Add site selector dropdown here later */}
-        {/* <div className="mb-4">
-          <select
-            value={currentSiteId}
-            onChange={(e) => setCurrentSiteId(e.target.value)}
-            className="px-4 py-2 bg-gray-800 text-white rounded-lg"
-          >
-            <option value="kayvontennis-com">Kayvon Tennis</option>
-            <option value="courtcrate-com">Court Crate</option>
-            <option value="cyberbykayvon-com">Cyber by Kayvon</option>
-          </select>
-        </div> */}
-
         {/* First Row - Primary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
@@ -139,21 +126,22 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Latest Visits & Events Chart - Same Height Row */}
+        {/* THIRD ROW - Latest Users (LEFT) & Events Chart (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <LatestVisits siteId={currentSiteId} />
           <EventsChart data={events} />
         </div>
 
-        {/* Traffic Sources - Full Width */}
-<div className="mb-6">
-  <TrafficSources siteId={currentSiteId} />
-</div>
+        {/* FOURTH ROW - IP Tracker (LEFT) & Traffic Sources (RIGHT) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <IPLookup />
+          <TrafficSources siteId={currentSiteId} />
+        </div>
 
-{/* Recent Events - Full Width */}
-<div className="mb-6">
-  <EventsFeed events={events} />
-</div>
+        {/* FIFTH ROW - Recent Events (FULL WIDTH) */}
+        <div className="mb-6">
+          <EventsFeed events={events} />
+        </div>
       </div>
     </div>
   );
