@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Globe } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
 const TrafficSources = ({ siteId }) => {
@@ -10,7 +9,7 @@ const TrafficSources = ({ siteId }) => {
   useEffect(() => {
     if (siteId) {
       fetchTrafficSources();
-      const interval = setInterval(fetchTrafficSources, 10000);
+      const interval = setInterval(fetchTrafficSources, 15000);
       return () => clearInterval(interval);
     }
   }, [siteId]);
@@ -26,85 +25,73 @@ const TrafficSources = ({ siteId }) => {
     }
   };
 
-  const COLORS = ['#667eea', '#48bb78', '#ed8936', '#4299e1'];
+  const total = sources.reduce((sum, source) => sum + source.value, 0);
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-          <Globe className="w-6 h-6 mr-2 text-blue-500" />
+      <div className="bg-white p-4 rounded-xl shadow-lg flex flex-col" style={{ height: '280px' }}>
+        <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
           Traffic Sources
         </h3>
-        <div className="text-center py-8 text-gray-400">
-          Loading traffic data...
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-400 text-sm">Loading traffic data...</p>
         </div>
       </div>
     );
   }
 
-  const total = sources.reduce((sum, source) => sum + source.value, 0);
-
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg h-[300px] flex flex-col">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <Globe className="w-6 h-6 mr-2 text-blue-500" />
+    <div className="bg-white p-4 rounded-xl shadow-lg flex flex-col" style={{ height: '280px' }}>
+      <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center">
+        <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
         Traffic Sources
       </h3>
 
       {total === 0 ? (
-        <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
-          No traffic data available yet.
+        <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-center py-4">
+            <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="w-8 h-8 text-green-600" />
+            </div>
+            <p className="text-gray-600 text-sm font-medium mb-1">No Traffic Data Yet</p>
+            <p className="text-gray-400 text-xs">Traffic sources will appear here</p>
+          </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between flex-1">
-          {/* Pie Chart - Smaller */}
-          <div className="w-2/5">
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={sources}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={70}
-                  fill="#8884d8"
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {sources.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => `${value} visits`}
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="flex-1 space-y-2">
+          {sources.map((source, index) => {
+            const percentage = total > 0 ? ((source.value / total) * 100).toFixed(1) : 0;
 
-          {/* Legend - Horizontal Layout */}
-          <div className="w-3/5 grid grid-cols-2 gap-3">
-            {sources.map((source, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div
-                  className="w-4 h-4 rounded-sm flex-shrink-0"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-700 truncate">{source.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {source.value} ({total > 0 ? Math.round((source.value / total) * 100) : 0}%)
+            return (
+              <div key={index} className="flex items-center justify-between py-1.5">
+                <div className="flex items-center space-x-2 flex-1">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: source.color }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">{source.name}</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${percentage}%`,
+                        backgroundColor: source.color
+                      }}
+                    />
                   </div>
+                  <span className="text-sm font-semibold text-gray-800 w-12 text-right">
+                    {percentage}%
+                  </span>
+                  <span className="text-xs text-gray-500 w-10 text-right">
+                    ({source.value})
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
     </div>

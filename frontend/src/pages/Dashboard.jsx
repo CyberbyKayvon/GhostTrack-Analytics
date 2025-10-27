@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Users, Eye, Shield, Clock, FileText, MapPin, Plus } from 'lucide-react';
+import { Activity, Users, Eye, Shield } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import StatCard from '../components/common/StatCard';
-import EventsChart from '../components/dashboard/EventsChart';
 import EventsFeed from '../components/dashboard/EventsFeed';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
@@ -17,9 +16,6 @@ const Dashboard = () => {
     unique_visitors: 0,
     page_views: 0,
     bot_detections: 0,
-    avg_duration: '2m 34s',
-    add_to_cart: 0,
-    tracked_ips: 156,
     suspicious_activity: 0
   });
   const [events, setEvents] = useState([]);
@@ -43,9 +39,6 @@ const Dashboard = () => {
         unique_visitors: statsRes.data.unique_visitors || 0,
         page_views: statsRes.data.page_views || 0,
         bot_detections: statsRes.data.bot_detections || 0,
-        avg_duration: '2m 34s',
-        add_to_cart: eventsRes.data.events?.filter(e => e.event_type === 'add_to_cart').length || 0,
-        tracked_ips: 156,
         suspicious_activity: statsRes.data.suspicious_activity || 0
       });
 
@@ -70,7 +63,7 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 pb-8">
-        {/* First Row - Primary Stats */}
+        {/* ROW 1 - Primary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
             title="Total Events"
@@ -98,49 +91,16 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Second Row - Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard
-            title="Avg Visit Duration"
-            value={stats.avg_duration}
-            icon={Clock}
-            gradient="bg-gradient-to-br from-orange-500 to-orange-700"
-          />
-          <StatCard
-            title="Add to Cart"
-            value={stats.add_to_cart}
-            icon={FileText}
-            gradient="bg-gradient-to-br from-teal-500 to-teal-700"
-          />
-          <StatCard
-            title="Tracked IPs"
-            value={stats.tracked_ips}
-            icon={MapPin}
-            gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
-          />
-          <div className="bg-gradient-to-br from-gray-500 to-gray-700 p-6 rounded-xl shadow-lg flex items-center justify-between group hover:shadow-xl transition-all cursor-pointer">
-            <div className="flex-1">
-              <p className="text-white text-opacity-90 text-sm font-medium mb-1">Add Metric</p>
-              <Plus className="w-12 h-12 text-white opacity-70 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </div>
-        </div>
-
-        {/* THIRD ROW - Latest Users (LEFT) & Events Chart (RIGHT) */}
+        {/* ROW 2 - Latest Users (LEFT) & Recent Events (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <LatestVisits siteId={currentSiteId} />
-          <EventsChart data={events} />
+          <EventsFeed events={events} />
         </div>
 
-        {/* FOURTH ROW - IP Tracker (LEFT) & Traffic Sources (RIGHT) */}
+        {/* ROW 3 - IP Tracker (LEFT) & Traffic Sources (RIGHT) - SHORTER CARDS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <IPLookup />
           <TrafficSources siteId={currentSiteId} />
-        </div>
-
-        {/* FIFTH ROW - Recent Events (FULL WIDTH) */}
-        <div className="mb-6">
-          <EventsFeed events={events} />
         </div>
       </div>
     </div>

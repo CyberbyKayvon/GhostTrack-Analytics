@@ -18,6 +18,7 @@ const ChromeIcon = ({ className = "w-3 h-3" }) => (
 const LatestVisits = ({ siteId }) => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (siteId) {
@@ -29,19 +30,31 @@ const LatestVisits = ({ siteId }) => {
 
   const fetchVisitors = async () => {
     try {
+      console.log('Fetching visitors for site:', siteId);
       const response = await analyticsAPI.getRecentVisitors(siteId, 10);
-      const visitors = response.data.visitors || [];
+      console.log('API Response:', response);
 
-      const sortedVisitors = [...visitors].sort((a, b) => {
-        const numA = parseInt(String(a.id)) || 0;
-        const numB = parseInt(String(b.id)) || 0;
-        return numB - numA;
-      });
+      const visitors = response.data?.visitors || [];
+      console.log('Visitors data:', visitors);
 
-      setVisits(sortedVisitors);
+      if (visitors.length > 0) {
+        // Sort by visitor ID (descending - newest first)
+        const sortedVisitors = [...visitors].sort((a, b) => {
+          const numA = parseInt(String(a.id)) || 0;
+          const numB = parseInt(String(b.id)) || 0;
+          return numB - numA;
+        });
+
+        setVisits(sortedVisitors);
+        setError(null);
+      } else {
+        setVisits([]);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching visitors:', error);
+      setError(error.message);
       setLoading(false);
     }
   };
@@ -209,7 +222,10 @@ const LatestVisits = ({ siteId }) => {
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Users (Last 10)</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <User className="w-6 h-6 mr-2 text-blue-500" />
+          Latest Users (Last 10)
+        </h3>
         <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
           Loading visitors...
         </div>
@@ -217,13 +233,45 @@ const LatestVisits = ({ siteId }) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <User className="w-6 h-6 mr-2 text-blue-500" />
+          Latest Users (Last 10)
+        </h3>
+        <div className="text-center py-8 flex-1 flex items-center justify-center">
+          <div>
+            <p className="text-red-500 font-medium mb-2">Error loading visitors</p>
+            <p className="text-gray-400 text-sm">{error}</p>
+            <button
+              onClick={fetchVisitors}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">👥 Latest Users (Last 10)</h3>
+      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <User className="w-6 h-6 mr-2 text-blue-500" />
+        Latest Users (Last 10)
+      </h3>
 
       {visits.length === 0 ? (
         <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
-          No visitors yet. Tracking will begin automatically.
+          <div>
+            <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+              <User className="w-10 h-10 text-blue-600" />
+            </div>
+            <p className="text-gray-600 font-medium mb-2">No visitors yet</p>
+            <p className="text-gray-400 text-sm">Tracking will begin automatically when users visit your site</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
@@ -236,7 +284,7 @@ const LatestVisits = ({ siteId }) => {
                 key={index}
                 className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
               >
-                {/* Row 1: ONLY Visitor ID on LEFT, IP + Location + Browser on RIGHT */}
+                {/* Row 1: Visitor ID on LEFT, IP + Location + Browser on RIGHT */}
                 <div className="flex items-center justify-between mb-3">
                   {/* LEFT: Just the ID */}
                   <div className="flex items-center space-x-2">
