@@ -10,28 +10,28 @@ const api = axios.create({
 });
 
 export const analyticsAPI = {
-  getStats: (siteId = 'ghosttrack-test-dashboard') =>
+  getStats: (siteId = 'kayvontennis-com') =>
     api.get(`/analytics/stats?site_id=${siteId}`),
 
-  getEvents: (siteId, limit = 50) =>
+  getEvents: (siteId = 'kayvontennis-com', limit = 50) =>
     api.get(`/analytics/events?site_id=${siteId}&limit=${limit}`),
 
   getEventsByType: (siteId, startDate, endDate) =>
     api.get(`/analytics/events/by-type?site_id=${siteId}&start_date=${startDate}&end_date=${endDate}`),
 
-  getTrafficSources: (siteId = 'ghosttrack-test-dashboard') =>
+  getTrafficSources: (siteId = 'kayvontennis-com') =>
     api.get(`/analytics/traffic-sources?site_id=${siteId}`),
 
-  getRecentVisitors: (siteId = 'ghosttrack-test-dashboard', limit = 10) =>
+  getRecentVisitors: (siteId = 'kayvontennis-com', limit = 10) =>
     api.get(`/analytics/recent-visitors?site_id=${siteId}&limit=${limit}`),
 };
 
 
 export const threatsAPI = {
-  getAlerts: (siteId) =>
+  getAlerts: (siteId = 'kayvontennis-com') =>
     api.get(`/threats/alerts?site_id=${siteId}`),
 
-  getSuspiciousActivity: (siteId) =>
+  getSuspiciousActivity: (siteId = 'kayvontennis-com') =>
     api.get(`/threats/suspicious?site_id=${siteId}`),
 };
 

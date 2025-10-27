@@ -31,9 +31,9 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const [statsRes, eventsRes] = await Promise.all([
-        analyticsAPI.getStats(),
-        analyticsAPI.getEvents('ghosttrack-test-dashboard', 50)
-      ]);
+        analyticsAPI.getStats('kayvontennis-com'),
+        analyticsAPI.getEvents('kayvontennis-com', 50)
+      ]);;
 
       setStats({
         total_events: statsRes.data.total_events || 0,
