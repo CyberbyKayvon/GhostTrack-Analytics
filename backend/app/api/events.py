@@ -16,8 +16,7 @@ class EventCreate(BaseModel):
     referrer: Optional[str] = None
     user_agent: Optional[str] = None
     ip_address: Optional[str] = None
-    visitor_id: Optional[str] = None  # PERSISTENT ID
-    session_id: Optional[str] = None  # PER-SESSION ID
+    session_id: Optional[str] = None
     is_bot: Optional[bool] = False
 
 
@@ -42,7 +41,7 @@ def get_client_ip(request: Request) -> str:
 @router.post("/track")
 async def track_event(request: Request, event_data: dict, db: Session = Depends(get_db)):
     """
-    Track a new event with both visitor_id (persistent) and session_id (per-session)
+    Track a new event
     """
     try:
         # Extract data
@@ -51,8 +50,7 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
         url = event_data.get("url", "/")
         referrer = event_data.get("referrer")
         user_agent = event_data.get("user_agent")
-        visitor_id = event_data.get("visitor_id", "unknown")  # PERSISTENT
-        session_id = event_data.get("session_id", "unknown")  # PER-SESSION
+        session_id = event_data.get("session_id", "unknown")
         is_bot = event_data.get("is_bot", False)
 
         # Get real IP address
@@ -61,7 +59,7 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
         # Convert boolean to integer for database
         is_bot_int = 1 if is_bot else 0
 
-        # Create event with BOTH IDs
+        # Create event
         new_event = Event(
             site_id=site_id,
             event_type=event_type,
@@ -69,8 +67,7 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
             referrer=referrer,
             user_agent=user_agent,
             ip_address=ip_address,
-            visitor_id=visitor_id,  # Store persistent visitor ID
-            session_id=session_id,  # Store per-session ID
+            session_id=session_id,
             is_bot=is_bot_int,
             timestamp=datetime.utcnow()
         )
@@ -83,9 +80,7 @@ async def track_event(request: Request, event_data: dict, db: Session = Depends(
             "status": "success",
             "event_id": new_event.id,
             "message": "Event tracked successfully",
-            "ip_captured": ip_address,
-            "visitor_id": visitor_id,
-            "session_id": session_id
+            "ip_captured": ip_address
         }
 
     except Exception as e:

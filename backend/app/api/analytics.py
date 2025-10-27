@@ -49,8 +49,7 @@ async def get_stats(
 
     # Unique visitors (distinct session IDs)
     unique_visitors = db.query(func.count(distinct(Event.session_id))).filter(
-        Event.site_id == site_id,
-        Event.session_id != 'unknown'
+        Event.site_id == site_id
     ).scalar() or 0
 
     # Page views (pageview events)
@@ -165,23 +164,28 @@ async def get_recent_visitors(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent unique sessions (last 24 hours)
-    Groups by session_id to show unique visits
+    Get recent unique visitors with their activity
+    Returns visitors with sequential numbering (001-010)
+    Newest visitors get highest numbers
+    NOW COUNTS ALL EVENTS AS ACTIVITY (not just clicks)
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
-    # Get unique sessions from last 24 hours
+    # Get visitor data ordered by most recent first
     visitor_data = db.query(
         Event.session_id,
+        Event.ip_address,
+        Event.user_agent,
         func.max(Event.timestamp).label('last_seen'),
-        func.min(Event.timestamp).label('first_seen'),
-        func.count(Event.id).label('total_actions')
+        func.min(Event.timestamp).label('first_seen')
     ).filter(
         Event.site_id == site_id,
         Event.timestamp >= recent_time,
         Event.session_id != 'unknown'
     ).group_by(
-        Event.session_id  # Group ONLY by session_id for uniqueness
+        Event.session_id,
+        Event.ip_address,
+        Event.user_agent
     ).order_by(
         desc('last_seen')  # Most recent first
     ).limit(limit).all()
@@ -189,20 +193,18 @@ async def get_recent_visitors(
     visitors = []
     total_visitors = len(visitor_data)
 
+    # Assign sequential numbers with newest visitor getting highest number
     for idx, visitor in enumerate(visitor_data):
-        # Sequential numbering: newest = highest
+        # Calculate visitor number: newest visitor gets limit, oldest gets 1
         visitor_number = total_visitors - idx
-        visitor_number_padded = str(visitor_number).zfill(3)
+        visitor_number_padded = str(visitor_number).zfill(3)  # Format as 001, 002, 003...
 
-        # Get most recent event for this session
-        last_event = db.query(Event).filter(
+        # Count ALL events for this session (activity count)
+        # This includes: clicks, pageviews, add_to_cart, etc.
+        activity_count = db.query(func.count(Event.id)).filter(
             Event.session_id == visitor.session_id
-        ).order_by(desc(Event.timestamp)).first()
+        ).scalar() or 0
 
-        if not last_event:
-            continue
-
-        # Calculate duration
         duration_seconds = 0
         if visitor.first_seen and visitor.last_seen:
             duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
@@ -211,17 +213,26 @@ async def get_recent_visitors(
         seconds = duration_seconds % 60
         duration_str = f"{minutes}:{seconds:02d}"
 
+        last_event = db.query(Event).filter(
+            Event.session_id == visitor.session_id
+        ).order_by(desc(Event.timestamp)).first()
+
+        # Return full URL, let frontend handle formatting
+        last_page = "Unknown"
+        if last_event and last_event.url:
+            last_page = last_event.url
+
         # Detect browser
-        browser = detect_browser(last_event.user_agent)
+        browser = detect_browser(visitor.user_agent)
 
         visitors.append({
             "id": visitor_number_padded,
             "visitor": f"#{visitor_number_padded}",
-            "ip": last_event.ip_address or "Unknown",
+            "ip": visitor.ip_address or "Unknown",
             "browser": browser,
-            "clicks": visitor.total_actions,
+            "clicks": activity_count,  # All events count as activity
             "duration": duration_str,
-            "last_page": last_event.url or "Unknown",
+            "last_page": last_page,
             "timestamp": visitor.last_seen.isoformat(),
             "session_id": visitor.session_id
         })

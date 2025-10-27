@@ -13,8 +13,7 @@ class Event(Base):
     referrer = Column(String, nullable=True)
     user_agent = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
-    visitor_id = Column(String, index=True, nullable=True)  # NEW: Persistent visitor ID
-    session_id = Column(String, index=True, nullable=True)  # Per-session ID
+    session_id = Column(String, index=True, nullable=True)
     is_bot = Column(Integer, default=0)  # 0 or 1
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
