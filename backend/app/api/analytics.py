@@ -47,10 +47,10 @@ async def get_stats(
         Event.site_id == site_id
     ).scalar() or 0
 
-    # Unique visitors (distinct visitor IDs - PERSISTENT)
-    unique_visitors = db.query(func.count(distinct(Event.visitor_id))).filter(
+    # Unique visitors (distinct session IDs)
+    unique_visitors = db.query(func.count(distinct(Event.session_id))).filter(
         Event.site_id == site_id,
-        Event.visitor_id != 'unknown'
+        Event.session_id != 'unknown'
     ).scalar() or 0
 
     # Page views (pageview events)
@@ -100,7 +100,6 @@ async def get_events(
                 "event_type": event.event_type,
                 "url": event.url,
                 "timestamp": event.timestamp.isoformat(),
-                "visitor_id": event.visitor_id,
                 "session_id": event.session_id,
                 "is_bot": event.is_bot,
                 "user_agent": event.user_agent
@@ -166,86 +165,65 @@ async def get_recent_visitors(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent UNIQUE users with PERSISTENT visitor IDs
-    Each visitor appears ONCE, even if they had multiple sessions
-    Shows their TOTAL activity across all time
+    Get recent unique sessions (last 24 hours)
+    Groups by session_id to show unique visits
     """
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
-    # Get ALL visitors for this site to assign persistent numbers
-    all_visitors = db.query(
-        Event.visitor_id,
-        func.min(Event.timestamp).label('first_seen_ever')
-    ).filter(
-        Event.site_id == site_id,
-        Event.visitor_id != 'unknown',
-        Event.visitor_id.isnot(None)
-    ).group_by(
-        Event.visitor_id
-    ).order_by(
-        'first_seen_ever'  # Oldest visitor gets #001
-    ).all()
-
-    # Create visitor ID to number mapping (PERSISTENT)
-    visitor_number_map = {}
-    for idx, visitor_record in enumerate(all_visitors):
-        visitor_number = idx + 1
-        visitor_number_map[visitor_record.visitor_id] = str(visitor_number).zfill(3)
-
-    # Get recent unique visitors (last 24 hours) - ONE ROW PER VISITOR
+    # Get unique sessions from last 24 hours
     visitor_data = db.query(
-        Event.visitor_id,
+        Event.session_id,
         func.max(Event.timestamp).label('last_seen'),
-        func.min(Event.timestamp).label('first_seen_ever'),
+        func.min(Event.timestamp).label('first_seen'),
         func.count(Event.id).label('total_actions')
     ).filter(
         Event.site_id == site_id,
         Event.timestamp >= recent_time,
-        Event.visitor_id != 'unknown',
-        Event.visitor_id.isnot(None)
+        Event.session_id != 'unknown'
     ).group_by(
-        Event.visitor_id  # ONLY group by visitor_id for true uniqueness
+        Event.session_id  # Group ONLY by session_id for uniqueness
     ).order_by(
-        desc('last_seen')  # Most recent activity first
+        desc('last_seen')  # Most recent first
     ).limit(limit).all()
 
     visitors = []
+    total_visitors = len(visitor_data)
 
-    for visitor in visitor_data:
-        # Get persistent visitor number
-        visitor_number_padded = visitor_number_map.get(visitor.visitor_id, '???')
+    for idx, visitor in enumerate(visitor_data):
+        # Sequential numbering: newest = highest
+        visitor_number = total_visitors - idx
+        visitor_number_padded = str(visitor_number).zfill(3)
 
-        # Get most recent event for this visitor to get IP, browser, last page
+        # Get most recent event for this session
         last_event = db.query(Event).filter(
-            Event.visitor_id == visitor.visitor_id
+            Event.session_id == visitor.session_id
         ).order_by(desc(Event.timestamp)).first()
 
         if not last_event:
             continue
 
-        # Calculate duration for most recent session
+        # Calculate duration
         duration_seconds = 0
-        if visitor.first_seen_ever and visitor.last_seen:
-            duration_seconds = int((visitor.last_seen - visitor.first_seen_ever).total_seconds())
+        if visitor.first_seen and visitor.last_seen:
+            duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
 
         minutes = duration_seconds // 60
         seconds = duration_seconds % 60
         duration_str = f"{minutes}:{seconds:02d}"
 
-        # Detect browser from most recent user agent
+        # Detect browser
         browser = detect_browser(last_event.user_agent)
 
         visitors.append({
-            "id": visitor_number_padded,  # PERSISTENT NUMBER
+            "id": visitor_number_padded,
             "visitor": f"#{visitor_number_padded}",
             "ip": last_event.ip_address or "Unknown",
             "browser": browser,
-            "clicks": visitor.total_actions,  # Total actions
+            "clicks": visitor.total_actions,
             "duration": duration_str,
             "last_page": last_event.url or "Unknown",
             "timestamp": visitor.last_seen.isoformat(),
-            "visitor_id": visitor.visitor_id,
-            "session_id": last_event.session_id
+            "session_id": visitor.session_id
         })
 
     return {"visitors": visitors}
