@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer, MousePointer, MapPin, Globe, Smartphone, Tablet, Monitor } from 'lucide-react';
+import { User, Clock, Timer, MousePointer, MapPin, Globe, Smartphone, Tablet, Monitor, Instagram } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 
 // Chrome SVG Icon Component
 const ChromeIcon = ({ className = "w-3 h-3" }) => (
@@ -13,6 +13,18 @@ const ChromeIcon = ({ className = "w-3 h-3" }) => (
     <path d="M2 12C2 6.47715 6.47715 2 12 2V6C8.68629 6 6 8.68629 6 12H2Z" fill="#FBBC04"/>
     <path d="M12 18V22C6.47715 22 2 17.5228 2 12H6C6 15.3137 8.68629 18 12 18Z" fill="#34A853"/>
     <path d="M22 12C22 17.5228 17.5228 22 12 22V18C15.3137 18 18 15.3137 18 12H22Z" fill="#4285F4"/>
+  </svg>
+);
+
+// Safari SVG Icon Component
+const SafariIcon = ({ className = "w-3 h-3" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="#0066CC" strokeWidth="1.5" fill="white"/>
+    <path d="M12 3L12.5 5.5M12 21L11.5 18.5M21 12L18.5 12.5M3 12L5.5 11.5" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
+    <path d="M17.5 6.5L16 8M6.5 17.5L8 16M17.5 17.5L16 16M6.5 6.5L8 8" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
+    <path d="M12 12L15 9L12 15L9 15L12 12Z" fill="#FF0000"/>
+    <path d="M12 12L9 15L12 9L15 9L12 12Z" fill="#0066CC"/>
+    <circle cx="12" cy="12" r="1" fill="#0066CC"/>
   </svg>
 );
 
@@ -59,13 +71,23 @@ const LatestVisits = ({ siteId }) => {
     }
   };
 
-  // IMPROVED: Use ua-parser-js for accurate browser and device detection
-  const getBrowserAndDeviceInfo = (userAgent) => {
+  // IMPROVED: Detect Instagram in-app browser and accurate mobile detection
+  const getBrowserAndDeviceInfo = (visit) => {
+    const userAgent = visit.user_agent || visit.browser_user_agent || '';
+    const storedBrowser = visit.browser || 'Unknown';
+
+    console.log('Processing visit:', {
+      id: visit.id,
+      ip: visit.ip,
+      userAgent: userAgent,
+      storedBrowser
+    });
+
     if (!userAgent) {
       return {
-        browserIcon: <div className="text-sm">❓</div>,
+        browserIcon: <Monitor className="w-3 h-3 text-gray-500" />,
         browserColor: 'bg-gray-100 text-gray-500',
-        browserName: 'Unknown',
+        browserName: storedBrowser,
         deviceIcon: <Monitor className="w-3 h-3" />,
         deviceType: 'desktop'
       };
@@ -74,13 +96,23 @@ const LatestVisits = ({ siteId }) => {
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
 
-    const browserName = result.browser.name || 'Unknown';
-    const deviceType = result.device.type || 'desktop'; // mobile, tablet, or desktop
+    console.log('Parsed result:', result);
+
+    let browserName = result.browser.name || storedBrowser || 'Unknown';
+    let deviceType = result.device.type || 'desktop';
+
+    // SPECIAL: Detect Instagram in-app browser
+    if (userAgent.includes('Instagram') || storedBrowser.toLowerCase().includes('instagram')) {
+      browserName = 'Instagram';
+    }
 
     // Browser icon based on name
     let browserIcon, browserColor;
 
-    if (browserName.toLowerCase().includes('edge')) {
+    if (browserName === 'Instagram') {
+      browserIcon = <Instagram className="w-3 h-3" />;
+      browserColor = 'bg-pink-100 text-pink-700';
+    } else if (browserName.toLowerCase().includes('edge')) {
       browserIcon = <div className="text-sm">🌊</div>;
       browserColor = 'bg-cyan-100 text-cyan-700';
     } else if (browserName.toLowerCase().includes('chrome')) {
@@ -90,7 +122,7 @@ const LatestVisits = ({ siteId }) => {
       browserIcon = <div className="text-sm">🦊</div>;
       browserColor = 'bg-orange-100 text-orange-700';
     } else if (browserName.toLowerCase().includes('safari')) {
-      browserIcon = <div className="text-sm">🧭</div>;
+      browserIcon = <SafariIcon className="w-3 h-3" />;
       browserColor = 'bg-blue-100 text-blue-700';
     } else if (browserName.toLowerCase().includes('opera')) {
       browserIcon = <div className="text-sm">🎭</div>;
@@ -99,7 +131,7 @@ const LatestVisits = ({ siteId }) => {
       browserIcon = <div className="text-sm">🦁</div>;
       browserColor = 'bg-purple-100 text-purple-700';
     } else {
-      browserIcon = <div className="text-sm">❓</div>;
+      browserIcon = <Monitor className="w-3 h-3" />;
       browserColor = 'bg-gray-100 text-gray-500';
     }
 
@@ -279,7 +311,7 @@ const LatestVisits = ({ siteId }) => {
       ) : (
         <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
           {visits.map((visit, index) => {
-            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserAndDeviceInfo(visit.user_agent);
+            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserAndDeviceInfo(visit);
             const region = getRegion(visit);
 
             return (
@@ -287,20 +319,19 @@ const LatestVisits = ({ siteId }) => {
                 key={index}
                 className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
               >
-                {/* Row 1: Visitor ID on LEFT, IP + Location + Browser + Device on RIGHT */}
+                {/* Row 1: Visitor ID + IP on LEFT, Location + Browser + Device on RIGHT */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <div className="bg-blue-500 p-1.5 rounded-full">
                       <User className="w-3 h-3 text-white" />
                     </div>
                     <span className="font-bold text-gray-800">#{visit.id}</span>
+                    <span className="text-gray-400 text-xs">•</span>
+                    <span className="text-gray-700 text-xs font-mono">{visit.ip}</span>
                   </div>
 
-                  {/* RIGHT: IP + Location + Browser + Device */}
+                  {/* RIGHT: Location + Browser + Device */}
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-500 text-xs font-medium">IP:</span>
-                    <span className="text-gray-700 text-sm font-mono">{visit.ip}</span>
-
                     {region && (
                       <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                         region === 'Local'
@@ -321,13 +352,13 @@ const LatestVisits = ({ siteId }) => {
                       </div>
                     )}
 
-                    {/* IMPROVED: Browser Badge */}
+                    {/* Browser Badge with ICON */}
                     <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserColor}`}>
                       {browserIcon}
                       <span>{browserName}</span>
                     </div>
 
-                    {/* IMPROVED: Device Badge (NEW!) */}
+                    {/* Device Badge */}
                     <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
                       {deviceIcon}
                       <span className="capitalize">{deviceType}</span>
