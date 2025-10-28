@@ -220,28 +220,43 @@ const EventsFeed = ({ events }) => {
     };
   };
 
-  // IMPROVED: Get IP from multiple possible fields
+  // IMPROVED: Get IP from multiple possible fields with extensive logging
   const getIP = (event) => {
-    // Try multiple possible field names
-    const ip = event.ip || event.ip_address || event.visitor_ip || event.client_ip;
+    // Try ALL possible field names
+    const ip = event.ip ||
+               event.ip_address ||
+               event.visitor_ip ||
+               event.client_ip ||
+               event.ipAddress ||
+               event.visitor?.ip ||
+               event.visitor?.ip_address;
 
-    console.log('Event IP lookup:', {
+    // Enhanced logging - shows ALL event fields
+    console.log('=== EVENT IP DEBUG ===');
+    console.log('Full event object:', event);
+    console.log('Event IP lookup results:', {
       event_id: event.id || 'unknown',
-      ip: ip,
-      event_ip: event.ip,
-      event_ip_address: event.ip_address,
-      event_visitor_ip: event.visitor_ip,
-      event_client_ip: event.client_ip
+      FOUND_IP: ip,
+      tried_ip: event.ip,
+      tried_ip_address: event.ip_address,
+      tried_visitor_ip: event.visitor_ip,
+      tried_client_ip: event.client_ip,
+      tried_ipAddress: event.ipAddress,
+      tried_visitor_obj: event.visitor,
+      all_event_keys: Object.keys(event)
     });
 
-    // If still no IP, try to extract from referrer or other metadata
+    // If still no IP, try to extract from event_data or metadata
     if (!ip && event.event_data) {
       try {
         const data = typeof event.event_data === 'string'
           ? JSON.parse(event.event_data)
           : event.event_data;
-        return data.ip || data.client_ip || 'N/A';
+        const extractedIp = data.ip || data.client_ip || data.ip_address;
+        console.log('Tried event_data:', extractedIp);
+        return extractedIp || 'N/A';
       } catch (e) {
+        console.log('Error parsing event_data:', e);
         return 'N/A';
       }
     }
@@ -320,12 +335,14 @@ const EventsFeed = ({ events }) => {
                           Session #{sessionNumber}
                         </div>
                       </div>
-                      {/* IP Address on separate line */}
-                      {ipAddress && ipAddress !== 'N/A' && (
-                        <div className="text-xs text-indigo-700 font-mono bg-indigo-50 px-2 py-1 rounded inline-block border border-indigo-200 font-semibold">
-                          🌐 {ipAddress}
-                        </div>
-                      )}
+                      {/* IP Address - ALWAYS SHOWN (even if N/A for debugging) */}
+                      <div className={`text-xs font-mono px-2 py-1 rounded inline-block border font-semibold ${
+                        ipAddress && ipAddress !== 'N/A'
+                          ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                          : 'text-gray-500 bg-gray-50 border-gray-200'
+                      }`}>
+                        🌐 IP: {ipAddress}
+                      </div>
                     </div>
                   </div>
                   {/* RIGHT SIDE - TIME AND DATE ONLY */}
