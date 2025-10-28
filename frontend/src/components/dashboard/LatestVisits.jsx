@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer, MousePointer, MapPin, Globe } from 'lucide-react';
+import { User, Clock, Timer, MousePointer, MapPin, Globe, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
+import UAParser from 'ua-parser-js';
 
 // Chrome SVG Icon Component
 const ChromeIcon = ({ className = "w-3 h-3" }) => (
@@ -38,7 +39,6 @@ const LatestVisits = ({ siteId }) => {
       console.log('Visitors data:', visitors);
 
       if (visitors.length > 0) {
-        // Sort by visitor ID (descending - newest first)
         const sortedVisitors = [...visitors].sort((a, b) => {
           const numA = parseInt(String(a.id)) || 0;
           const numB = parseInt(String(b.id)) || 0;
@@ -59,56 +59,67 @@ const LatestVisits = ({ siteId }) => {
     }
   };
 
-  const getBrowserIcon = (browser) => {
-    const icons = {
-      'Chrome': {
-        icon: <ChromeIcon className="w-3 h-3" />,
-        color: 'bg-blue-100 text-blue-700',
-        name: 'Chrome'
-      },
-      'Firefox': {
-        icon: <div className="text-sm">🦊</div>,
-        color: 'bg-orange-100 text-orange-700',
-        name: 'Firefox'
-      },
-      'Safari': {
-        icon: <div className="text-sm">🧭</div>,
-        color: 'bg-blue-100 text-blue-700',
-        name: 'Safari'
-      },
-      'Edge': {
-        icon: <div className="text-sm">🌊</div>,
-        color: 'bg-cyan-100 text-cyan-700',
-        name: 'Edge'
-      },
-      'Opera': {
-        icon: <div className="text-sm">🎭</div>,
-        color: 'bg-red-100 text-red-700',
-        name: 'Opera'
-      },
-      'Brave': {
-        icon: <div className="text-sm">🦁</div>,
-        color: 'bg-purple-100 text-purple-700',
-        name: 'Brave'
-      },
-      'IE': {
-        icon: <div className="text-sm">💤</div>,
-        color: 'bg-gray-100 text-gray-700',
-        name: 'IE'
-      },
-      'Other': {
-        icon: <div className="text-sm">❓</div>,
-        color: 'bg-gray-100 text-gray-500',
-        name: 'Other'
-      },
-      'Unknown': {
-        icon: <div className="text-sm">❓</div>,
-        color: 'bg-gray-100 text-gray-500',
-        name: 'Unknown'
-      }
-    };
+  // IMPROVED: Use ua-parser-js for accurate browser and device detection
+  const getBrowserAndDeviceInfo = (userAgent) => {
+    if (!userAgent) {
+      return {
+        browserIcon: <div className="text-sm">❓</div>,
+        browserColor: 'bg-gray-100 text-gray-500',
+        browserName: 'Unknown',
+        deviceIcon: <Monitor className="w-3 h-3" />,
+        deviceType: 'desktop'
+      };
+    }
 
-    return icons[browser] || icons['Unknown'];
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
+
+    const browserName = result.browser.name || 'Unknown';
+    const deviceType = result.device.type || 'desktop'; // mobile, tablet, or desktop
+
+    // Browser icon based on name
+    let browserIcon, browserColor;
+
+    if (browserName.toLowerCase().includes('edge')) {
+      browserIcon = <div className="text-sm">🌊</div>;
+      browserColor = 'bg-cyan-100 text-cyan-700';
+    } else if (browserName.toLowerCase().includes('chrome')) {
+      browserIcon = <ChromeIcon className="w-3 h-3" />;
+      browserColor = 'bg-blue-100 text-blue-700';
+    } else if (browserName.toLowerCase().includes('firefox')) {
+      browserIcon = <div className="text-sm">🦊</div>;
+      browserColor = 'bg-orange-100 text-orange-700';
+    } else if (browserName.toLowerCase().includes('safari')) {
+      browserIcon = <div className="text-sm">🧭</div>;
+      browserColor = 'bg-blue-100 text-blue-700';
+    } else if (browserName.toLowerCase().includes('opera')) {
+      browserIcon = <div className="text-sm">🎭</div>;
+      browserColor = 'bg-red-100 text-red-700';
+    } else if (browserName.toLowerCase().includes('brave')) {
+      browserIcon = <div className="text-sm">🦁</div>;
+      browserColor = 'bg-purple-100 text-purple-700';
+    } else {
+      browserIcon = <div className="text-sm">❓</div>;
+      browserColor = 'bg-gray-100 text-gray-500';
+    }
+
+    // Device icon based on type
+    let deviceIcon;
+    if (deviceType === 'mobile') {
+      deviceIcon = <Smartphone className="w-3 h-3" />;
+    } else if (deviceType === 'tablet') {
+      deviceIcon = <Tablet className="w-3 h-3" />;
+    } else {
+      deviceIcon = <Monitor className="w-3 h-3" />;
+    }
+
+    return {
+      browserIcon,
+      browserColor,
+      browserName,
+      deviceIcon,
+      deviceType
+    };
   };
 
   const formatDuration = (durationStr) => {
@@ -183,37 +194,29 @@ const LatestVisits = ({ siteId }) => {
       const url = new URL(pageUrl);
       let path = url.pathname;
 
-      // Remove leading/trailing slashes
       path = path.replace(/^\/+|\/+$/g, '');
 
-      // If empty (homepage), return domain
       if (!path) {
         return url.hostname.replace('www.', '');
       }
 
-      // Get just the page name (last segment)
       const segments = path.split('/');
       let pageName = segments[segments.length - 1];
 
-      // Remove file extensions
       pageName = pageName.replace(/\.(html|htm|php|aspx)$/i, '');
 
-      // If no page name, use last meaningful segment
       if (!pageName && segments.length > 1) {
         pageName = segments[segments.length - 2];
       }
 
-      // Capitalize first letter
       pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
 
-      // Truncate if too long
       if (pageName.length > 25) {
         pageName = pageName.substring(0, 22) + '...';
       }
 
       return pageName || 'Homepage';
     } catch (e) {
-      // If URL parsing fails, just clean up the string
       const cleaned = pageUrl.split('/').pop()?.replace(/\.(html|htm)$/i, '') || 'Homepage';
       return cleaned.length > 25 ? cleaned.substring(0, 22) + '...' : cleaned;
     }
@@ -276,7 +279,7 @@ const LatestVisits = ({ siteId }) => {
       ) : (
         <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
           {visits.map((visit, index) => {
-            const browserInfo = getBrowserIcon(visit.browser || 'Unknown');
+            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserAndDeviceInfo(visit.user_agent);
             const region = getRegion(visit);
 
             return (
@@ -284,9 +287,8 @@ const LatestVisits = ({ siteId }) => {
                 key={index}
                 className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
               >
-                {/* Row 1: Visitor ID on LEFT, IP + Location + Browser on RIGHT */}
+                {/* Row 1: Visitor ID on LEFT, IP + Location + Browser + Device on RIGHT */}
                 <div className="flex items-center justify-between mb-3">
-                  {/* LEFT: Just the ID */}
                   <div className="flex items-center space-x-2">
                     <div className="bg-blue-500 p-1.5 rounded-full">
                       <User className="w-3 h-3 text-white" />
@@ -294,7 +296,7 @@ const LatestVisits = ({ siteId }) => {
                     <span className="font-bold text-gray-800">#{visit.id}</span>
                   </div>
 
-                  {/* RIGHT: IP + Location Badge + Browser Badge */}
+                  {/* RIGHT: IP + Location + Browser + Device */}
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500 text-xs font-medium">IP:</span>
                     <span className="text-gray-700 text-sm font-mono">{visit.ip}</span>
@@ -319,9 +321,16 @@ const LatestVisits = ({ siteId }) => {
                       </div>
                     )}
 
-                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserInfo.color}`}>
-                      {browserInfo.icon}
-                      <span>{browserInfo.name}</span>
+                    {/* IMPROVED: Browser Badge */}
+                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserColor}`}>
+                      {browserIcon}
+                      <span>{browserName}</span>
+                    </div>
+
+                    {/* IMPROVED: Device Badge (NEW!) */}
+                    <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                      {deviceIcon}
+                      <span className="capitalize">{deviceType}</span>
                     </div>
                   </div>
                 </div>

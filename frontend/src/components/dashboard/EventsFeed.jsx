@@ -1,5 +1,6 @@
 import React from 'react';
-import { Activity, MousePointer, Eye, ShoppingCart, AlertTriangle, Shield, Search } from 'lucide-react';
+import { Activity, MousePointer, Eye, ShoppingCart, AlertTriangle, Shield, Search, Smartphone, Tablet, Monitor } from 'lucide-react';
+import UAParser from 'ua-parser-js';
 
 // Chrome SVG Icon Component
 const ChromeIcon = ({ className = "w-4 h-4" }) => (
@@ -64,13 +65,10 @@ const EventsFeed = ({ events }) => {
 
   const formatTimeLocal = (timestamp) => {
     try {
-      // Handle UTC conversion properly
       let date;
-
       if (timestamp.endsWith('Z') || timestamp.includes('+')) {
         date = new Date(timestamp);
       } else {
-        // Assume UTC and append Z
         date = new Date(timestamp + 'Z');
       }
 
@@ -92,7 +90,6 @@ const EventsFeed = ({ events }) => {
   const formatDateLocal = (timestamp) => {
     try {
       let date;
-
       if (timestamp.endsWith('Z') || timestamp.includes('+')) {
         date = new Date(timestamp);
       } else {
@@ -118,55 +115,79 @@ const EventsFeed = ({ events }) => {
     return pageName.replace('.html', '');
   };
 
-  const detectBrowser = (userAgent) => {
-    if (!userAgent) return { icon: <Activity className="w-3 h-3" />, name: 'Unknown', color: 'bg-gray-100 text-gray-500' };
-
-    const ua = userAgent.toLowerCase();
-
-    if (ua.includes('edg/') || ua.includes('edge')) {
+  // IMPROVED: Use ua-parser-js for accurate browser and device detection
+  const detectBrowserAndDevice = (userAgent) => {
+    if (!userAgent) {
       return {
-        icon: <div className="text-sm">🌊</div>,
-        name: 'Edge',
-        color: 'bg-cyan-100 text-cyan-700'
-      };
-    } else if (ua.includes('chrome') && ua.includes('safari')) {
-      return {
-        icon: <ChromeIcon className="w-3 h-3" />,
-        name: 'Chrome',
-        color: 'bg-blue-100 text-blue-700'
-      };
-    } else if (ua.includes('firefox')) {
-      return {
-        icon: <div className="text-sm">🦊</div>,
-        name: 'Firefox',
-        color: 'bg-orange-100 text-orange-700'
-      };
-    } else if (ua.includes('safari') && !ua.includes('chrome')) {
-      return {
-        icon: <div className="text-sm">🧭</div>,
-        name: 'Safari',
-        color: 'bg-blue-100 text-blue-700'
-      };
-    } else if (ua.includes('opera') || ua.includes('opr/')) {
-      return {
-        icon: <div className="text-sm">🎭</div>,
-        name: 'Opera',
-        color: 'bg-red-100 text-red-700'
+        browserIcon: <Activity className="w-3 h-3" />,
+        browserName: 'Unknown',
+        browserColor: 'bg-gray-100 text-gray-500',
+        deviceIcon: null,
+        deviceType: 'Unknown'
       };
     }
 
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
+
+    const browserName = result.browser.name || 'Unknown';
+    const deviceType = result.device.type || 'desktop'; // mobile, tablet, or desktop
+
+    // Get browser icon
+    let browserIcon, browserColor;
+
+    if (browserName.toLowerCase().includes('edge')) {
+      browserIcon = <div className="text-sm">🌊</div>;
+      browserColor = 'bg-cyan-100 text-cyan-700';
+    } else if (browserName.toLowerCase().includes('chrome')) {
+      browserIcon = <ChromeIcon className="w-3 h-3" />;
+      browserColor = 'bg-blue-100 text-blue-700';
+    } else if (browserName.toLowerCase().includes('firefox')) {
+      browserIcon = <div className="text-sm">🦊</div>;
+      browserColor = 'bg-orange-100 text-orange-700';
+    } else if (browserName.toLowerCase().includes('safari')) {
+      browserIcon = <div className="text-sm">🧭</div>;
+      browserColor = 'bg-blue-100 text-blue-700';
+    } else if (browserName.toLowerCase().includes('opera')) {
+      browserIcon = <div className="text-sm">🎭</div>;
+      browserColor = 'bg-red-100 text-red-700';
+    } else {
+      browserIcon = <Activity className="w-3 h-3" />;
+      browserColor = 'bg-gray-100 text-gray-500';
+    }
+
+    // Get device icon based on type
+    let deviceIcon;
+    if (deviceType === 'mobile') {
+      deviceIcon = <Smartphone className="w-3 h-3" />;
+    } else if (deviceType === 'tablet') {
+      deviceIcon = <Tablet className="w-3 h-3" />;
+    } else {
+      deviceIcon = <Monitor className="w-3 h-3" />;
+    }
+
     return {
-      icon: <Activity className="w-3 h-3" />,
-      name: 'Other',
-      color: 'bg-gray-100 text-gray-500'
+      browserIcon,
+      browserName,
+      browserColor,
+      deviceIcon,
+      deviceType
     };
   };
 
+  // Create session map for numbering
   const sessionMap = React.useMemo(() => {
     const map = new Map();
     let counter = 1;
 
-    events.forEach(event => {
+    // Sort events by timestamp to assign session numbers chronologically
+    const sortedEvents = [...events].sort((a, b) => {
+      const dateA = new Date(a.timestamp);
+      const dateB = new Date(b.timestamp);
+      return dateA - dateB;
+    });
+
+    sortedEvents.forEach(event => {
       if (event.session_id && !map.has(event.session_id)) {
         map.set(event.session_id, counter.toString().padStart(3, '0'));
         counter++;
@@ -190,7 +211,7 @@ const EventsFeed = ({ events }) => {
       ) : (
         <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
           {events.slice(0, 10).map((event, index) => {
-            const browserInfo = detectBrowser(event.user_agent);
+            const { browserIcon, browserName, browserColor, deviceIcon, deviceType } = detectBrowserAndDevice(event.user_agent);
             const sessionNumber = sessionMap.get(event.session_id) || '???';
 
             return (
@@ -210,13 +231,23 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-500 flex items-center space-x-2">
                         <span>Page: {getPageName(event.url)}</span>
                       </div>
-                      <div className={`text-xs text-gray-400 mt-1 flex items-center space-x-1 px-2 py-0.5 rounded ${browserInfo.color}`}>
-                        {browserInfo.icon}
-                        <span>Session #{sessionNumber}</span>
+                      {/* IMPROVED: Show browser, device icon, and session number */}
+                      <div className="flex items-center space-x-2 mt-1">
+                        <div className={`text-xs flex items-center space-x-1 px-2 py-0.5 rounded ${browserColor}`}>
+                          {browserIcon}
+                          <span>{browserName}</span>
+                        </div>
+                        <div className="text-xs flex items-center space-x-1 px-2 py-0.5 rounded bg-gray-200 text-gray-700">
+                          {deviceIcon}
+                          <span className="capitalize">{deviceType}</span>
+                        </div>
+                        <div className="text-xs text-gray-400 flex items-center">
+                          Session #{sessionNumber}
+                        </div>
                       </div>
                     </div>
                   </div>
-                  {/* RIGHT SIDE - ONLY TIME AND DATE */}
+                  {/* RIGHT SIDE - TIME AND DATE */}
                   <div className="text-right flex flex-col items-end gap-1">
                     <div className="text-sm font-bold text-blue-600">
                       {formatTimeLocal(event.timestamp)}
