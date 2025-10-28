@@ -28,6 +28,25 @@ const SafariIcon = ({ className = "w-3 h-3" }) => (
   </svg>
 );
 
+// Firefox SVG Icon Component
+const FirefoxIcon = ({ className = "w-3 h-3" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#FF7139"/>
+    <circle cx="12" cy="12" r="7" fill="#FFCD00"/>
+    <path d="M12 5C8.68629 5 6 7.68629 6 11C6 14.3137 8.68629 17 12 17C15.3137 17 18 14.3137 18 11" stroke="#E35425" strokeWidth="2" fill="none"/>
+    <path d="M9 10C9 8.89543 9.89543 8 11 8C12.1046 8 13 8.89543 13 10C13 11.1046 12.1046 12 11 12" fill="#E35425"/>
+  </svg>
+);
+
+// Edge SVG Icon Component
+const EdgeIcon = ({ className = "w-3 h-3" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#0078D7"/>
+    <path d="M7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17H7V12Z" fill="#FFFFFF"/>
+    <path d="M12 7C14.7614 7 17 9.23858 17 12H12V7Z" fill="#00BCF2"/>
+  </svg>
+);
+
 const LatestVisits = ({ siteId }) => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,10 +90,10 @@ const LatestVisits = ({ siteId }) => {
     }
   };
 
-  // IMPROVED: Detect Instagram in-app browser and accurate mobile detection
+  // IMPROVED: Better browser detection with multiple fallbacks
   const getBrowserAndDeviceInfo = (visit) => {
     const userAgent = visit.user_agent || visit.browser_user_agent || '';
-    const storedBrowser = visit.browser || 'Unknown';
+    const storedBrowser = visit.browser || '';
 
     console.log('Processing visit:', {
       id: visit.id,
@@ -83,56 +102,80 @@ const LatestVisits = ({ siteId }) => {
       storedBrowser
     });
 
-    if (!userAgent) {
-      return {
-        browserIcon: <Monitor className="w-3 h-3 text-gray-500" />,
-        browserColor: 'bg-gray-100 text-gray-500',
-        browserName: storedBrowser,
-        deviceIcon: <Monitor className="w-3 h-3" />,
-        deviceType: 'desktop'
-      };
-    }
-
+    // Parse with UAParser first
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
 
-    console.log('Parsed result:', result);
+    console.log('UAParser result:', result);
 
-    let browserName = result.browser.name || storedBrowser || 'Unknown';
+    let browserName = '';
     let deviceType = result.device.type || 'desktop';
 
-    // SPECIAL: Detect Instagram in-app browser
-    if (userAgent.includes('Instagram') || storedBrowser.toLowerCase().includes('instagram')) {
+    // PRIORITY 1: Check for Instagram in user agent
+    if (userAgent.includes('Instagram')) {
       browserName = 'Instagram';
     }
+    // PRIORITY 2: Check stored browser field
+    else if (storedBrowser && storedBrowser !== 'Unknown' && storedBrowser.trim() !== '') {
+      browserName = storedBrowser;
+    }
+    // PRIORITY 3: Use UAParser result
+    else if (result.browser.name) {
+      browserName = result.browser.name;
+    }
+    // PRIORITY 4: Check user agent string manually
+    else if (userAgent) {
+      if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+        browserName = 'Chrome';
+      } else if (userAgent.includes('Edg')) {
+        browserName = 'Edge';
+      } else if (userAgent.includes('Firefox')) {
+        browserName = 'Firefox';
+      } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+        browserName = 'Safari';
+      } else if (userAgent.includes('Opera') || userAgent.includes('OPR')) {
+        browserName = 'Opera';
+      }
+    }
 
-    // Browser icon based on name
+    // If still unknown, set to Unknown
+    if (!browserName) {
+      browserName = 'Unknown';
+    }
+
+    console.log('Final browser name:', browserName);
+
+    // Get browser icon and color based on detected name
     let browserIcon, browserColor;
 
-    if (browserName === 'Instagram') {
+    const browserLower = browserName.toLowerCase();
+
+    if (browserLower.includes('instagram')) {
       browserIcon = <Instagram className="w-3 h-3" />;
       browserColor = 'bg-pink-100 text-pink-700';
-    } else if (browserName.toLowerCase().includes('edge')) {
-      browserIcon = <div className="text-sm">🌊</div>;
+    } else if (browserLower.includes('edge') || browserLower.includes('edg')) {
+      browserIcon = <EdgeIcon className="w-3 h-3" />;
       browserColor = 'bg-cyan-100 text-cyan-700';
-    } else if (browserName.toLowerCase().includes('chrome')) {
+    } else if (browserLower.includes('chrome')) {
       browserIcon = <ChromeIcon className="w-3 h-3" />;
       browserColor = 'bg-blue-100 text-blue-700';
-    } else if (browserName.toLowerCase().includes('firefox')) {
-      browserIcon = <div className="text-sm">🦊</div>;
+    } else if (browserLower.includes('firefox')) {
+      browserIcon = <FirefoxIcon className="w-3 h-3" />;
       browserColor = 'bg-orange-100 text-orange-700';
-    } else if (browserName.toLowerCase().includes('safari')) {
+    } else if (browserLower.includes('safari')) {
       browserIcon = <SafariIcon className="w-3 h-3" />;
       browserColor = 'bg-blue-100 text-blue-700';
-    } else if (browserName.toLowerCase().includes('opera')) {
-      browserIcon = <div className="text-sm">🎭</div>;
+    } else if (browserLower.includes('opera')) {
+      browserIcon = <div className="text-xs">🎭</div>;
       browserColor = 'bg-red-100 text-red-700';
-    } else if (browserName.toLowerCase().includes('brave')) {
-      browserIcon = <div className="text-sm">🦁</div>;
+    } else if (browserLower.includes('brave')) {
+      browserIcon = <div className="text-xs">🦁</div>;
       browserColor = 'bg-purple-100 text-purple-700';
     } else {
-      browserIcon = <Monitor className="w-3 h-3" />;
-      browserColor = 'bg-gray-100 text-gray-500';
+      // Unknown browser - show monitor icon
+      browserIcon = <Monitor className="w-3 h-3 text-gray-500" />;
+      browserColor = 'bg-gray-100 text-gray-600';
+      browserName = 'Unknown';
     }
 
     // Device icon based on type
@@ -389,13 +432,22 @@ const LatestVisits = ({ siteId }) => {
                   </div>
                 </div>
 
-                {/* Row 3: Activity and Page */}
-                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center">
-                  <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
-                  <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
-                  <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
-                  <span className="mx-2">•</span>
-                  <span className="text-gray-600 truncate">{formatPageUrl(visit.last_page)}</span>
+                {/* Row 3: Activity and Page with Region on far right */}
+                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
+                    <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
+                    <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
+                    <span className="mx-2">•</span>
+                    <span className="text-gray-600 truncate">{formatPageUrl(visit.last_page)}</span>
+                  </div>
+                  {/* Geographic Region on far right */}
+                  {region && region !== 'Local' && (
+                    <div className="flex items-center space-x-1 text-gray-600 ml-2 flex-shrink-0">
+                      <MapPin className="w-3 h-3" />
+                      <span className="font-medium">{region}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );

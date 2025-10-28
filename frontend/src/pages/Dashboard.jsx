@@ -6,6 +6,7 @@ import EventsFeed from '../components/dashboard/EventsFeed';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
 import IPLookup from '../components/dashboard/IPLookup';
+import TodayStats from '../components/dashboard/TodayStats';
 import { analyticsAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -91,16 +92,23 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* ROW 2 - Latest Users (LEFT) & Recent Events (RIGHT) */}
+        {/* ROW 2 - Today's Activity (LEFT) & Latest Users (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <TodayStats events={events} stats={stats} />
           <LatestVisits siteId={currentSiteId} />
-          <EventsFeed events={events} />
         </div>
 
-        {/* ROW 3 - IP Tracker (LEFT) & Traffic Sources (RIGHT) - SHORTER CARDS */}
+        {/* ROW 3 - Recent Events (LEFT) & IP Tracker (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <EventsFeed events={events} />
           <IPLookup />
+        </div>
+
+        {/* ROW 4 - Traffic Sources (LEFT COLUMN ONLY) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <TrafficSources siteId={currentSiteId} />
+          {/* Empty right column - IP Tracker extends down here */}
+          <div></div>
         </div>
       </div>
     </div>

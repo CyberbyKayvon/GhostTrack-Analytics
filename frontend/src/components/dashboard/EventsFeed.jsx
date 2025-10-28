@@ -225,6 +225,15 @@ const EventsFeed = ({ events }) => {
     // Try multiple possible field names
     const ip = event.ip || event.ip_address || event.visitor_ip || event.client_ip;
 
+    console.log('Event IP lookup:', {
+      event_id: event.id || 'unknown',
+      ip: ip,
+      event_ip: event.ip,
+      event_ip_address: event.ip_address,
+      event_visitor_ip: event.visitor_ip,
+      event_client_ip: event.client_ip
+    });
+
     // If still no IP, try to extract from referrer or other metadata
     if (!ip && event.event_data) {
       try {
@@ -297,8 +306,8 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-500 mb-1 truncate">
                         Page: {getPageName(event.url)}
                       </div>
-                      {/* Browser, Device, Session, and IP */}
-                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      {/* Browser, Device, Session */}
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
                         <div className={`text-xs flex items-center space-x-1 px-2 py-0.5 rounded ${browserColor}`}>
                           {browserIcon}
                           <span>{browserName}</span>
@@ -310,15 +319,13 @@ const EventsFeed = ({ events }) => {
                         <div className="text-xs text-gray-500 flex items-center">
                           Session #{sessionNumber}
                         </div>
-                        {ipAddress !== 'N/A' && (
-                          <>
-                            <span className="text-xs text-gray-400">•</span>
-                            <div className="text-xs text-gray-500 font-mono">
-                              {ipAddress}
-                            </div>
-                          </>
-                        )}
                       </div>
+                      {/* IP Address on separate line */}
+                      {ipAddress && ipAddress !== 'N/A' && (
+                        <div className="text-xs text-indigo-700 font-mono bg-indigo-50 px-2 py-1 rounded inline-block border border-indigo-200 font-semibold">
+                          🌐 {ipAddress}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* RIGHT SIDE - TIME AND DATE ONLY */}
