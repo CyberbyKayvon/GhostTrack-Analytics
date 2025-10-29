@@ -26,7 +26,7 @@ const IPLookup = () => {
 
     try {
       // Using ip-api.com free API with all available fields
-      const response = await fetch(`http://ip-api.com/json/${ipAddress.trim()}?fields=66846719`);
+      const response = await fetch(`https://ipapi.co/${ipAddress.trim()}/json/`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch IP data');
