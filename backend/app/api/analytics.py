@@ -264,7 +264,8 @@ async def get_recent_visitors(
             "duration": duration_str,
             "last_page": last_page,
             "timestamp": visitor.last_seen.isoformat(),
-            "session_id": visitor.session_id
+            "session_id": visitor.session_id,
+            "user_agent": visitor.user_agent or ""  # ✅ ADDED: Include user_agent for frontend parsing
         })
 
     return {"visitors": visitors}

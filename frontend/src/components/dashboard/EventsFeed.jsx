@@ -321,7 +321,7 @@ const EventsFeed = ({ events }) => {
                       <div className="text-xs text-gray-500 mb-1 truncate">
                         Page: {getPageName(event.url)}
                       </div>
-                      {/* Browser, Device, Session */}
+                      {/* Browser, Device */}
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
                         <div className={`text-xs flex items-center space-x-1 px-2 py-0.5 rounded ${browserColor}`}>
                           {browserIcon}
@@ -331,17 +331,26 @@ const EventsFeed = ({ events }) => {
                           {deviceIcon}
                           <span className="capitalize">{deviceType}</span>
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center">
+                      </div>
+                      {/* IP Address & Session - BOTTOM ROW */}
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <div className={`text-xs font-mono px-2 py-1 rounded inline-block border font-semibold ${
+                          ipAddress && ipAddress !== 'N/A'
+                            ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                            : 'text-gray-500 bg-gray-50 border-gray-200'
+                        }`}>
+                          🌐 IP: {ipAddress}
+                        </div>
+                        <span className="text-gray-400 text-xs">•</span>
+                        <div className="text-xs text-gray-600 font-medium">
                           Session #{sessionNumber}
                         </div>
-                      </div>
-                      {/* IP Address - ALWAYS SHOWN (even if N/A for debugging) */}
-                      <div className={`text-xs font-mono px-2 py-1 rounded inline-block border font-semibold ${
-                        ipAddress && ipAddress !== 'N/A'
-                          ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                          : 'text-gray-500 bg-gray-50 border-gray-200'
-                      }`}>
-                        🌐 IP: {ipAddress}
+                        {/* TODO: Add returning visitor badge here once backend tracking is added */}
+                        {/* Example: {event.visit_count > 1 && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
+                            Visit #{event.visit_count}
+                          </span>
+                        )} */}
                       </div>
                     </div>
                   </div>

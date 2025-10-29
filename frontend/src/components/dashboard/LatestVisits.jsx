@@ -1,457 +1,263 @@
-import React, { useState, useEffect } from 'react';
-import { User, Clock, Timer, MousePointer, MapPin, Globe, Smartphone, Tablet, Monitor, Instagram } from 'lucide-react';
-import { analyticsAPI } from '../../services/api';
-import { UAParser } from 'ua-parser-js';
+import React, { useMemo } from 'react';
+import { Users, Globe, Monitor, Clock, Zap, Eye, MousePointer2, Activity } from 'lucide-react';
 
-// Chrome SVG Icon Component
-const ChromeIcon = ({ className = "w-3 h-3" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
-    <path d="M12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6Z" fill="#FFFFFF"/>
-    <circle cx="12" cy="12" r="4" fill="#4285F4"/>
-    <path d="M12 2C17.5228 2 22 6.47715 22 12H18C18 8.68629 15.3137 6 12 6V2Z" fill="#EA4335"/>
-    <path d="M2 12C2 6.47715 6.47715 2 12 2V6C8.68629 6 6 8.68629 6 12H2Z" fill="#FBBC04"/>
-    <path d="M12 18V22C6.47715 22 2 17.5228 2 12H6C6 15.3137 8.68629 18 12 18Z" fill="#34A853"/>
-    <path d="M22 12C22 17.5228 17.5228 22 12 22V18C15.3137 18 18 15.3137 18 12H22Z" fill="#4285F4"/>
-  </svg>
-);
+const LatestVisits = ({ events }) => {
+  // Process events into unique sessions/visits
+  const visits = useMemo(() => {
+    if (!events || events.length === 0) return [];
 
-// Safari SVG Icon Component
-const SafariIcon = ({ className = "w-3 h-3" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="#0066CC" strokeWidth="1.5" fill="white"/>
-    <path d="M12 3L12.5 5.5M12 21L11.5 18.5M21 12L18.5 12.5M3 12L5.5 11.5" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
-    <path d="M17.5 6.5L16 8M6.5 17.5L8 16M17.5 17.5L16 16M6.5 6.5L8 8" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
-    <path d="M12 12L15 9L12 15L9 15L12 12Z" fill="#FF0000"/>
-    <path d="M12 12L9 15L12 9L15 9L12 12Z" fill="#0066CC"/>
-    <circle cx="12" cy="12" r="1" fill="#0066CC"/>
-  </svg>
-);
+    // Group events by IP address + hour
+    const sessionMap = new Map();
 
-// Firefox SVG Icon Component
-const FirefoxIcon = ({ className = "w-3 h-3" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="#FF7139"/>
-    <circle cx="12" cy="12" r="7" fill="#FFCD00"/>
-    <path d="M12 5C8.68629 5 6 7.68629 6 11C6 14.3137 8.68629 17 12 17C15.3137 17 18 14.3137 18 11" stroke="#E35425" strokeWidth="2" fill="none"/>
-    <path d="M9 10C9 8.89543 9.89543 8 11 8C12.1046 8 13 8.89543 13 10C13 11.1046 12.1046 12 11 12" fill="#E35425"/>
-  </svg>
-);
+    events.forEach(event => {
+      const ip = event.FOUND_IP || event.ip || 'unknown';
+      const timestamp = new Date(event.timestamp);
+      const hourKey = `${timestamp.getFullYear()}-${timestamp.getMonth()}-${timestamp.getDate()}-${timestamp.getHours()}`;
+      const sessionKey = `${ip}_${hourKey}`;
 
-// Edge SVG Icon Component
-const EdgeIcon = ({ className = "w-3 h-3" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="#0078D7"/>
-    <path d="M7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17H7V12Z" fill="#FFFFFF"/>
-    <path d="M12 7C14.7614 7 17 9.23858 17 12H12V7Z" fill="#00BCF2"/>
-  </svg>
-);
-
-const LatestVisits = ({ siteId }) => {
-  const [visits, setVisits] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (siteId) {
-      fetchVisitors();
-      const interval = setInterval(fetchVisitors, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [siteId]);
-
-  const fetchVisitors = async () => {
-    try {
-      console.log('Fetching visitors for site:', siteId);
-      const response = await analyticsAPI.getRecentVisitors(siteId, 10);
-      console.log('API Response:', response);
-
-      const visitors = response.data?.visitors || [];
-      console.log('Visitors data:', visitors);
-
-      if (visitors.length > 0) {
-        const sortedVisitors = [...visitors].sort((a, b) => {
-          const numA = parseInt(String(a.id)) || 0;
-          const numB = parseInt(String(b.id)) || 0;
-          return numB - numA;
+      if (!sessionMap.has(sessionKey)) {
+        sessionMap.set(sessionKey, {
+          session_key: sessionKey,
+          ip_address: ip,
+          events: [],
+          first_seen: event.timestamp,
+          last_seen: event.timestamp,
         });
-
-        setVisits(sortedVisitors);
-        setError(null);
-      } else {
-        setVisits([]);
       }
 
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching visitors:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
+      const session = sessionMap.get(sessionKey);
+      session.events.push(event);
 
-  // IMPROVED: Better browser detection with multiple fallbacks
-  const getBrowserAndDeviceInfo = (visit) => {
-    const userAgent = visit.user_agent || visit.browser_user_agent || '';
-    const storedBrowser = visit.browser || '';
-
-    console.log('Processing visit:', {
-      id: visit.id,
-      ip: visit.ip,
-      userAgent: userAgent,
-      storedBrowser
+      if (event.timestamp > session.last_seen) {
+        session.last_seen = event.timestamp;
+      }
     });
 
-    // Parse with UAParser first
-    const parser = new UAParser(userAgent);
-    const result = parser.getResult();
+    // Convert to array and calculate metrics
+    const visitsArray = Array.from(sessionMap.values()).map(session => {
+      const pageviews = session.events.filter(e =>
+        e.event_type === 'pageview' || e.event_type === 'page_view'
+      ).length;
+      const clicks = session.events.filter(e => e.event_type === 'click').length;
 
-    console.log('UAParser result:', result);
+      const latestEvent = session.events[session.events.length - 1];
 
-    let browserName = '';
-    let deviceType = result.device.type || 'desktop';
+      const firstTime = new Date(session.first_seen);
+      const lastTime = new Date(session.last_seen);
+      const durationMs = lastTime - firstTime;
+      const durationMin = Math.floor(durationMs / 60000);
+      const durationSec = Math.floor((durationMs % 60000) / 1000);
 
-    // PRIORITY 1: Check for Instagram in user agent
-    if (userAgent.includes('Instagram')) {
-      browserName = 'Instagram';
-    }
-    // PRIORITY 2: Check stored browser field
-    else if (storedBrowser && storedBrowser !== 'Unknown' && storedBrowser.trim() !== '') {
-      browserName = storedBrowser;
-    }
-    // PRIORITY 3: Use UAParser result
-    else if (result.browser.name) {
-      browserName = result.browser.name;
-    }
-    // PRIORITY 4: Check user agent string manually
-    else if (userAgent) {
-      if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
-        browserName = 'Chrome';
-      } else if (userAgent.includes('Edg')) {
-        browserName = 'Edge';
-      } else if (userAgent.includes('Firefox')) {
-        browserName = 'Firefox';
-      } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
-        browserName = 'Safari';
-      } else if (userAgent.includes('Opera') || userAgent.includes('OPR')) {
-        browserName = 'Opera';
-      }
-    }
-
-    // If still unknown, set to Unknown
-    if (!browserName) {
-      browserName = 'Unknown';
-    }
-
-    console.log('Final browser name:', browserName);
-
-    // Get browser icon and color based on detected name
-    let browserIcon, browserColor;
-
-    const browserLower = browserName.toLowerCase();
-
-    if (browserLower.includes('instagram')) {
-      browserIcon = <Instagram className="w-3 h-3" />;
-      browserColor = 'bg-pink-100 text-pink-700';
-    } else if (browserLower.includes('edge') || browserLower.includes('edg')) {
-      browserIcon = <EdgeIcon className="w-3 h-3" />;
-      browserColor = 'bg-cyan-100 text-cyan-700';
-    } else if (browserLower.includes('chrome')) {
-      browserIcon = <ChromeIcon className="w-3 h-3" />;
-      browserColor = 'bg-blue-100 text-blue-700';
-    } else if (browserLower.includes('firefox')) {
-      browserIcon = <FirefoxIcon className="w-3 h-3" />;
-      browserColor = 'bg-orange-100 text-orange-700';
-    } else if (browserLower.includes('safari')) {
-      browserIcon = <SafariIcon className="w-3 h-3" />;
-      browserColor = 'bg-blue-100 text-blue-700';
-    } else if (browserLower.includes('opera')) {
-      browserIcon = <div className="text-xs">🎭</div>;
-      browserColor = 'bg-red-100 text-red-700';
-    } else if (browserLower.includes('brave')) {
-      browserIcon = <div className="text-xs">🦁</div>;
-      browserColor = 'bg-purple-100 text-purple-700';
-    } else {
-      // Unknown browser - show monitor icon
-      browserIcon = <Monitor className="w-3 h-3 text-gray-500" />;
-      browserColor = 'bg-gray-100 text-gray-600';
-      browserName = 'Unknown';
-    }
-
-    // Device icon based on type
-    let deviceIcon;
-    if (deviceType === 'mobile') {
-      deviceIcon = <Smartphone className="w-3 h-3" />;
-    } else if (deviceType === 'tablet') {
-      deviceIcon = <Tablet className="w-3 h-3" />;
-    } else {
-      deviceIcon = <Monitor className="w-3 h-3" />;
-    }
-
-    return {
-      browserIcon,
-      browserColor,
-      browserName,
-      deviceIcon,
-      deviceType
-    };
-  };
-
-  const formatDuration = (durationStr) => {
-    try {
-      const parts = durationStr.split(':');
-      const minutes = parseInt(parts[0]) || 0;
-      const seconds = parseInt(parts[1]) || 0;
-
-      if (minutes > 60) {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return `${hours}h ${mins}m`;
-      } else if (minutes > 0) {
-        return `${minutes}m ${seconds}s`;
-      } else {
-        return `${seconds}s`;
-      }
-    } catch (e) {
-      return durationStr;
-    }
-  };
-
-  const formatTimeLocal = (timestamp) => {
-    try {
-      let date;
-
-      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
-        date = new Date(timestamp);
-      } else {
-        date = new Date(timestamp + 'Z');
+      let pagePath = '/';
+      if (latestEvent?.url && latestEvent.url !== 'N/A') {
+        try {
+          pagePath = new URL(latestEvent.url).pathname;
+        } catch (e) {
+          pagePath = latestEvent.url;
+        }
       }
 
-      let hours = date.getHours();
-      const minutes = date.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+      return {
+        session_key: session.session_key,
+        ip_address: session.ip_address,
+        time: firstTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        duration: durationMin > 0 ? `${durationMin}m ${durationSec}s` : `${durationSec}s`,
+        actions: session.events.length,
+        page_views: pageviews,
+        clicks: clicks,
+        page_path: pagePath,
+        event_type: latestEvent?.event_type || 'unknown',
+        timestamp: session.last_seen,
+      };
+    });
 
-      hours = hours % 12;
-      hours = hours ? hours : 12;
+    return visitsArray
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 10);
+  }, [events]);
 
-      const minutesStr = minutes < 10 ? '0' + minutes : minutes;
-
-      return `${hours}:${minutesStr} ${ampm}`;
-    } catch (e) {
-      console.error('Error formatting time:', e, timestamp);
-      return 'N/A';
-    }
-  };
-
-  const getRegionFromIP = (ip) => {
-    if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-      return 'Local';
-    }
-    return null;
-  };
-
-  const getRegion = (visit) => {
-    if (visit.location && visit.location !== 'Unknown') {
-      const parts = visit.location.split(',');
-      if (parts.length >= 1) {
-        return parts[0].trim();
-      }
-      return visit.location;
-    }
-
-    return getRegionFromIP(visit.ip);
-  };
-
-  const formatPageUrl = (pageUrl) => {
-    if (!pageUrl || pageUrl === 'Unknown') return 'Homepage';
-
-    try {
-      const url = new URL(pageUrl);
-      let path = url.pathname;
-
-      path = path.replace(/^\/+|\/+$/g, '');
-
-      if (!path) {
-        return url.hostname.replace('www.', '');
-      }
-
-      const segments = path.split('/');
-      let pageName = segments[segments.length - 1];
-
-      pageName = pageName.replace(/\.(html|htm|php|aspx)$/i, '');
-
-      if (!pageName && segments.length > 1) {
-        pageName = segments[segments.length - 2];
-      }
-
-      pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-
-      if (pageName.length > 25) {
-        pageName = pageName.substring(0, 22) + '...';
-      }
-
-      return pageName || 'Homepage';
-    } catch (e) {
-      const cleaned = pageUrl.split('/').pop()?.replace(/\.(html|htm)$/i, '') || 'Homepage';
-      return cleaned.length > 25 ? cleaned.substring(0, 22) + '...' : cleaned;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-          <User className="w-6 h-6 mr-2 text-blue-500" />
-          Latest Users (Last 10)
-        </h3>
-        <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
-          Loading visitors...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-          <User className="w-6 h-6 mr-2 text-blue-500" />
-          Latest Users (Last 10)
-        </h3>
-        <div className="text-center py-8 flex-1 flex items-center justify-center">
-          <div>
-            <p className="text-red-500 font-medium mb-2">Error loading visitors</p>
-            <p className="text-gray-400 text-sm">{error}</p>
-            <button
-              onClick={fetchVisitors}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Accent colors for the left border stripe
+  const accentColors = [
+    'border-l-purple-500',
+    'border-l-blue-500',
+    'border-l-cyan-500',
+    'border-l-green-500',
+    'border-l-orange-500',
+    'border-l-pink-500',
+    'border-l-red-500',
+    'border-l-indigo-500',
+    'border-l-teal-500',
+    'border-l-fuchsia-500',
+  ];
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <User className="w-6 h-6 mr-2 text-blue-500" />
-        Latest Users (Last 10)
-      </h3>
-
-      {visits.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 flex-1 flex items-center justify-center">
-          <div>
-            <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-              <User className="w-10 h-10 text-blue-600" />
-            </div>
-            <p className="text-gray-600 font-medium mb-2">No visitors yet</p>
-            <p className="text-gray-400 text-sm">Tracking will begin automatically when users visit your site</p>
+    <div className="bg-white rounded-2xl p-6 shadow-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Users className="text-purple-600" size={24} />
           </div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Latest Users
+          </h2>
         </div>
-      ) : (
-        <div className="space-y-2 overflow-y-auto flex-1 pr-2" style={{ maxHeight: '400px' }}>
-          {visits.map((visit, index) => {
-            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserAndDeviceInfo(visit);
-            const region = getRegion(visit);
+        <div className="px-4 py-2 bg-blue-100 rounded-lg">
+          <span className="text-blue-700 font-bold text-sm">
+            {visits.length} Active Sessions
+          </span>
+        </div>
+      </div>
 
-            return (
-              <div
-                key={index}
-                className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-              >
-                {/* Row 1: Visitor ID + IP on LEFT, Location + Browser + Device on RIGHT */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-blue-500 p-1.5 rounded-full">
-                      <User className="w-3 h-3 text-white" />
+      {/* Visits List */}
+      <div className="space-y-3">
+        {visits.map((visit, index) => {
+          const shortId = visit.session_key.split('_')[1]?.slice(-2) || String(index).padStart(2, '0');
+          const accentColor = accentColors[index % accentColors.length];
+
+          return (
+            <div
+              key={visit.session_key}
+              className={`bg-gray-50 rounded-xl p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all duration-200`}
+            >
+              <div className="flex items-center gap-5">
+                {/* Bold Badge with Number */}
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
+                    <span className="text-white font-bold text-lg">
+                      #{shortId}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="flex-1 grid grid-cols-5 gap-5">
+
+                  {/* IP Address */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe size={16} className="text-[#1E88B8]" />
+                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
+                        IP ADDRESS
+                      </span>
                     </div>
-                    <span className="font-bold text-gray-800">#{visit.id}</span>
-                    <span className="text-gray-400 text-xs">•</span>
-                    <span className="text-gray-700 text-xs font-mono">{visit.ip}</span>
+                    <div className="text-gray-900 font-bold text-base font-mono">
+                      {visit.ip_address}
+                    </div>
+                    <div className="text-gray-500 text-xs font-medium">
+                      Visitor #{index + 1}
+                    </div>
                   </div>
 
-                  {/* RIGHT: Location + Browser + Device */}
-                  <div className="flex items-center space-x-2">
-                    {region && (
-                      <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        region === 'Local'
-                          ? 'bg-gray-100 text-gray-600'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {region === 'Local' ? (
-                          <>
-                            <Globe className="w-3 h-3" />
-                            <span>Local</span>
-                          </>
-                        ) : (
-                          <>
-                            <MapPin className="w-3 h-3" />
-                            <span>{region}</span>
-                          </>
+                  {/* Device */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Monitor size={16} className="text-[#D91C81]" />
+                      <span className="text-sm font-black text-[#D91C81] uppercase tracking-wider">
+                        DEVICE
+                      </span>
+                    </div>
+                    <div className="text-gray-900 font-bold text-base">
+                      Desktop
+                    </div>
+                    <div className="text-gray-600 text-sm">
+                      Web Browser
+                    </div>
+                  </div>
+
+                  {/* Session Time */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock size={16} className="text-[#1E88B8]" />
+                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
+                        SESSION
+                      </span>
+                    </div>
+                    <div className="text-gray-900 font-bold text-base">
+                      {visit.time}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-600 text-sm">
+                      <Activity size={14} className="text-[#1E88B8]" />
+                      <span className="font-medium">{visit.duration}</span>
+                    </div>
+                  </div>
+
+                  {/* Activity Stats - BOLD NUMBERS */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MousePointer2 size={16} className="text-[#D91C81]" />
+                      <span className="text-sm font-black text-[#D91C81] uppercase tracking-wider">
+                        ACTIVITY
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {/* Total Events - BIG & BOLD */}
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-orange-600 font-black text-3xl">
+                          {visit.actions}
+                        </span>
+                        <span className="text-gray-600 font-semibold text-sm">events</span>
+                      </div>
+
+                      {/* Views & Clicks in subtle pills */}
+                      <div className="flex gap-2 flex-wrap">
+                        <div className="px-2.5 py-1 bg-blue-100 rounded-md flex items-center gap-1.5">
+                          <Eye size={12} className="text-blue-600" />
+                          <span className="text-blue-700 font-bold text-xs">{visit.page_views}</span>
+                          <span className="text-blue-600 text-xs">views</span>
+                        </div>
+
+                        {visit.clicks > 0 && (
+                          <div className="px-2.5 py-1 bg-pink-100 rounded-md">
+                            <span className="text-pink-700 font-bold text-xs">{visit.clicks} clicks</span>
+                          </div>
                         )}
                       </div>
-                    )}
-
-                    {/* Browser Badge with ICON */}
-                    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${browserColor}`}>
-                      {browserIcon}
-                      <span>{browserName}</span>
-                    </div>
-
-                    {/* Device Badge */}
-                    <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
-                      {deviceIcon}
-                      <span className="capitalize">{deviceType}</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Row 2: Time and Duration - SIDE BY SIDE */}
-                <div className="flex items-center space-x-6 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-3 h-3 text-gray-500" />
-                    <div>
-                      <div className="text-xs text-gray-500 font-medium">Time</div>
-                      <div className="text-sm font-semibold text-blue-600">
-                        {formatTimeLocal(visit.timestamp)}
+                  {/* Latest Activity */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Activity size={16} className="text-[#1E88B8]" />
+                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
+                        LATEST
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {/* Event Type Badge */}
+                      <div className="inline-block px-3 py-1.5 bg-purple-600 rounded-lg">
+                        <span className="text-white font-bold text-sm">
+                          {visit.event_type}
+                        </span>
+                      </div>
+
+                      {/* Page Path */}
+                      <div
+                        className="px-2.5 py-1.5 bg-gray-200 rounded-md"
+                        title={visit.page_path}
+                      >
+                        <span className="text-gray-700 font-mono font-medium text-xs truncate block">
+                          {visit.page_path}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Timer className="w-3 h-3 text-gray-500" />
-                    <div>
-                      <div className="text-xs text-gray-500 font-medium">Duration</div>
-                      <div className="text-sm font-semibold text-gray-700">
-                        {formatDuration(visit.duration)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 3: Activity and Page with Region on far right */}
-                <div className="text-xs text-gray-500 pt-2 border-t border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <MousePointer className="w-3 h-3 mr-1 text-purple-500" />
-                    <span className="font-semibold text-gray-700">{visit.clicks || 0}</span>
-                    <span className="ml-1">{visit.clicks === 1 ? 'action' : 'actions'}</span>
-                    <span className="mx-2">•</span>
-                    <span className="text-gray-600 truncate">{formatPageUrl(visit.last_page)}</span>
-                  </div>
-                  {/* Geographic Region on far right */}
-                  {region && region !== 'Local' && (
-                    <div className="flex items-center space-x-1 text-gray-600 ml-2 flex-shrink-0">
-                      <MapPin className="w-3 h-3" />
-                      <span className="font-medium">{region}</span>
-                    </div>
-                  )}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          );
+        })}
+      </div>
+
+      {visits.length === 0 && (
+        <div className="text-center py-16">
+          <div className="inline-block p-5 bg-gray-100 rounded-2xl mb-4">
+            <Users className="text-gray-300" size={64} />
+          </div>
+          <p className="text-gray-900 font-bold text-xl mb-1">No Active Sessions</p>
+          <p className="text-gray-500">Visitor data will appear here when available</p>
         </div>
       )}
     </div>

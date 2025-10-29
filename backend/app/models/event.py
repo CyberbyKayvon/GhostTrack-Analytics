@@ -17,5 +17,18 @@ class Event(Base):
     is_bot = Column(Integer, default=0)  # 0 or 1
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
+    # ✅ NEW: Geographic data
+    city = Column(String, nullable=True)
+    region = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    country_code = Column(String, nullable=True)
+
+    # ✅ NEW: Device and browser detection
+    device_type = Column(String, nullable=True)  # mobile, desktop, tablet
+    browser = Column(String, nullable=True)  # Chrome, Safari, Firefox, etc.
+
+    # ✅ NEW: Referrer source categorization
+    referrer_source = Column(String, nullable=True)  # direct, organic, social, referral
+
     def __repr__(self):
         return f"<Event {self.id} - {self.event_type} - {self.site_id}>"

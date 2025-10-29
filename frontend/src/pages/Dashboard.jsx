@@ -92,23 +92,21 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* ROW 2 - Today's Activity (LEFT) & Latest Users (RIGHT) */}
+        {/* ROW 2 - Today's Activity (LEFT) & Recent Events (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <TodayStats events={events} stats={stats} />
+          <EventsFeed events={events} />
+        </div>
+
+        {/* ROW 3 - Latest Users (FULL WIDTH) */}
+        <div className="grid grid-cols-1 gap-6 mb-6">
           <LatestVisits siteId={currentSiteId} />
         </div>
 
-        {/* ROW 3 - Recent Events (LEFT) & IP Tracker (RIGHT) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <EventsFeed events={events} />
-          <IPLookup />
-        </div>
-
-        {/* ROW 4 - Traffic Sources (LEFT COLUMN ONLY) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* ROW 4 - Traffic Sources (LEFT HALF) & IP Tracker (RIGHT HALF) - EQUAL HEIGHT */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           <TrafficSources siteId={currentSiteId} />
-          {/* Empty right column - IP Tracker extends down here */}
-          <div></div>
+          <IPLookup />
         </div>
       </div>
     </div>
