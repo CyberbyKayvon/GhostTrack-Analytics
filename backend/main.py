@@ -38,6 +38,7 @@ app.add_middleware(
         "http://kayvontennis.com",
         "https://www.kayvontennis.com",
         "http://www.kayvontennis.com",
+        "https://dashboard.ghosttrack.app",  # ← ADD THIS
         "*"  # Allow all origins (less secure, but works for testing)
     ],
     allow_credentials=True,
