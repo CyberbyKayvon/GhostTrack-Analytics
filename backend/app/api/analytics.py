@@ -87,7 +87,7 @@ async def get_events(
         db: Session = Depends(get_db)
 ):
     """
-    Get recent events for a site
+    Get recent events for a site - WITH FULL CONTEXT
     """
     events = db.query(Event).filter(
         Event.site_id == site_id
@@ -102,7 +102,10 @@ async def get_events(
                 "timestamp": event.timestamp.isoformat(),
                 "session_id": event.session_id,
                 "is_bot": event.is_bot,
-                "user_agent": event.user_agent
+                "user_agent": event.user_agent,
+                # ✅ NEW: Include IP and referrer
+                "ip_address": event.ip_address or "N/A",
+                "referrer": event.referrer or "Direct"
             }
             for event in events
         ]
