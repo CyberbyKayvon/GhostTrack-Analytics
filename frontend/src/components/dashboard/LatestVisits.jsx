@@ -1,263 +1,221 @@
-import React, { useMemo } from 'react';
-import { Users, Globe, Monitor, Clock, Zap, Eye, MousePointer2, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tablet, Instagram } from 'lucide-react';
+import { analyticsAPI } from '../../services/api';
+import { UAParser } from 'ua-parser-js';
 
-const LatestVisits = ({ events }) => {
-  // Process events into unique sessions/visits
-  const visits = useMemo(() => {
-    if (!events || events.length === 0) return [];
+// Chrome SVG Icon
+const ChromeIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+    <circle cx="12" cy="12" r="4" fill="#4285F4"/>
+  </svg>
+);
 
-    // Group events by IP address + hour
-    const sessionMap = new Map();
+// Safari SVG Icon
+const SafariIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="#0066CC" strokeWidth="1.5" fill="white"/>
+    <circle cx="12" cy="12" r="1" fill="#0066CC"/>
+  </svg>
+);
 
-    events.forEach(event => {
-      const ip = event.FOUND_IP || event.ip || 'unknown';
-      const timestamp = new Date(event.timestamp);
-      const hourKey = `${timestamp.getFullYear()}-${timestamp.getMonth()}-${timestamp.getDate()}-${timestamp.getHours()}`;
-      const sessionKey = `${ip}_${hourKey}`;
+const LatestVisits = ({ siteId }) => {
+  const [visits, setVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-      if (!sessionMap.has(sessionKey)) {
-        sessionMap.set(sessionKey, {
-          session_key: sessionKey,
-          ip_address: ip,
-          events: [],
-          first_seen: event.timestamp,
-          last_seen: event.timestamp,
-        });
-      }
+  useEffect(() => {
+    if (siteId) {
+      fetchVisitors();
+      const interval = setInterval(fetchVisitors, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [siteId]);
 
-      const session = sessionMap.get(sessionKey);
-      session.events.push(event);
+  const fetchVisitors = async () => {
+    try {
+      console.log('=== FETCHING VISITORS ===');
+      console.log('Site ID:', siteId);
 
-      if (event.timestamp > session.last_seen) {
-        session.last_seen = event.timestamp;
-      }
-    });
+      const response = await analyticsAPI.getRecentVisitors(siteId, 10);
 
-    // Convert to array and calculate metrics
-    const visitsArray = Array.from(sessionMap.values()).map(session => {
-      const pageviews = session.events.filter(e =>
-        e.event_type === 'pageview' || e.event_type === 'page_view'
-      ).length;
-      const clicks = session.events.filter(e => e.event_type === 'click').length;
+      console.log('Full API Response:', response);
+      console.log('Response Data:', response.data);
+      console.log('Visitors Array:', response.data?.visitors);
 
-      const latestEvent = session.events[session.events.length - 1];
+      const visitors = response.data?.visitors || [];
 
-      const firstTime = new Date(session.first_seen);
-      const lastTime = new Date(session.last_seen);
-      const durationMs = lastTime - firstTime;
-      const durationMin = Math.floor(durationMs / 60000);
-      const durationSec = Math.floor((durationMs % 60000) / 1000);
+      console.log('Setting visits to:', visitors);
+      console.log('Number of visitors:', visitors.length);
 
-      let pagePath = '/';
-      if (latestEvent?.url && latestEvent.url !== 'N/A') {
-        try {
-          pagePath = new URL(latestEvent.url).pathname;
-        } catch (e) {
-          pagePath = latestEvent.url;
-        }
-      }
+      setVisits(visitors);
+      setLoading(false);
+    } catch (error) {
+      console.error('=== ERROR FETCHING VISITORS ===');
+      console.error('Error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      setLoading(false);
+    }
+  };
 
-      return {
-        session_key: session.session_key,
-        ip_address: session.ip_address,
-        time: firstTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        duration: durationMin > 0 ? `${durationMin}m ${durationSec}s` : `${durationSec}s`,
-        actions: session.events.length,
-        page_views: pageviews,
-        clicks: clicks,
-        page_path: pagePath,
-        event_type: latestEvent?.event_type || 'unknown',
-        timestamp: session.last_seen,
-      };
-    });
+  const getBrowserInfo = (visit) => {
+    const userAgent = visit.user_agent || '';
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
 
-    return visitsArray
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 10);
-  }, [events]);
+    let browserName = visit.browser || result.browser.name || 'Unknown';
+    let deviceType = result.device.type || 'desktop';
 
-  // Accent colors for the left border stripe
-  const accentColors = [
-    'border-l-purple-500',
-    'border-l-blue-500',
-    'border-l-cyan-500',
-    'border-l-green-500',
-    'border-l-orange-500',
-    'border-l-pink-500',
-    'border-l-red-500',
-    'border-l-indigo-500',
-    'border-l-teal-500',
-    'border-l-fuchsia-500',
-  ];
+    if (userAgent.includes('Instagram')) browserName = 'Instagram';
+
+    let browserIcon = <Monitor className="w-4 h-4" />;
+    let browserColor = 'bg-blue-500';
+
+    if (browserName.toLowerCase().includes('instagram')) {
+      browserIcon = <Instagram className="w-4 h-4" />;
+      browserColor = 'bg-pink-500';
+    } else if (browserName.toLowerCase().includes('chrome')) {
+      browserIcon = <ChromeIcon className="w-4 h-4" />;
+      browserColor = 'bg-blue-500';
+    } else if (browserName.toLowerCase().includes('safari')) {
+      browserIcon = <SafariIcon className="w-4 h-4" />;
+      browserColor = 'bg-blue-600';
+    }
+
+    let deviceIcon = deviceType === 'mobile' ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />;
+
+    return { browserIcon, browserColor, browserName, deviceIcon, deviceType };
+  };
+
+  const formatTime = (timestamp) => {
+    try {
+      const date = timestamp.endsWith('Z') ? new Date(timestamp) : new Date(timestamp + 'Z');
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const formatPageUrl = (url) => {
+    if (!url || url === 'Unknown') return 'Homepage';
+    try {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname.split('/').pop() || 'Homepage';
+      return path.replace(/\.(html|htm|php)$/i, '') || 'Homepage';
+    } catch {
+      return 'Homepage';
+    }
+  };
+
+  const accentColors = ['border-l-purple-500', 'border-l-blue-500', 'border-l-cyan-500', 'border-l-green-500', 'border-l-orange-500'];
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-lg">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Users className="text-purple-600" size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Latest Users</h2>
+        </div>
+        <div className="text-center py-8 text-gray-400">Loading visitors...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-100">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-100 rounded-lg">
             <Users className="text-purple-600" size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Latest Users
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Latest Users</h2>
         </div>
         <div className="px-4 py-2 bg-blue-100 rounded-lg">
-          <span className="text-blue-700 font-bold text-sm">
-            {visits.length} Active Sessions
-          </span>
+          <span className="text-blue-700 font-bold text-sm">{visits.length} Sessions</span>
         </div>
       </div>
 
-      {/* Visits List */}
-      <div className="space-y-3">
-        {visits.map((visit, index) => {
-          const shortId = visit.session_key.split('_')[1]?.slice(-2) || String(index).padStart(2, '0');
-          const accentColor = accentColors[index % accentColors.length];
+      {visits.length === 0 ? (
+        <div className="text-center py-16">
+          <Users className="text-gray-300 mx-auto mb-4" size={64} />
+          <p className="text-gray-900 font-bold text-xl mb-1">No Active Sessions</p>
+          <p className="text-gray-500">Visitor data will appear here</p>
+        </div>
+      ) : (
+        <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '400px' }}>
+          {visits.map((visit, index) => {
+            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserInfo(visit);
+            const accentColor = accentColors[index % accentColors.length];
 
-          return (
-            <div
-              key={visit.session_key}
-              className={`bg-gray-50 rounded-xl p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all duration-200`}
-            >
-              <div className="flex items-center gap-5">
-                {/* Bold Badge with Number */}
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
-                    <span className="text-white font-bold text-lg">
-                      #{shortId}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content Grid */}
-                <div className="flex-1 grid grid-cols-5 gap-5">
-
-                  {/* IP Address */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Globe size={16} className="text-[#1E88B8]" />
-                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
-                        IP ADDRESS
-                      </span>
-                    </div>
-                    <div className="text-gray-900 font-bold text-base font-mono">
-                      {visit.ip_address}
-                    </div>
-                    <div className="text-gray-500 text-xs font-medium">
-                      Visitor #{index + 1}
+            return (
+              <div key={visit.session_id || index} className={`bg-gray-50 rounded-xl p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
+                <div className="flex items-center gap-5">
+                  <div className="flex-shrink-0">
+                    <div className={`w-14 h-14 rounded-xl ${browserColor} flex items-center justify-center shadow-md`}>
+                      {browserIcon}
                     </div>
                   </div>
 
-                  {/* Device */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Monitor size={16} className="text-[#D91C81]" />
-                      <span className="text-sm font-black text-[#D91C81] uppercase tracking-wider">
-                        DEVICE
-                      </span>
+                  <div className="flex-1 grid grid-cols-5 gap-5">
+                    {/* IP */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Globe size={16} className="text-blue-600" />
+                        <span className="text-sm font-black text-blue-600 uppercase">IP</span>
+                      </div>
+                      <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
+                      <div className="text-gray-500 text-xs">Visitor #{visit.id}</div>
                     </div>
-                    <div className="text-gray-900 font-bold text-base">
-                      Desktop
-                    </div>
-                    <div className="text-gray-600 text-sm">
-                      Web Browser
-                    </div>
-                  </div>
 
-                  {/* Session Time */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock size={16} className="text-[#1E88B8]" />
-                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
-                        SESSION
-                      </span>
+                    {/* Device */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Monitor size={16} className="text-pink-600" />
+                        <span className="text-sm font-black text-pink-600 uppercase">DEVICE</span>
+                      </div>
+                      <div className="text-gray-900 font-bold capitalize">{deviceType}</div>
+                      <div className="text-gray-600 text-sm">{browserName}</div>
                     </div>
-                    <div className="text-gray-900 font-bold text-base">
-                      {visit.time}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-600 text-sm">
-                      <Activity size={14} className="text-[#1E88B8]" />
-                      <span className="font-medium">{visit.duration}</span>
-                    </div>
-                  </div>
 
-                  {/* Activity Stats - BOLD NUMBERS */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MousePointer2 size={16} className="text-[#D91C81]" />
-                      <span className="text-sm font-black text-[#D91C81] uppercase tracking-wider">
-                        ACTIVITY
-                      </span>
+                    {/* Session */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock size={16} className="text-blue-600" />
+                        <span className="text-sm font-black text-blue-600 uppercase">TIME</span>
+                      </div>
+                      <div className="text-gray-900 font-bold">{formatTime(visit.timestamp)}</div>
+                      <div className="text-gray-600 text-sm">{visit.duration || '0:00'}</div>
                     </div>
-                    <div className="space-y-2">
-                      {/* Total Events - BIG & BOLD */}
+
+                    {/* Activity */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MousePointer2 size={16} className="text-pink-600" />
+                        <span className="text-sm font-black text-pink-600 uppercase">ACTIVITY</span>
+                      </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-orange-600 font-black text-3xl">
-                          {visit.actions}
-                        </span>
+                        <span className="text-orange-600 font-black text-3xl">{visit.clicks || 0}</span>
                         <span className="text-gray-600 font-semibold text-sm">events</span>
                       </div>
+                    </div>
 
-                      {/* Views & Clicks in subtle pills */}
-                      <div className="flex gap-2 flex-wrap">
-                        <div className="px-2.5 py-1 bg-blue-100 rounded-md flex items-center gap-1.5">
-                          <Eye size={12} className="text-blue-600" />
-                          <span className="text-blue-700 font-bold text-xs">{visit.page_views}</span>
-                          <span className="text-blue-600 text-xs">views</span>
-                        </div>
-
-                        {visit.clicks > 0 && (
-                          <div className="px-2.5 py-1 bg-pink-100 rounded-md">
-                            <span className="text-pink-700 font-bold text-xs">{visit.clicks} clicks</span>
-                          </div>
-                        )}
+                    {/* Latest */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Activity size={16} className="text-blue-600" />
+                        <span className="text-sm font-black text-blue-600 uppercase">PAGE</span>
+                      </div>
+                      <div className="px-2.5 py-1.5 bg-purple-600 rounded-md">
+                        <span className="text-white font-bold text-xs truncate block">{formatPageUrl(visit.last_page)}</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Latest Activity */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Activity size={16} className="text-[#1E88B8]" />
-                      <span className="text-sm font-black text-[#1E88B8] uppercase tracking-wider">
-                        LATEST
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {/* Event Type Badge */}
-                      <div className="inline-block px-3 py-1.5 bg-purple-600 rounded-lg">
-                        <span className="text-white font-bold text-sm">
-                          {visit.event_type}
-                        </span>
-                      </div>
-
-                      {/* Page Path */}
-                      <div
-                        className="px-2.5 py-1.5 bg-gray-200 rounded-md"
-                        title={visit.page_path}
-                      >
-                        <span className="text-gray-700 font-mono font-medium text-xs truncate block">
-                          {visit.page_path}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {visits.length === 0 && (
-        <div className="text-center py-16">
-          <div className="inline-block p-5 bg-gray-100 rounded-2xl mb-4">
-            <Users className="text-gray-300" size={64} />
-          </div>
-          <p className="text-gray-900 font-bold text-xl mb-1">No Active Sessions</p>
-          <p className="text-gray-500">Visitor data will appear here when available</p>
+            );
+          })}
         </div>
       )}
     </div>
