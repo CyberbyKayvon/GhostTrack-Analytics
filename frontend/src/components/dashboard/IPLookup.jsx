@@ -25,7 +25,7 @@ const IPLookup = () => {
     setIpData(null);
 
     try {
-      // Using ip-api.com free API with all available fields
+      // Using ipapi.co free API with HTTPS support
       const response = await fetch(`https://ipapi.co/${ipAddress.trim()}/json/`);
 
       if (!response.ok) {
@@ -34,11 +34,36 @@ const IPLookup = () => {
 
       const data = await response.json();
 
-      if (data.status === 'fail') {
-        throw new Error(data.message || 'Invalid IP address or lookup failed');
+      if (data.error) {
+        throw new Error(data.reason || 'Invalid IP address or lookup failed');
       }
 
-      setIpData(data);
+      // Map ipapi.co response to match our component's expected format
+      const mappedData = {
+        query: ipAddress.trim(),
+        country: data.country_name,
+        countryCode: data.country_code,
+        region: data.region_code,
+        regionName: data.region,
+        city: data.city,
+        zip: data.postal,
+        lat: data.latitude,
+        lon: data.longitude,
+        timezone: data.timezone,
+        offset: data.utc_offset ? (data.utc_offset.includes(':') ?
+          (parseInt(data.utc_offset.split(':')[0]) * 3600 + parseInt(data.utc_offset.split(':')[1]) * 60) : 0) : 0,
+        isp: data.org,
+        org: data.org,
+        as: data.asn,
+        mobile: false, // ipapi.co doesn't provide this in free tier
+        proxy: false,  // ipapi.co doesn't provide this in free tier
+        hosting: false, // ipapi.co doesn't provide this in free tier
+        continent: data.continent_code,
+        currency: data.currency,
+        currencySymbol: data.currency_name
+      };
+
+      setIpData(mappedData);
       setLoading(false);
     } catch (err) {
       setError(err.message || 'Failed to lookup IP address');
