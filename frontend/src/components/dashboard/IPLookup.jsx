@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { MapPin, Search } from 'lucide-react';
+import { Search, MapPin, Globe, Wifi, Server, Navigation } from 'lucide-react';
 
-const IPLookup = () => {
+const IPTracker = () => {
   const [ipAddress, setIpAddress] = useState('');
   const [ipData, setIpData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
-  const handleLookup = async () => {
+  const handleSearch = async () => {
     if (!ipAddress.trim()) {
       setError('Please enter an IP address');
       return;
     }
 
     setLoading(true);
-    setError(null);
+    setError('');
 
     try {
       const response = await fetch(`https://ipapi.co/${ipAddress}/json/`);
@@ -25,10 +25,10 @@ const IPLookup = () => {
         setIpData(null);
       } else {
         setIpData(data);
-        setError(null);
+        setError('');
       }
     } catch (err) {
-      setError('Failed to fetch IP information');
+      setError('Failed to fetch IP data. Please try again.');
       setIpData(null);
     } finally {
       setLoading(false);
@@ -37,110 +37,163 @@ const IPLookup = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleLookup();
+      handleSearch();
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg h-full flex flex-col">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <MapPin className="w-6 h-6 mr-2 text-blue-500" />
-        IP Address Tracker
-      </h3>
+    <div className="bg-white rounded-2xl p-6 shadow-lg" style={{ minHeight: '500px' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <MapPin className="text-blue-600" size={24} />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          IP Address Tracker
+        </h2>
+      </div>
 
       {/* Search Input */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-3 mb-6">
         <input
           type="text"
+          placeholder="Enter IP address (e.g., 102.129.153.238)"
           value={ipAddress}
           onChange={(e) => setIpAddress(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Enter IP address (e.g., 8.8.8.8)"
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 font-mono"
         />
         <button
-          onClick={handleLookup}
+          onClick={handleSearch}
           disabled={loading}
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2"
         >
-          {loading ? (
-            <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-          ) : (
-            <Search className="w-5 h-5" />
-          )}
+          <Search size={20} />
+          {loading ? 'Searching...' : 'Search'}
         </button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium">{error}</p>
         </div>
       )}
 
-      {/* Results - Flex-1 to fill remaining space */}
-      <div className="flex-1 flex items-center justify-center">
-        {!ipData && !loading && (
-          <div className="text-center text-gray-400">
-            <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-              <MapPin className="w-12 h-12 text-blue-600" />
+      {/* IP Data Display */}
+      {ipData && (
+        <div className="space-y-4">
+          {/* Main IP Info Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-black text-gray-900">IP Address</h3>
+              <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-lg font-mono">
+                {ipData.ip}
+              </span>
             </div>
-            <p className="font-medium mb-2">Enter an IP address</p>
-            <p className="text-sm">Track location, ISP, and network information</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Type</p>
+                <p className="text-lg font-bold text-gray-900">{ipData.version || 'IPv4'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Organization</p>
+                <p className="text-lg font-bold text-gray-900">{ipData.org || 'N/A'}</p>
+              </div>
+            </div>
           </div>
-        )}
 
-        {ipData && (
-          <div className="w-full space-y-4">
-            {/* IP Address */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-500 mb-1">IP Address</div>
-              <div className="text-lg font-bold text-gray-900">{ipData.ip}</div>
-              <div className="text-xs text-gray-500 mt-1">Type: {ipData.version}</div>
+          {/* Location Section */}
+          <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="text-green-600" size={24} />
+              <h3 className="text-xl font-black text-gray-900">Location</h3>
             </div>
-
-            {/* Location */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-500 mb-2 flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
-                Location
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">City</p>
+                <p className="text-base font-bold text-gray-900">{ipData.city || 'Unknown'}</p>
               </div>
-              <div className="font-semibold text-gray-900">
-                {ipData.city}, {ipData.region}
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Region</p>
+                <p className="text-base font-bold text-gray-900">{ipData.region || 'Unknown'}</p>
               </div>
-              <div className="text-sm text-gray-600 mt-1">
-                {ipData.country_name} ({ipData.country_code})
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Country</p>
+                <p className="text-base font-bold text-gray-900">
+                  {ipData.country_name || 'Unknown'} ({ipData.country_code || 'N/A'})
+                </p>
               </div>
-              {ipData.postal && (
-                <div className="text-xs text-gray-500 mt-1">ZIP: {ipData.postal}</div>
-              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Postal Code</p>
+                <p className="text-base font-bold text-gray-900">{ipData.postal || 'N/A'}</p>
+              </div>
             </div>
+          </div>
 
+          {/* Coordinates & Network */}
+          <div className="grid grid-cols-2 gap-4">
             {/* Coordinates */}
-            {ipData.latitude && ipData.longitude && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Coordinates</div>
-                <div className="text-sm font-mono text-gray-700">
-                  {ipData.latitude}, {ipData.longitude}
+            <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <Navigation className="text-purple-600" size={24} />
+                <h3 className="text-xl font-black text-gray-900">Coordinates</h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Latitude</p>
+                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.latitude || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Longitude</p>
+                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.longitude || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Timezone</p>
+                  <p className="text-base font-bold text-gray-900">{ipData.timezone || 'N/A'}</p>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Network Info */}
-            {ipData.org && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Network</div>
-                <div className="text-sm text-gray-700">{ipData.org}</div>
-                {ipData.asn && (
-                  <div className="text-xs text-gray-500 mt-1">ASN: {ipData.asn}</div>
-                )}
+            <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <Wifi className="text-orange-600" size={24} />
+                <h3 className="text-xl font-black text-gray-900">Network</h3>
               </div>
-            )}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">ASN</p>
+                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.asn || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Network</p>
+                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.network || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Currency</p>
+                  <p className="text-base font-bold text-gray-900">
+                    {ipData.currency ? `${ipData.currency} (${ipData.currency_name})` : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!ipData && !error && !loading && (
+        <div className="text-center py-12">
+          <div className="inline-block p-6 bg-gray-100 rounded-2xl mb-4">
+            <MapPin className="text-gray-300" size={64} />
+          </div>
+          <p className="text-gray-900 font-bold text-xl mb-2">Search for an IP Address</p>
+          <p className="text-gray-500">Enter an IP address above to view detailed information</p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default IPLookup;
+export default IPTracker;

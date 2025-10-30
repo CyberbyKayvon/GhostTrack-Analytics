@@ -86,7 +86,7 @@ const TrafficSources = ({ siteId }) => {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-lg">
+      <div className="bg-white p-6 rounded-xl shadow-lg" style={{ minHeight: '500px', maxHeight: '500px' }}>
         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
           <TrendingUp className="w-6 h-6 mr-2 text-green-500" />
           Traffic Sources
@@ -101,17 +101,17 @@ const TrafficSources = ({ siteId }) => {
   const totalVisits = getTotalVisits();
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
+    <div className="bg-white p-6 rounded-xl shadow-lg" style={{ minHeight: '500px', maxHeight: '500px', overflow: 'hidden' }}>
       <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
         <TrendingUp className="w-6 h-6 mr-2 text-green-500" />
         Traffic Sources
       </h3>
 
       {/* 2-COLUMN LAYOUT - 40% Left, 60% Right */}
-      <div className="grid gap-6" style={{ gridTemplateColumns: '40% 60%' }}>
+      <div className="grid gap-6" style={{ gridTemplateColumns: '40% 60%', height: 'calc(100% - 60px)' }}>
 
         {/* LEFT COLUMN - Traffic Sources (40% - Narrower) */}
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto pr-2">
           <h4 className="text-sm font-semibold text-gray-600 mb-3">Source Breakdown</h4>
 
           {sources.length === 0 ? (
@@ -163,7 +163,7 @@ const TrafficSources = ({ siteId }) => {
         </div>
 
         {/* RIGHT COLUMN - Top Pages (60% - Wider) */}
-        <div className="border-l border-gray-200 pl-6">
+        <div className="border-l border-gray-200 pl-6 overflow-y-auto">
           <h4 className="text-sm font-semibold text-gray-600 mb-3 text-center">Top Pages</h4>
 
           {topPages.length === 0 ? (

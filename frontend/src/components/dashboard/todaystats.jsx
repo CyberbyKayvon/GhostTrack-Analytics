@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Calendar, TrendingUp, Eye, Users, MousePointer, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const TodayStats = ({ events, stats }) => {
+  const [timeFilter, setTimeFilter] = useState('week'); // 'week', 'month', 'year'
+
   // Calculate today's stats
   const todayStats = useMemo(() => {
     const now = new Date();
@@ -51,22 +53,26 @@ const TodayStats = ({ events, stats }) => {
     };
   }, [events]);
 
-  // Prepare weekly chart data
-  const weeklyChartData = useMemo(() => {
+  // Prepare chart data based on selected time filter
+  const chartData = useMemo(() => {
     if (!events || events.length === 0) return [];
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Build 7-day window
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
+    let days = 7;
+    if (timeFilter === 'month') days = 30;
+    if (timeFilter === 'year') days = 365;
+
+    // Build day window
+    const daysList = [];
+    for (let i = days - 1; i >= 0; i--) {
       const date = new Date(todayStart);
       date.setDate(todayStart.getDate() - i);
 
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
 
-      days.push({
+      daysList.push({
         dayName,
         events: 0,
         isToday: i === 0,
@@ -90,7 +96,7 @@ const TodayStats = ({ events, stats }) => {
           eventDate.getDate()
         );
 
-        const matchingDay = days.find(d =>
+        const matchingDay = daysList.find(d =>
           d.date.getTime() === eventDayStart.getTime()
         );
 
@@ -102,10 +108,19 @@ const TodayStats = ({ events, stats }) => {
       }
     });
 
-    return days;
-  }, [events]);
+    return daysList;
+  }, [events, timeFilter]);
 
-  const totalWeekEvents = weeklyChartData.reduce((sum, d) => sum + d.events, 0);
+  const totalChartEvents = chartData.reduce((sum, d) => sum + d.events, 0);
+
+  const getFilterLabel = () => {
+    switch (timeFilter) {
+      case 'week': return 'Last 7 Days';
+      case 'month': return 'Last 30 Days';
+      case 'year': return 'Last Year';
+      default: return 'Last 7 Days';
+    }
+  };
 
   return (
     <div className="bg-white p-4 rounded-xl shadow-lg flex flex-col" style={{ height: '500px' }}>
@@ -165,17 +180,52 @@ const TodayStats = ({ events, stats }) => {
 
       {/* Weekly Chart Section */}
       <div className="flex-1 bg-gray-50 rounded-lg p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-bold text-gray-700">Last 7 Days</h4>
-          <div className="text-xs text-gray-500">
-            Total: <span className="font-semibold text-purple-600">{totalWeekEvents}</span>
+        {/* Time Filter Buttons - BELOW STATS, ABOVE CHART */}
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-bold text-gray-700">{getFilterLabel()}</h4>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTimeFilter('week')}
+              className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+                timeFilter === 'week'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setTimeFilter('month')}
+              className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+                timeFilter === 'month'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setTimeFilter('year')}
+              className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+                timeFilter === 'year'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              Year
+            </button>
           </div>
         </div>
 
-        {weeklyChartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={150}>
+        <div className="text-xs text-gray-500 mb-2 text-right">
+          Total: <span className="font-semibold text-purple-600">{totalChartEvents}</span>
+        </div>
+
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={120}>
             <BarChart
-              data={weeklyChartData}
+              data={chartData}
               margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
@@ -213,7 +263,7 @@ const TodayStats = ({ events, stats }) => {
                 radius={[4, 4, 0, 0]}
                 maxBarSize={35}
               >
-                {weeklyChartData.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.isToday ? '#8b5cf6' : '#c4b5fd'}
@@ -224,7 +274,7 @@ const TodayStats = ({ events, stats }) => {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[150px] flex items-center justify-center text-gray-400 text-sm">
+          <div className="h-[120px] flex items-center justify-center text-gray-400 text-sm">
             No data for chart
           </div>
         )}

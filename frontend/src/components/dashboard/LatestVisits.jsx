@@ -159,41 +159,48 @@ const LatestVisits = ({ siteId }) => {
                   </div>
 
                   <div className="flex-1 grid grid-cols-5 gap-5">
-                    {/* IP */}
+                    {/* IP - TURQUOISE #1E88B8 */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Globe size={16} className="text-blue-600" />
-                        <span className="text-sm font-black text-blue-600 uppercase">IP</span>
+                        <Globe size={16} className="text-cyan-600" />
+                        <span className="text-sm font-black uppercase text-cyan-600">IP</span>
                       </div>
                       <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
                       <div className="text-gray-500 text-xs">Visitor #{visit.id}</div>
                     </div>
 
-                    {/* Device */}
+                    {/* Device - PINK #D91C81 */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Monitor size={16} className="text-pink-600" />
-                        <span className="text-sm font-black text-pink-600 uppercase">DEVICE</span>
+                        <span className="text-sm font-black uppercase text-pink-600">DEVICE</span>
                       </div>
                       <div className="text-gray-900 font-bold capitalize">{deviceType}</div>
-                      <div className="text-gray-600 text-sm">{browserName}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600 text-sm font-medium">Browser:</span>
+                        {browserIcon}
+                        <span className="text-gray-900 text-sm font-semibold">{browserName}</span>
+                      </div>
                     </div>
 
-                    {/* Session */}
+                    {/* Session - TURQUOISE #1E88B8 */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Clock size={16} className="text-blue-600" />
-                        <span className="text-sm font-black text-blue-600 uppercase">TIME</span>
+                        <Clock size={16} className="text-cyan-600" />
+                        <span className="text-sm font-black uppercase text-cyan-600">TIME</span>
                       </div>
                       <div className="text-gray-900 font-bold">{formatTime(visit.timestamp)}</div>
-                      <div className="text-gray-600 text-sm">{visit.duration || '0:00'}</div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-600 text-sm font-medium">Duration:</span>
+                        <span className="text-gray-900 text-sm font-semibold">{visit.duration || '0m 0s'}</span>
+                      </div>
                     </div>
 
-                    {/* Activity */}
+                    {/* Activity - PINK #D91C81 */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <MousePointer2 size={16} className="text-pink-600" />
-                        <span className="text-sm font-black text-pink-600 uppercase">ACTIVITY</span>
+                        <span className="text-sm font-black uppercase text-pink-600">ACTIVITY</span>
                       </div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-orange-600 font-black text-3xl">{visit.clicks || 0}</span>
@@ -201,11 +208,11 @@ const LatestVisits = ({ siteId }) => {
                       </div>
                     </div>
 
-                    {/* Latest */}
+                    {/* Latest - TURQUOISE #1E88B8 */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Activity size={16} className="text-blue-600" />
-                        <span className="text-sm font-black text-blue-600 uppercase">PAGE</span>
+                        <Activity size={16} className="text-cyan-600" />
+                        <span className="text-sm font-black uppercase text-cyan-600">PAGE</span>
                       </div>
                       <div className="px-2.5 py-1.5 bg-purple-600 rounded-md">
                         <span className="text-white font-bold text-xs truncate block">{formatPageUrl(visit.last_page)}</span>
