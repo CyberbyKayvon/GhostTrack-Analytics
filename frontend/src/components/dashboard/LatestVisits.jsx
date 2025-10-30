@@ -3,19 +3,90 @@ import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tabl
 import { analyticsAPI } from '../../services/api';
 import { UAParser } from 'ua-parser-js';
 
-// Chrome SVG Icon
-const ChromeIcon = ({ className = "w-4 h-4" }) => (
+// Chrome - Real recognizable logo with all 4 colors
+const ChromeIcon = ({ className = "w-8 h-8" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" fill="#4285F4"/>
+    <path d="M12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6Z" fill="#FFFFFF"/>
     <circle cx="12" cy="12" r="4" fill="#4285F4"/>
+    <path d="M12 2C17.5228 2 22 6.47715 22 12H18C18 8.68629 15.3137 6 12 6V2Z" fill="#EA4335"/>
+    <path d="M2 12C2 6.47715 6.47715 2 12 2V6C8.68629 6 6 8.68629 6 12H2Z" fill="#FBBC04"/>
+    <path d="M12 18V22C6.47715 22 2 17.5228 2 12H6C6 15.3137 8.68629 18 12 18Z" fill="#34A853"/>
+    <path d="M22 12C22 17.5228 17.5228 22 12 22V18C15.3137 18 18 15.3137 18 12H22Z" fill="#4285F4"/>
   </svg>
 );
 
-// Safari SVG Icon
-const SafariIcon = ({ className = "w-4 h-4" }) => (
+// Safari - Blue compass with red/blue needle
+const SafariIcon = ({ className = "w-8 h-8" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" stroke="#0066CC" strokeWidth="1.5" fill="white"/>
+    <path d="M12 3L12.5 5.5M12 21L11.5 18.5M21 12L18.5 12.5M3 12L5.5 11.5" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
+    <path d="M17.5 6.5L16 8M6.5 17.5L8 16M17.5 17.5L16 16M6.5 6.5L8 8" stroke="#0066CC" strokeWidth="1" strokeLinecap="round"/>
+    <path d="M12 12L15 9L12 15L9 15L12 12Z" fill="#FF0000"/>
+    <path d="M12 12L9 15L12 9L15 9L12 12Z" fill="#0066CC"/>
     <circle cx="12" cy="12" r="1" fill="#0066CC"/>
+  </svg>
+);
+
+// Firefox - ACTUAL recognizable orange fox around blue globe
+const FirefoxIcon = ({ className = "w-8 h-8" }) => (
+  <svg className={className} viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="firefox-gradient-1" cx="50%" cy="50%">
+        <stop offset="0%" stopColor="#FFBD4F"/>
+        <stop offset="100%" stopColor="#FF9640"/>
+      </radialGradient>
+      <radialGradient id="firefox-gradient-2" cx="50%" cy="50%">
+        <stop offset="0%" stopColor="#FF9640"/>
+        <stop offset="100%" stopColor="#E63950"/>
+      </radialGradient>
+      <radialGradient id="firefox-gradient-3" cx="50%" cy="50%">
+        <stop offset="0%" stopColor="#A060FF"/>
+        <stop offset="100%" stopColor="#7542E5"/>
+      </radialGradient>
+    </defs>
+    {/* Globe base */}
+    <circle cx="44" cy="44" r="38" fill="url(#firefox-gradient-3)"/>
+    {/* Fox tail - orange gradient */}
+    <path d="M20 30 Q10 20 15 10 Q20 5 30 8 Q35 10 38 15 L44 25 Z" fill="url(#firefox-gradient-1)"/>
+    {/* Fox body - wrapping around */}
+    <path d="M44 8 Q50 5 58 8 Q70 12 75 22 Q78 30 75 38 Q72 45 65 50 L55 55 Q48 58 44 58 Z" fill="url(#firefox-gradient-2)"/>
+    {/* Fox head/face */}
+    <path d="M70 25 Q75 20 78 15 Q80 12 80 18 Q80 25 75 32 Q70 38 65 40 Z" fill="url(#firefox-gradient-1)"/>
+    {/* Inner glow */}
+    <circle cx="44" cy="44" r="28" fill="#592ACB" opacity="0.7"/>
+    <circle cx="44" cy="44" r="20" fill="#4615B2" opacity="0.8"/>
+  </svg>
+);
+
+// Edge - ACTUAL recognizable blue-green wave
+const EdgeIcon = ({ className = "w-8 h-8" }) => (
+  <svg className={className} viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="edge-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0078D4"/>
+        <stop offset="50%" stopColor="#1E96EB"/>
+        <stop offset="100%" stopColor="#28A8EA"/>
+      </linearGradient>
+      <linearGradient id="edge-gradient-2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#28A8EA"/>
+        <stop offset="100%" stopColor="#00D8A0"/>
+      </linearGradient>
+    </defs>
+    {/* Main wave shape */}
+    <path d="M44 8 Q70 8 78 28 Q82 38 78 50 Q74 60 62 68 Q52 74 44 74 Q30 74 20 65 Q10 56 8 44 Q6 30 16 20 Q26 10 44 10 Z" fill="url(#edge-gradient-1)"/>
+    {/* Inner wave accent */}
+    <path d="M50 20 Q65 22 70 35 Q72 42 68 50 Q64 58 54 62 Q46 65 40 62 Q35 60 32 54 Z" fill="url(#edge-gradient-2)"/>
+    {/* Highlight curve */}
+    <path d="M25 30 Q35 20 48 20 Q58 20 65 28" stroke="#B4ECF7" strokeWidth="3" fill="none" opacity="0.6"/>
+  </svg>
+);
+
+// Opera - Red O logo
+const OperaIcon = ({ className = "w-8 h-8" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#FF1B2D"/>
+    <ellipse cx="12" cy="12" rx="5" ry="7" fill="none" stroke="white" strokeWidth="2"/>
   </svg>
 );
 
@@ -33,27 +104,12 @@ const LatestVisits = ({ siteId }) => {
 
   const fetchVisitors = async () => {
     try {
-      console.log('=== FETCHING VISITORS ===');
-      console.log('Site ID:', siteId);
-
       const response = await analyticsAPI.getRecentVisitors(siteId, 10);
-
-      console.log('Full API Response:', response);
-      console.log('Response Data:', response.data);
-      console.log('Visitors Array:', response.data?.visitors);
-
       const visitors = response.data?.visitors || [];
-
-      console.log('Setting visits to:', visitors);
-      console.log('Number of visitors:', visitors.length);
-
       setVisits(visitors);
       setLoading(false);
     } catch (error) {
-      console.error('=== ERROR FETCHING VISITORS ===');
-      console.error('Error:', error);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response);
+      console.error('Error fetching visitors:', error);
       setLoading(false);
     }
   };
@@ -66,34 +122,113 @@ const LatestVisits = ({ siteId }) => {
     let browserName = visit.browser || result.browser.name || 'Unknown';
     let deviceType = result.device.type || 'desktop';
 
+    // Detect Instagram in-app browser
     if (userAgent.includes('Instagram')) browserName = 'Instagram';
 
-    let browserIcon = <Monitor className="w-4 h-4" />;
-    let browserColor = 'bg-blue-500';
+    // Get browser icon and color
+    let browserIcon, browserColor;
 
-    if (browserName.toLowerCase().includes('instagram')) {
-      browserIcon = <Instagram className="w-4 h-4" />;
-      browserColor = 'bg-pink-500';
+    if (browserName === 'Instagram' || browserName.toLowerCase().includes('instagram')) {
+      browserIcon = <Instagram className="w-8 h-8 text-white" />;
+      browserColor = 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400';
+    } else if (browserName.toLowerCase().includes('edge')) {
+      browserIcon = <EdgeIcon className="w-8 h-8" />;
+      browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('chrome')) {
-      browserIcon = <ChromeIcon className="w-4 h-4" />;
-      browserColor = 'bg-blue-500';
+      browserIcon = <ChromeIcon className="w-8 h-8" />;
+      browserColor = 'bg-white';
+    } else if (browserName.toLowerCase().includes('firefox')) {
+      browserIcon = <FirefoxIcon className="w-8 h-8" />;
+      browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('safari')) {
-      browserIcon = <SafariIcon className="w-4 h-4" />;
-      browserColor = 'bg-blue-600';
+      browserIcon = <SafariIcon className="w-8 h-8" />;
+      browserColor = 'bg-white';
+    } else if (browserName.toLowerCase().includes('opera')) {
+      browserIcon = <OperaIcon className="w-8 h-8" />;
+      browserColor = 'bg-white';
+    } else {
+      browserIcon = <Activity className="w-8 h-8 text-gray-600" />;
+      browserColor = 'bg-gray-200';
     }
 
-    let deviceIcon = deviceType === 'mobile' ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />;
+    // Get device icon
+    let deviceIcon;
+    if (deviceType === 'mobile') {
+      deviceIcon = <Smartphone className="w-4 h-4" />;
+    } else if (deviceType === 'tablet') {
+      deviceIcon = <Tablet className="w-4 h-4" />;
+    } else {
+      deviceIcon = <Monitor className="w-4 h-4" />;
+    }
 
-    return { browserIcon, browserColor, browserName, deviceIcon, deviceType };
+    return { browserIcon, browserColor, deviceIcon, deviceType, browserName };
   };
 
+  // Format time exactly like EventsFeed (e.g., "7:20 PM")
   const formatTime = (timestamp) => {
     try {
-      const date = timestamp.endsWith('Z') ? new Date(timestamp) : new Date(timestamp + 'Z');
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } catch {
+      let date;
+      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        date = new Date(timestamp);
+      } else {
+        date = new Date(timestamp + 'Z');
+      }
+
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+
+      return `${hours}:${minutesStr} ${ampm}`;
+    } catch (e) {
       return 'N/A';
     }
+  };
+
+  // Format duration properly
+  const formatDuration = (duration) => {
+    if (!duration || duration === '0:00' || duration === '0') return '0s';
+
+    if (typeof duration === 'string' && duration.includes(':')) {
+      const parts = duration.split(':');
+      if (parts.length === 2) {
+        const mins = parseInt(parts[0]);
+        const secs = parseInt(parts[1]);
+
+        if (mins < 1440) {
+          if (mins === 0) return `${secs}s`;
+          if (mins < 60) return `${mins}m ${secs}s`;
+          const hours = Math.floor(mins / 60);
+          const remainingMins = mins % 60;
+          return `${hours}h ${remainingMins}m`;
+        } else {
+          const totalSeconds = mins * 60 + secs;
+          return formatSecondsToTime(totalSeconds);
+        }
+      }
+    }
+
+    if (typeof duration === 'number') {
+      return formatSecondsToTime(duration);
+    }
+
+    return duration;
+  };
+
+  const formatSecondsToTime = (seconds) => {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}m ${secs}s`;
+    }
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${mins}m`;
   };
 
   const formatPageUrl = (url) => {
@@ -146,20 +281,21 @@ const LatestVisits = ({ siteId }) => {
       ) : (
         <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '400px' }}>
           {visits.map((visit, index) => {
-            const { browserIcon, browserColor, browserName, deviceIcon, deviceType } = getBrowserInfo(visit);
+            const { browserIcon, browserColor, deviceIcon, deviceType, browserName } = getBrowserInfo(visit);
             const accentColor = accentColors[index % accentColors.length];
 
             return (
               <div key={visit.session_id || index} className={`bg-gray-50 rounded-xl p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
                 <div className="flex items-center gap-5">
+                  {/* Browser icon - LARGE and recognizable */}
                   <div className="flex-shrink-0">
-                    <div className={`w-14 h-14 rounded-xl ${browserColor} flex items-center justify-center shadow-md`}>
+                    <div className={`w-16 h-16 rounded-xl ${browserColor} flex items-center justify-center shadow-md`}>
                       {browserIcon}
                     </div>
                   </div>
 
                   <div className="flex-1 grid grid-cols-5 gap-5">
-                    {/* IP - TURQUOISE #1E88B8 */}
+                    {/* IP */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Globe size={16} className="text-cyan-600" />
@@ -169,21 +305,20 @@ const LatestVisits = ({ siteId }) => {
                       <div className="text-gray-500 text-xs">Visitor #{visit.id}</div>
                     </div>
 
-                    {/* Device - PINK #D91C81 */}
+                    {/* Device - FIXED: Show device type and browser name, NOT duplicate */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Monitor size={16} className="text-pink-600" />
                         <span className="text-sm font-black uppercase text-pink-600">DEVICE</span>
                       </div>
                       <div className="text-gray-900 font-bold capitalize">{deviceType}</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600 text-sm font-medium">Browser:</span>
-                        {browserIcon}
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-600 text-sm">Browser:</span>
                         <span className="text-gray-900 text-sm font-semibold">{browserName}</span>
                       </div>
                     </div>
 
-                    {/* Session - TURQUOISE #1E88B8 */}
+                    {/* Time */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Clock size={16} className="text-cyan-600" />
@@ -192,11 +327,11 @@ const LatestVisits = ({ siteId }) => {
                       <div className="text-gray-900 font-bold">{formatTime(visit.timestamp)}</div>
                       <div className="flex items-center gap-1">
                         <span className="text-gray-600 text-sm font-medium">Duration:</span>
-                        <span className="text-gray-900 text-sm font-semibold">{visit.duration || '0m 0s'}</span>
+                        <span className="text-gray-900 text-sm font-semibold">{formatDuration(visit.duration)}</span>
                       </div>
                     </div>
 
-                    {/* Activity - PINK #D91C81 */}
+                    {/* Activity */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <MousePointer2 size={16} className="text-pink-600" />
@@ -208,7 +343,7 @@ const LatestVisits = ({ siteId }) => {
                       </div>
                     </div>
 
-                    {/* Latest - TURQUOISE #1E88B8 */}
+                    {/* Page */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Activity size={16} className="text-cyan-600" />
