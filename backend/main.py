@@ -39,12 +39,9 @@ app.add_middleware(
         "http://kayvontennis.com",
         "https://www.kayvontennis.com",
         "http://www.kayvontennis.com",
-        "https://dashboard.ghosttrack.app",  # ← ADD THIS
-        "*"  # Allow all origins (less secure, but works for testing)
+        "https://dashboard.ghosttrack.app"
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 # Include routers
