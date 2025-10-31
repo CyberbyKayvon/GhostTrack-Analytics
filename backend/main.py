@@ -7,7 +7,7 @@ import os
 from app.core.database import init_db
 from app.core.config import settings
 from app.api import events, analytics, auth, threats
-from routes.heatmap import heatmap_bp
+from routes.heatmap import router as heatmap_router
 
 # Get the directory where main.py is located
 BASE_DIR = Path(__file__).resolve().parent
@@ -52,6 +52,7 @@ app.include_router(events.router, prefix="/api/v1/events", tags=["events"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(threats.router, prefix="/api/v1/threats", tags=["threats"])
+app.include_router(heatmap_router, prefix="/api/v1/heatmap", tags=["heatmap"])
 
 # Serve the tracker JavaScript file
 tracker_dir = BASE_DIR.parent / "tracker"
