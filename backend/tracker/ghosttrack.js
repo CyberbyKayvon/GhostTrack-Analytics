@@ -1,4 +1,4 @@
-// GhostTrack Analytics - Tracking Script with Persistent Session IDs
+// GhostTrack Analytics - Tracking Script with Persistent Session IDs + Heatmap
 // Place this script in your website's <head> or before </body>
 
 (function() {
@@ -6,7 +6,8 @@
 
   // Configuration
   const SITE_ID = 'kayvontennis-com'; // Change this for each site
-  const API_ENDPOINT = 'http://localhost:8000/api/events/track'; // Change to your API URL
+  const API_ENDPOINT = 'https://ghosttrack-analytics-production.up.railway.app/api/v1/events/track';
+  const HEATMAP_ENDPOINT = 'https://ghosttrack-analytics-production.up.railway.app/api/v1/heatmap/track';
   const SESSION_STORAGE_KEY = 'ghosttrack_session_id';
 
   /**
@@ -87,6 +88,33 @@
   }
 
   /**
+   * Track heatmap click with coordinates
+   */
+  function trackHeatmapClick(event) {
+    const sessionId = getOrCreateSessionId();
+
+    const payload = {
+      site_id: SITE_ID,
+      session_id: sessionId,
+      page_url: window.location.href,
+      x: event.pageX,
+      y: event.pageY,
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight
+    };
+
+    // Send heatmap data
+    fetch(HEATMAP_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(err => console.error('Heatmap tracking error:', err));
+  }
+
+  /**
    * Track page view on load
    */
   function trackPageView() {
@@ -106,6 +134,7 @@
     const element = event.target;
     const tagName = element.tagName.toLowerCase();
 
+    // Track regular click event
     trackEvent('click', {
       element_tag: tagName,
       element_id: element.id || null,
@@ -113,6 +142,9 @@
       element_text: element.innerText?.substring(0, 50) || null,
       page_title: document.title
     });
+
+    // Track heatmap click
+    trackHeatmapClick(event);
   }
 
   /**
@@ -164,7 +196,7 @@
    * Initialize tracking
    */
   function init() {
-    console.log('GhostTrack Analytics initialized');
+    console.log('GhostTrack Analytics initialized with Heatmap tracking');
     console.log('Session ID:', getOrCreateSessionId());
 
     // Track initial pageview
@@ -209,14 +241,3 @@
     getSessionId: getOrCreateSessionId
   };
 })();
-
-// USAGE EXAMPLES:
-//
-// 1. Track custom event:
-//    window.ghostTrack.track('custom_event', { custom_data: 'value' });
-//
-// 2. Get current session ID:
-//    const sessionId = window.ghostTrack.getSessionId();
-//
-// 3. Track search:
-//    window.ghostTrack.track('search', { query: 'tennis rackets' });
