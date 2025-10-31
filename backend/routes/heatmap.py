@@ -15,7 +15,7 @@ def get_db():
 
 # Request models
 class HeatmapClick(BaseModel):
-    site_id: int
+    site_id: str  # ← CORRECT
     session_id: str
     page_url: str
     x: int
@@ -55,7 +55,7 @@ async def track_click(data: HeatmapClick):
 
 
 @router.get("/data/{site_id}")
-async def get_heatmap_data(site_id: int, page_url: Optional[str] = '', days: int = 7):
+async def get_heatmap_data(site_id: str, page_url: Optional[str] = '', days: int = 7):
     """Retrieve heatmap click data"""
     try:
         conn = get_db()
