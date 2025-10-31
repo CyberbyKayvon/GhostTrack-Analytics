@@ -42,31 +42,31 @@ const IPTracker = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg" style={{ minHeight: '500px' }}>
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg" style={{ minHeight: '500px' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+      <div className="flex items-center gap-3 mb-4 sm:mb-6 pb-4 border-b-2 border-gray-100">
         <div className="p-2 bg-blue-100 rounded-lg">
-          <MapPin className="text-blue-600" size={24} />
+          <MapPin className="text-blue-600" size={20} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           IP Address Tracker
         </h2>
       </div>
 
-      {/* Search Input */}
-      <div className="flex gap-3 mb-6">
+      {/* Search Input - Mobile Responsive */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
         <input
           type="text"
-          placeholder="Enter IP address (e.g., 102.129.153.238)"
+          placeholder="Enter IP address"
           value={ipAddress}
           onChange={(e) => setIpAddress(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 font-mono"
+          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 font-mono text-sm sm:text-base"
         />
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2"
+          className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
           <Search size={20} />
           {loading ? 'Searching...' : 'Search'}
@@ -75,8 +75,8 @@ const IPTracker = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 font-medium">{error}</p>
+        <div className="mb-4 sm:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
         </div>
       )}
 
@@ -84,32 +84,32 @@ const IPTracker = () => {
       {ipData && (
         <div className="space-y-4">
           {/* Main IP Info Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-black text-gray-900">IP Address</h3>
-              <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-lg font-mono">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+              <h3 className="text-xl sm:text-2xl font-black text-gray-900">IP Address</h3>
+              <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-base sm:text-lg font-mono break-all">
                 {ipData.ip}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Type</p>
-                <p className="text-lg font-bold text-gray-900">{ipData.version || 'IPv4'}</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.version || 'IPv4'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Organization</p>
-                <p className="text-lg font-bold text-gray-900">{ipData.org || 'N/A'}</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900 break-words">{ipData.org || 'N/A'}</p>
               </div>
             </div>
           </div>
 
           {/* Location Section */}
-          <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+          <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-gray-200">
             <div className="flex items-center gap-2 mb-4">
-              <MapPin className="text-green-600" size={24} />
-              <h3 className="text-xl font-black text-gray-900">Location</h3>
+              <MapPin className="text-green-600" size={20} />
+              <h3 className="text-lg sm:text-xl font-black text-gray-900">Location</h3>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">City</p>
                 <p className="text-base font-bold text-gray-900">{ipData.city || 'Unknown'}</p>
@@ -132,12 +132,12 @@ const IPTracker = () => {
           </div>
 
           {/* Coordinates & Network */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Coordinates */}
-            <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-gray-200">
               <div className="flex items-center gap-2 mb-4">
-                <Navigation className="text-purple-600" size={24} />
-                <h3 className="text-xl font-black text-gray-900">Coordinates</h3>
+                <Navigation className="text-purple-600" size={20} />
+                <h3 className="text-lg sm:text-xl font-black text-gray-900">Coordinates</h3>
               </div>
               <div className="space-y-3">
                 <div>
@@ -156,19 +156,19 @@ const IPTracker = () => {
             </div>
 
             {/* Network Info */}
-            <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <div className="bg-white rounded-xl p-4 sm:p-6 border-2 border-gray-200">
               <div className="flex items-center gap-2 mb-4">
-                <Wifi className="text-orange-600" size={24} />
-                <h3 className="text-xl font-black text-gray-900">Network</h3>
+                <Wifi className="text-orange-600" size={20} />
+                <h3 className="text-lg sm:text-xl font-black text-gray-900">Network</h3>
               </div>
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-500 mb-1">ASN</p>
-                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.asn || 'N/A'}</p>
+                  <p className="text-base font-bold text-gray-900 font-mono break-all">{ipData.asn || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-500 mb-1">Network</p>
-                  <p className="text-base font-bold text-gray-900 font-mono">{ipData.network || 'N/A'}</p>
+                  <p className="text-base font-bold text-gray-900 font-mono break-all">{ipData.network || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-500 mb-1">Currency</p>
@@ -186,10 +186,10 @@ const IPTracker = () => {
       {!ipData && !error && !loading && (
         <div className="text-center py-12">
           <div className="inline-block p-6 bg-gray-100 rounded-2xl mb-4">
-            <MapPin className="text-gray-300" size={64} />
+            <MapPin className="text-gray-300" size={48} />
           </div>
-          <p className="text-gray-900 font-bold text-xl mb-2">Search for an IP Address</p>
-          <p className="text-gray-500">Enter an IP address above to view detailed information</p>
+          <p className="text-gray-900 font-bold text-lg sm:text-xl mb-2">Search for an IP Address</p>
+          <p className="text-gray-500 text-sm sm:text-base">Enter an IP address above to view detailed information</p>
         </div>
       )}
     </div>

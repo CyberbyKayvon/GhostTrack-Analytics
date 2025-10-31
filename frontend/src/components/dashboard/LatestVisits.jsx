@@ -129,25 +129,25 @@ const LatestVisits = ({ siteId }) => {
     let browserIcon, browserColor;
 
     if (browserName === 'Instagram' || browserName.toLowerCase().includes('instagram')) {
-      browserIcon = <Instagram className="w-8 h-8 text-white" />;
+      browserIcon = <Instagram className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />;
       browserColor = 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400';
     } else if (browserName.toLowerCase().includes('edge')) {
-      browserIcon = <EdgeIcon className="w-8 h-8" />;
+      browserIcon = <EdgeIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('chrome')) {
-      browserIcon = <ChromeIcon className="w-8 h-8" />;
+      browserIcon = <ChromeIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('firefox')) {
-      browserIcon = <FirefoxIcon className="w-8 h-8" />;
+      browserIcon = <FirefoxIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('safari')) {
-      browserIcon = <SafariIcon className="w-8 h-8" />;
+      browserIcon = <SafariIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('opera')) {
-      browserIcon = <OperaIcon className="w-8 h-8" />;
+      browserIcon = <OperaIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else {
-      browserIcon = <Activity className="w-8 h-8 text-gray-600" />;
+      browserIcon = <Activity className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-600" />;
       browserColor = 'bg-gray-200';
     }
 
@@ -246,12 +246,12 @@ const LatestVisits = ({ siteId }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg">
+        <div className="flex items-center gap-3 mb-4 sm:mb-6 pb-4 border-b-2 border-gray-100">
           <div className="p-2 bg-purple-100 rounded-lg">
-            <Users className="text-purple-600" size={24} />
+            <Users className="text-purple-600" size={20} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Latest Users</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Latest Users</h2>
         </div>
         <div className="text-center py-8 text-gray-400">Loading visitors...</div>
       </div>
@@ -259,34 +259,94 @@ const LatestVisits = ({ siteId }) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-100">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 pb-4 border-b-2 border-gray-100 gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-100 rounded-lg">
-            <Users className="text-purple-600" size={24} />
+            <Users className="text-purple-600" size={20} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Latest Users</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Latest Users</h2>
         </div>
-        <div className="px-4 py-2 bg-blue-100 rounded-lg">
+        <div className="px-4 py-2 bg-blue-100 rounded-lg self-start sm:self-auto">
           <span className="text-blue-700 font-bold text-sm">{visits.length} Sessions</span>
         </div>
       </div>
 
       {visits.length === 0 ? (
         <div className="text-center py-16">
-          <Users className="text-gray-300 mx-auto mb-4" size={64} />
-          <p className="text-gray-900 font-bold text-xl mb-1">No Active Sessions</p>
-          <p className="text-gray-500">Visitor data will appear here</p>
+          <Users className="text-gray-300 mx-auto mb-4" size={48} />
+          <p className="text-gray-900 font-bold text-lg sm:text-xl mb-1">No Active Sessions</p>
+          <p className="text-gray-500 text-sm sm:text-base">Visitor data will appear here</p>
         </div>
       ) : (
-        <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '400px' }}>
+        <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '600px' }}>
           {visits.map((visit, index) => {
             const { browserIcon, browserColor, deviceIcon, deviceType, browserName } = getBrowserInfo(visit);
             const accentColor = accentColors[index % accentColors.length];
 
             return (
-              <div key={visit.session_id || index} className={`bg-gray-50 rounded-xl p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
-                <div className="flex items-center gap-5">
+              <div key={visit.session_id || index} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
+                {/* Mobile & Tablet Layout (< lg) */}
+                <div className="lg:hidden space-y-3">
+                  {/* Browser Icon + IP + Activity */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg ${browserColor} flex items-center justify-center shadow-md`}>
+                        {browserIcon}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <Globe size={14} className="text-cyan-600 flex-shrink-0" />
+                          <span className="text-gray-900 font-bold font-mono text-sm break-all">{visit.ip || 'Unknown'}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1 flex-shrink-0">
+                          <span className="text-orange-600 font-black text-xl">{visit.clicks || 0}</span>
+                          <span className="text-gray-600 font-semibold text-xs">clicks</span>
+                        </div>
+                      </div>
+
+                      <div className="text-gray-500 text-xs mb-1">Visitor #{visit.id}</div>
+
+                      {/* Device & Browser */}
+                      <div className="flex items-center gap-2 text-xs">
+                        {deviceIcon}
+                        <span className="text-gray-900 font-semibold capitalize">{deviceType}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-600">{browserName}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time, Duration & Page */}
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Clock size={14} className="text-cyan-600" />
+                        <span className="text-xs font-bold text-gray-700 uppercase">Time</span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-900">{formatTime(visit.timestamp)}</div>
+                      <div className="text-xs text-gray-600 mt-0.5">
+                        Duration: <span className="font-semibold text-gray-900">{formatDuration(visit.duration)}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Activity size={14} className="text-cyan-600" />
+                        <span className="text-xs font-bold text-gray-700 uppercase">Page</span>
+                      </div>
+                      <div className="px-2 py-1 bg-purple-600 rounded-md inline-block">
+                        <span className="text-white font-bold text-xs">{formatPageUrl(visit.last_page)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout (>= lg) */}
+                <div className="hidden lg:flex items-center gap-5">
                   {/* Browser icon - LARGE and recognizable */}
                   <div className="flex-shrink-0">
                     <div className={`w-16 h-16 rounded-xl ${browserColor} flex items-center justify-center shadow-md`}>
@@ -305,7 +365,7 @@ const LatestVisits = ({ siteId }) => {
                       <div className="text-gray-500 text-xs">Visitor #{visit.id}</div>
                     </div>
 
-                    {/* Device - FIXED: Show device type and browser name, NOT duplicate */}
+                    {/* Device */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Monitor size={16} className="text-pink-600" />
