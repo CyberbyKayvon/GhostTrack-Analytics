@@ -7,6 +7,7 @@ import os
 from app.core.database import init_db
 from app.core.config import settings
 from app.api import events, analytics, auth, threats
+from routes.heatmap import heatmap_bp
 
 # Get the directory where main.py is located
 BASE_DIR = Path(__file__).resolve().parent
