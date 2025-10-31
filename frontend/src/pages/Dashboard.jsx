@@ -8,6 +8,7 @@ import TrafficSources from '../components/dashboard/TrafficSources';
 import IPLookup from '../components/dashboard/IPLookup';
 import TodayStats from '../components/dashboard/TodayStats';
 import { analyticsAPI } from '../services/api';
+import HeatmapViewer from '../components/dashboard/Heatmap';
 
 const Dashboard = () => {
   const [currentSiteId, setCurrentSiteId] = useState('kayvontennis-com');
@@ -107,6 +108,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           <TrafficSources siteId={currentSiteId} />
           <IPLookup />
+        </div>
+
+        {/* ROW 5 - Heatmap (FULL WIDTH) */}
+        <div className="grid grid-cols-1 gap-6 mt-6">
+          <HeatmapViewer siteId={currentSiteId} />
         </div>
       </div>
     </div>

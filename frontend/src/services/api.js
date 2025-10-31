@@ -34,4 +34,10 @@ export const threatsAPI = {
     api.get(`/threats/suspicious?site_id=${siteId}`),
 };
 
+export const heatmapAPI = {
+  track: (data) => api.post('/heatmap/track', data),
+  getData: (siteId, params) => api.get(`/heatmap/data/${siteId}`, { params })
+};
+
 export default api;
+
