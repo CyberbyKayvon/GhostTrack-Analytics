@@ -42,6 +42,8 @@ app.add_middleware(
         "https://dashboard.ghosttrack.app"
     ],
     allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
