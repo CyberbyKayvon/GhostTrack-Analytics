@@ -1,5 +1,4 @@
 // GhostTrack Analytics - Tracking Script with Persistent Session IDs + Heatmap
-// Place this script in your website's <head> or before </body>
 
 (function() {
   'use strict';
