@@ -9,6 +9,11 @@ const HeatmapViewer = ({ siteId }) => {
 
   useEffect(() => {
     fetchData();
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(fetchData, 10000);
+
+    return () => clearInterval(interval);
   }, [siteId, days]);
 
   const fetchData = async () => {
@@ -110,7 +115,7 @@ const HeatmapViewer = ({ siteId }) => {
             {/* Click dots visualization */}
             {getClickDensity().map((area, i) => {
               const intensity = area.count / maxClicks;
-              const size = 15 + (intensity * 30); // Smaller dots
+              const size = 15 + (intensity * 30);
               const opacity = 0.4 + (intensity * 0.6);
 
               return (
