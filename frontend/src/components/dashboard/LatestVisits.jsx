@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tablet, Instagram } from 'lucide-react';
+import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tablet, Instagram, Calendar } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 import { UAParser } from 'ua-parser-js';
 
@@ -189,6 +189,27 @@ const LatestVisits = ({ siteId }) => {
     }
   };
 
+  // NEW: Format date (e.g., "Nov 1, 2025" or "11/1/25")
+  const formatDate = (timestamp) => {
+    try {
+      let date;
+      if (timestamp.endsWith('Z') || timestamp.includes('+')) {
+        date = new Date(timestamp);
+      } else {
+        date = new Date(timestamp + 'Z');
+      }
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = months[date.getMonth()];
+      const day = date.getDate();
+      const year = date.getFullYear();
+
+      return `${month} ${day}, ${year}`;
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
   // Format duration properly
   const formatDuration = (duration) => {
     if (!duration || duration === '0:00' || duration === '0') return '0s';
@@ -328,7 +349,11 @@ const LatestVisits = ({ siteId }) => {
                         <span className="text-xs font-bold text-gray-700 uppercase">Time</span>
                       </div>
                       <div className="text-sm font-bold text-gray-900">{formatTime(visit.timestamp)}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">
+                      <div className="flex items-center gap-1 text-xs text-gray-600 mt-0.5">
+                        <Calendar size={12} className="text-gray-500" />
+                        <span>{formatDate(visit.timestamp)}</span>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
                         Duration: <span className="font-semibold text-gray-900">{formatDuration(visit.duration)}</span>
                       </div>
                     </div>
@@ -385,9 +410,13 @@ const LatestVisits = ({ siteId }) => {
                         <span className="text-sm font-black uppercase text-cyan-600">TIME</span>
                       </div>
                       <div className="text-gray-900 font-bold">{formatTime(visit.timestamp)}</div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-600 text-sm font-medium">Duration:</span>
-                        <span className="text-gray-900 text-sm font-semibold">{formatDuration(visit.duration)}</span>
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <Calendar size={12} className="text-gray-500" />
+                        <span>{formatDate(visit.timestamp)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                        <span className="font-medium">Duration:</span>
+                        <span className="font-semibold text-gray-900">{formatDuration(visit.duration)}</span>
                       </div>
                     </div>
 
