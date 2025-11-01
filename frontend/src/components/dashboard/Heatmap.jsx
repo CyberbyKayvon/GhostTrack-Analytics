@@ -21,6 +21,11 @@ const HeatmapViewer = ({ siteId }) => {
     try {
       setLoading(true);
       const response = await heatmapAPI.getData(siteId, { days });
+      console.log('RAW HEATMAP DATA:', response.data);
+      console.log('CLICKS ARRAY:', response.data?.clicks);
+      if (response.data?.clicks?.length > 0) {
+        console.log('FIRST CLICK:', response.data.clicks[0]);
+      }
       setData(response.data);
       setLoading(false);
     } catch (error) {
@@ -44,22 +49,31 @@ const HeatmapViewer = ({ siteId }) => {
   };
 
   const getClickDensity = () => {
-    if (!data?.clicks) return [];
+    if (!data?.clicks) {
+      console.log('No clicks in data');
+      return [];
+    }
+
+    console.log('Processing clicks for density:', data.clicks.length);
 
     const gridSize = 50;
     const density = {};
 
-    data.clicks.forEach(click => {
+    data.clicks.forEach((click, index) => {
+      console.log(`Click ${index}:`, click);
       const gridX = Math.floor(click.x / gridSize);
       const gridY = Math.floor(click.y / gridSize);
       const key = `${gridX},${gridY}`;
       density[key] = (density[key] || 0) + 1;
     });
 
-    return Object.entries(density).map(([key, count]) => {
+    const result = Object.entries(density).map(([key, count]) => {
       const [x, y] = key.split(',').map(Number);
       return { x: x * gridSize, y: y * gridSize, count };
     });
+
+    console.log('Density result:', result);
+    return result;
   };
 
   const maxClicks = Math.max(...(getClickDensity().map(d => d.count) || [1]));
@@ -67,7 +81,7 @@ const HeatmapViewer = ({ siteId }) => {
 
   return (
     <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg w-full">
-      {/* Header - Fixed for mobile */}
+      {/* Header */}
       <div className="flex flex-col gap-3 mb-6 pb-4 border-b-2 border-gray-100">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-orange-100 rounded-lg">
@@ -162,7 +176,7 @@ const HeatmapViewer = ({ siteId }) => {
         </div>
       )}
 
-      {/* Visual Heatmap - FIXED OVERFLOW */}
+      {/* Visual Heatmap */}
       <div className="bg-gray-50 rounded-xl border-2 border-gray-200">
         {loading ? (
           <div className="h-48 md:h-64 flex items-center justify-center">
@@ -174,7 +188,7 @@ const HeatmapViewer = ({ siteId }) => {
         ) : data?.clicks?.length > 0 ? (
           <div className="relative bg-white mx-auto p-4" style={{ height: '280px', width: '100%' }}>
             <div className="relative w-full h-full" style={{ overflow: 'visible' }}>
-              {/* Click dots - now with padding container */}
+              {/* Click dots */}
               {getClickDensity().map((area, i) => {
                 const intensity = area.count / maxClicks;
                 const size = 12 + (intensity * 25);
