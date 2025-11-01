@@ -21,11 +21,6 @@ const HeatmapViewer = ({ siteId }) => {
     try {
       setLoading(true);
       const response = await heatmapAPI.getData(siteId, { days });
-      console.log('RAW HEATMAP DATA:', response.data);
-      console.log('CLICKS ARRAY:', response.data?.clicks);
-      if (response.data?.clicks?.length > 0) {
-        console.log('FIRST CLICK:', response.data.clicks[0]);
-      }
       setData(response.data);
       setLoading(false);
     } catch (error) {
@@ -49,34 +44,29 @@ const HeatmapViewer = ({ siteId }) => {
   };
 
   const getClickDensity = () => {
-    if (!data?.clicks) {
-      console.log('No clicks in data');
-      return [];
-    }
-
-    console.log('Processing clicks for density:', data.clicks.length);
+    if (!data?.clicks) return [];
 
     const gridSize = 50;
     const density = {};
 
-    data.clicks.forEach((click, index) => {
-      console.log(`Click ${index}:`, click);
-      const gridX = Math.floor(click.x / gridSize);
-      const gridY = Math.floor(click.y / gridSize);
+    data.clicks.forEach(click => {
+      const x = click.x_position || click.x || 0;
+      const y = click.y_position || click.y || 0;
+
+      const gridX = Math.floor(x / gridSize);
+      const gridY = Math.floor(y / gridSize);
       const key = `${gridX},${gridY}`;
       density[key] = (density[key] || 0) + 1;
     });
 
-    const result = Object.entries(density).map(([key, count]) => {
+    return Object.entries(density).map(([key, count]) => {
       const [x, y] = key.split(',').map(Number);
       return { x: x * gridSize, y: y * gridSize, count };
     });
-
-    console.log('Density result:', result);
-    return result;
   };
 
-  const maxClicks = Math.max(...(getClickDensity().map(d => d.count) || [1]));
+  const clickDensity = getClickDensity();
+  const maxClicks = Math.max(...(clickDensity.map(d => d.count) || [1]));
   const pageBreakdown = getPageBreakdown();
 
   return (
@@ -176,8 +166,8 @@ const HeatmapViewer = ({ siteId }) => {
         </div>
       )}
 
-      {/* Visual Heatmap */}
-      <div className="bg-gray-50 rounded-xl border-2 border-gray-200">
+      {/* Visual Heatmap - FIXED OVERFLOW */}
+      <div className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden">
         {loading ? (
           <div className="h-48 md:h-64 flex items-center justify-center">
             <div className="text-center">
@@ -186,10 +176,10 @@ const HeatmapViewer = ({ siteId }) => {
             </div>
           </div>
         ) : data?.clicks?.length > 0 ? (
-          <div className="relative bg-white mx-auto p-4" style={{ height: '280px', width: '100%' }}>
-            <div className="relative w-full h-full" style={{ overflow: 'visible' }}>
+          <div className="relative bg-white p-6" style={{ height: '320px', width: '100%' }}>
+            <div className="relative w-full h-full">
               {/* Click dots */}
-              {getClickDensity().map((area, i) => {
+              {clickDensity.map((area, i) => {
                 const intensity = area.count / maxClicks;
                 const size = 12 + (intensity * 25);
                 const opacity = 0.4 + (intensity * 0.6);
@@ -197,7 +187,7 @@ const HeatmapViewer = ({ siteId }) => {
                 return (
                   <div
                     key={i}
-                    className="absolute rounded-full"
+                    className="absolute rounded-full pointer-events-none"
                     style={{
                       left: `${(area.x / 1920) * 100}%`,
                       top: `${(area.y / 1080) * 100}%`,
@@ -227,7 +217,7 @@ const HeatmapViewer = ({ siteId }) => {
             </div>
 
             {/* Legend */}
-            <div className="absolute bottom-2 right-2 bg-white rounded-lg shadow-lg p-2 border-2 border-gray-200 z-20">
+            <div className="absolute bottom-3 right-3 bg-white rounded-lg shadow-lg p-2 border-2 border-gray-200 z-20">
               <p className="text-xs font-bold text-gray-700 mb-1">Click Density</p>
               <div className="flex items-center gap-1 text-xs">
                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
