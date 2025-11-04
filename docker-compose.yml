@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: ghosttrack_db
     environment:
-      POSTGRES_USER: ghosttrack
-      POSTGRES_PASSWORD: ghosttrack_dev_password
-      POSTGRES_DB: ghosttrack
+      POSTGRES_USER: ${POSTGRES_USER:-ghosttrack}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ghosttrack_dev_password_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-ghosttrack}
     ports:
       - "5432:5432"
     volumes:
@@ -27,9 +27,12 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://ghosttrack:ghosttrack_dev_password@postgres:5432/ghosttrack
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-ghosttrack}:${POSTGRES_PASSWORD:-ghosttrack_dev_password_change_me}@postgres:5432/${POSTGRES_DB:-ghosttrack}
       - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
     depends_on:
       - postgres
       - redis

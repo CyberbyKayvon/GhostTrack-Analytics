@@ -25,5 +25,5 @@ def get_db():
 
 # Function to create all tables
 def init_db():
-    from app.models import event  # Import models here to avoid circular imports
+    from app.models import event, heatmap  # Import models here to avoid circular imports
     Base.metadata.create_all(bind=engine)

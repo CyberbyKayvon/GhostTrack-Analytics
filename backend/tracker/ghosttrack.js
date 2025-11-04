@@ -1,12 +1,29 @@
 // GhostTrack Analytics - Tracking Script with Persistent Session IDs + Heatmap
+//
+// Usage:
+// <script src="https://your-api.com/tracker/ghosttrack.js"
+//         data-ghosttrack
+//         data-site-id="my-website"
+//         data-api-url="https://your-api.com"
+//         data-debug="true">
+// </script>
+//
+// Parameters:
+//   data-ghosttrack: Required - marks this as the GhostTrack script
+//   data-site-id: Your unique site identifier (default: 'default-site')
+//   data-api-url: Your GhostTrack API URL (default: Railway production URL)
+//   data-debug: Enable console logging (default: false for silent operation)
 
 (function() {
   'use strict';
 
-  // Configuration
-  const SITE_ID = 'kayvontennis-com'; // Change this for each site
-  const API_ENDPOINT = 'https://ghosttrack-analytics-production.up.railway.app/api/v1/events/track';
-  const HEATMAP_ENDPOINT = 'https://ghosttrack-analytics-production.up.railway.app/api/v1/heatmap/track';
+  // Get configuration from script tag data attributes or use defaults
+  const currentScript = document.currentScript || document.querySelector('script[data-ghosttrack]');
+  const SITE_ID = currentScript?.dataset?.siteId || 'default-site';
+  const API_BASE = currentScript?.dataset?.apiUrl || 'https://ghosttrack-analytics-production.up.railway.app';
+  const DEBUG_MODE = currentScript?.dataset?.debug === 'true';
+  const API_ENDPOINT = `${API_BASE}/api/v1/events/track`;
+  const HEATMAP_ENDPOINT = `${API_BASE}/api/v1/heatmap/track`;
   const SESSION_STORAGE_KEY = 'ghosttrack_session_id';
 
   /**
@@ -82,7 +99,9 @@
         },
         body: JSON.stringify(payload),
         keepalive: true
-      }).catch(err => console.error('Tracking error:', err));
+      }).catch(err => {
+        if (DEBUG_MODE) console.error('Tracking error:', err);
+      });
     }
   }
 
@@ -110,7 +129,9 @@
       },
       body: JSON.stringify(payload),
       keepalive: true
-    }).catch(err => console.error('Heatmap tracking error:', err));
+    }).catch(err => {
+      if (DEBUG_MODE) console.error('Heatmap tracking error:', err);
+    });
   }
 
   /**
@@ -195,8 +216,12 @@
    * Initialize tracking
    */
   function init() {
-    console.log('GhostTrack Analytics initialized with Heatmap tracking');
-    console.log('Session ID:', getOrCreateSessionId());
+    if (DEBUG_MODE) {
+      console.log('GhostTrack Analytics initialized');
+      console.log('Site ID:', SITE_ID);
+      console.log('API Endpoint:', API_BASE);
+      console.log('Session ID:', getOrCreateSessionId());
+    }
 
     // Track initial pageview
     if (document.readyState === 'loading') {

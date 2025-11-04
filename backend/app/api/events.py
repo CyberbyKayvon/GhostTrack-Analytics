@@ -4,10 +4,13 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 import hashlib
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from app.core.database import get_db
 from app.models.event import Event
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 class EventCreate(BaseModel):
@@ -43,15 +46,18 @@ def generate_fallback_session_id(ip_address: str, user_agent: str) -> str:
     """
     Generate a fallback session ID based on IP + User Agent
     This is a backup when frontend doesn't provide session_id
+    Uses SHA-256 for cryptographic security
     """
     session_string = f"{ip_address}_{user_agent}_{datetime.utcnow().date()}"
-    return hashlib.md5(session_string.encode()).hexdigest()[:16]
+    return hashlib.sha256(session_string.encode()).hexdigest()[:32]
 
 
 @router.post("/track")
+@limiter.limit("100/minute")  # Limit to 100 requests per minute per IP
 async def track_event(request: Request, event_data: dict, db: Session = Depends(get_db)):
     """
     Track a new event with professional-grade accuracy
+    Rate limited to 100 requests/minute per IP to prevent DoS attacks
 
     This endpoint is designed to work with:
     - localStorage-based session IDs (preferred)
