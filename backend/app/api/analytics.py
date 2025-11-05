@@ -181,11 +181,10 @@ async def get_recent_visitors(
     recent_time = datetime.utcnow() - timedelta(hours=24)
 
     # STEP 1: Get all unique sessions with their first and last activity
-    # Order by most recent activity (last_seen DESC) for display
-    visitor_data = db.query(
+    # Group ONLY by session_id to prevent duplicates when user switches devices/browsers
+    # We'll get the most recent IP and user_agent for each session
+    visitor_sessions = db.query(
         Event.session_id,
-        Event.ip_address,
-        Event.user_agent,
         func.max(Event.timestamp).label('last_seen'),
         func.min(Event.timestamp).label('first_seen')
     ).filter(
@@ -193,12 +192,31 @@ async def get_recent_visitors(
         Event.timestamp >= recent_time,
         Event.session_id != 'unknown'
     ).group_by(
-        Event.session_id,
-        Event.ip_address,
-        Event.user_agent
+        Event.session_id
     ).order_by(
         desc('last_seen')  # Most recent activity first
     ).limit(limit).all()
+
+    if not visitor_sessions:
+        return {"visitors": []}
+
+    # STEP 1.5: For each session, get the most recent event to extract IP and user_agent
+    visitor_data = []
+    for session in visitor_sessions:
+        # Get the most recent event for this session
+        latest_event = db.query(Event).filter(
+            Event.session_id == session.session_id
+        ).order_by(desc(Event.timestamp)).first()
+
+        if latest_event:
+            visitor_data.append({
+                'session_id': session.session_id,
+                'ip_address': latest_event.ip_address,
+                'user_agent': latest_event.user_agent,
+                'last_seen': session.last_seen,
+                'first_seen': session.first_seen,
+                'is_bot': latest_event.is_bot
+            })
 
     if not visitor_data:
         return {"visitors": []}
@@ -227,17 +245,17 @@ async def get_recent_visitors(
 
     for visitor in visitor_data:
         # Get visitor number from mapping (based on first_seen across ALL sessions)
-        visitor_number = session_to_number.get(visitor.session_id, '999')
+        visitor_number = session_to_number.get(visitor['session_id'], '999')
 
         # Count ALL events for this session (not just clicks)
         activity_count = db.query(func.count(Event.id)).filter(
-            Event.session_id == visitor.session_id
+            Event.session_id == visitor['session_id']
         ).scalar() or 0
 
         # Calculate session duration
         duration_seconds = 0
-        if visitor.first_seen and visitor.last_seen:
-            duration_seconds = int((visitor.last_seen - visitor.first_seen).total_seconds())
+        if visitor['first_seen'] and visitor['last_seen']:
+            duration_seconds = int((visitor['last_seen'] - visitor['first_seen']).total_seconds())
 
         minutes = duration_seconds // 60
         seconds = duration_seconds % 60
@@ -245,7 +263,7 @@ async def get_recent_visitors(
 
         # Get last page visited
         last_event = db.query(Event).filter(
-            Event.session_id == visitor.session_id
+            Event.session_id == visitor['session_id']
         ).order_by(desc(Event.timestamp)).first()
 
         last_page = "Unknown"
@@ -253,19 +271,20 @@ async def get_recent_visitors(
             last_page = last_event.url
 
         # Detect browser
-        browser = detect_browser(visitor.user_agent)
+        browser = detect_browser(visitor['user_agent'])
 
         visitors.append({
             "id": visitor_number,
             "visitor": f"#{visitor_number}",
-            "ip": visitor.ip_address or "Unknown",
+            "ip": visitor['ip_address'] or "Unknown",
             "browser": browser,
             "clicks": activity_count,  # All events count as activity
             "duration": duration_str,
             "last_page": last_page,
-            "timestamp": visitor.last_seen.isoformat(),
-            "session_id": visitor.session_id,
-            "user_agent": visitor.user_agent or ""  # ✅ ADDED: Include user_agent for frontend parsing
+            "timestamp": visitor['last_seen'].isoformat(),
+            "session_id": visitor['session_id'],
+            "user_agent": visitor['user_agent'] or "",  # Include user_agent for frontend parsing
+            "is_bot": visitor['is_bot']  # Include bot status
         })
 
     return {"visitors": visitors}
