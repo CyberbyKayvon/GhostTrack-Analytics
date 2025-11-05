@@ -121,30 +121,40 @@ const EventsFeed = ({ events }) => {
     }
   };
 
-  // IMPROVED: Clean page name - handles long Instagram URLs
+  // IMPROVED: Clean page name - shows actual page path
   const getPageName = (url) => {
     if (!url) return 'Unknown';
 
     try {
       const urlObj = new URL(url);
+      let pathname = urlObj.pathname;
 
-      // Special handling for Instagram referrals
-      if (url.includes('fbclid=') || url.includes('igshid=') || url.includes('utm_')) {
-        // Clean up tracking parameters and get base page
-        const path = urlObj.pathname;
-        const segments = path.split('/').filter(s => s);
-
-        if (segments.length > 0) {
-          const pageName = segments[segments.length - 1].replace(/\.(html|htm)$/i, '');
-          return pageName.charAt(0).toUpperCase() + pageName.slice(1);
-        }
-
-        return urlObj.hostname.replace('www.', '');
+      // Remove trailing slash for consistency
+      if (pathname.endsWith('/') && pathname.length > 1) {
+        pathname = pathname.slice(0, -1);
       }
 
-      // Normal URL processing
-      const pageName = urlObj.pathname.split('/').pop() || 'Home';
-      return pageName.replace('.html', '').replace(/\.(htm|php)$/i, '') || 'Homepage';
+      // Split path into segments and filter out empty strings
+      const segments = pathname.split('/').filter(s => s);
+
+      // If no segments (root path), return "index"
+      if (segments.length === 0) {
+        return 'index';
+      }
+
+      // Get the last segment (the actual page)
+      let pageName = segments[segments.length - 1];
+
+      // Remove file extensions
+      pageName = pageName.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
+
+      // If the page name is empty after removing extension, use the previous segment
+      if (!pageName && segments.length > 1) {
+        pageName = segments[segments.length - 2];
+      }
+
+      // Capitalize first letter for display
+      return pageName.charAt(0).toUpperCase() + pageName.slice(1);
     } catch (e) {
       // Fallback for malformed URLs
       const cleaned = url.split('/').pop()?.split('?')[0] || 'Unknown';

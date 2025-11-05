@@ -364,11 +364,6 @@ const LatestVisits = ({ siteId }) => {
                         <span className="text-sm font-black uppercase text-cyan-600">IP</span>
                       </div>
                       <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
-                      <div className="text-gray-500 text-xs">Visitor #{visit.id}</div>
-                      <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
-                        <Calendar size={12} className="text-gray-500" />
-                        <span>{formatDate(visit.timestamp)}</span>
-                      </div>
                     </div>
 
                     {/* Device */}
@@ -381,6 +376,10 @@ const LatestVisits = ({ siteId }) => {
                       <div className="flex items-center gap-1">
                         <span className="text-gray-600 text-sm">Browser:</span>
                         <span className="text-gray-900 text-sm font-semibold">{browserName}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                        <Calendar size={12} className="text-gray-500" />
+                        <span>{formatDate(visit.timestamp)}</span>
                       </div>
                     </div>
 
@@ -418,6 +417,7 @@ const LatestVisits = ({ siteId }) => {
                       <div className="px-2.5 py-1.5 bg-purple-600 rounded-md">
                         <span className="text-white font-bold text-xs truncate block">{formatPageUrl(visit.last_page)}</span>
                       </div>
+                      <div className="text-gray-500 text-xs mt-1">Visitor #{visit.id}</div>
                     </div>
                   </div>
                 </div>

@@ -44,13 +44,13 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="flex justify-between items-center h-36 py-4">
+        <div className="flex justify-between items-center h-28 py-3">
           {/* Logo & Tagline */}
           <div className="flex items-center gap-6">
             <img
               src="/ghostlogotransparent.png"
               alt="GhostTrack"
-              className="h-32 w-auto"
+              className="h-24 w-auto"
               style={{ imageRendering: 'auto' }}
             />
             <div className="border-l-2 border-gray-400 pl-6 hidden md:block">
