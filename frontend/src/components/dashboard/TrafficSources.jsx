@@ -1,18 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ExternalLink } from 'lucide-react';
+import { TrendingUp, Globe } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 
 const TrafficSources = ({ siteId }) => {
   const [sources, setSources] = useState([]);
-  const [topPages, setTopPages] = useState([]);
+  const [geoLocations, setGeoLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper to determine region from IP (simple categorization)
+  const getRegionFromIP = (ip) => {
+    if (!ip || ip === 'Unknown') return 'Unknown';
+
+    // This is a simplified version - can be enhanced with proper geolocation API
+    // For now, categorize by IP ranges (very basic)
+    const firstOctet = parseInt(ip.split('.')[0]);
+
+    // US-based IPs (simplified)
+    if (firstOctet >= 3 && firstOctet <= 126) return 'North America';
+    // Europe
+    if (firstOctet >= 128 && firstOctet <= 191) return 'Europe';
+    // Asia-Pacific
+    if (firstOctet >= 192 && firstOctet <= 223) return 'Asia-Pacific';
+    // Other/Unknown
+    return 'Other Regions';
+  };
 
   useEffect(() => {
     if (!siteId) return;
 
     // Reset state immediately when siteId changes
     setSources([]);
-    setTopPages([]);
+    setGeoLocations([]);
     setLoading(true);
 
     const fetchData = async () => {
@@ -21,25 +39,25 @@ const TrafficSources = ({ siteId }) => {
         const sourcesResponse = await analyticsAPI.getTrafficSources(siteId);
         setSources(sourcesResponse.data?.sources || []);
 
-        // Fetch events to calculate top pages
-        const eventsResponse = await analyticsAPI.getEvents(siteId, 100);
-        const events = eventsResponse.data?.events || [];
+        // Fetch recent visitors to get geographic data
+        const visitorsResponse = await analyticsAPI.getRecentVisitors(siteId, 50);
+        const visitors = visitorsResponse.data?.visitors || [];
 
-        // Count page views by URL
-        const pageCount = {};
-        events.forEach(event => {
-          if (event.event_type === 'pageview' && event.url) {
-            pageCount[event.url] = (pageCount[event.url] || 0) + 1;
+        // Count visitors by region
+        const regionCount = {};
+        visitors.forEach(visitor => {
+          if (visitor.ip) {
+            const region = getRegionFromIP(visitor.ip);
+            regionCount[region] = (regionCount[region] || 0) + 1;
           }
         });
 
         // Convert to array and sort by count
-        const topPagesArray = Object.entries(pageCount)
-          .map(([url, count]) => ({ url, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5); // Top 5 pages
+        const geoArray = Object.entries(regionCount)
+          .map(([region, count]) => ({ region, count }))
+          .sort((a, b) => b.count - a.count);
 
-        setTopPages(topPagesArray);
+        setGeoLocations(geoArray);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching traffic data:', error);
@@ -51,39 +69,6 @@ const TrafficSources = ({ siteId }) => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [siteId]);
-
-  const formatPageName = (url) => {
-    try {
-      const urlObj = new URL(url);
-      let path = urlObj.pathname;
-
-      // Remove leading/trailing slashes
-      path = path.replace(/^\/+|\/+$/g, '');
-
-      if (!path || path === '') {
-        return 'Homepage';
-      }
-
-      // Get last segment
-      const segments = path.split('/');
-      let pageName = segments[segments.length - 1];
-
-      // Remove file extensions
-      pageName = pageName.replace(/\.(html|htm|php|aspx)$/i, '');
-
-      // Capitalize first letter
-      pageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-
-      // Truncate if too long
-      if (pageName.length > 20) {
-        pageName = pageName.substring(0, 17) + '...';
-      }
-
-      return pageName || 'Homepage';
-    } catch (e) {
-      return 'Unknown';
-    }
-  };
 
   const getTotalVisits = () => {
     return sources.reduce((sum, source) => sum + source.value, 0);
@@ -167,47 +152,62 @@ const TrafficSources = ({ siteId }) => {
           )}
         </div>
 
-        {/* RIGHT COLUMN - Top Pages (60% - Wider) */}
+        {/* RIGHT COLUMN - Geographic Locations (60% - Wider) */}
         <div className="border-l border-gray-200 pl-6 overflow-y-auto">
-          <h4 className="text-sm font-semibold text-gray-600 mb-3 text-center">Top Pages</h4>
+          <h4 className="text-sm font-semibold text-gray-600 mb-3 text-center flex items-center justify-center gap-2">
+            <Globe size={16} className="text-blue-500" />
+            Visitor Locations
+          </h4>
 
-          {topPages.length === 0 ? (
+          {geoLocations.length === 0 ? (
             <div className="text-center py-4 text-gray-400">
-              No page data yet
+              No location data yet
             </div>
           ) : (
             <div className="space-y-3">
-              {topPages.map((page, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-xs font-bold text-blue-600">
-                        {index + 1}
-                      </span>
+              {geoLocations.map((location, index) => {
+                const totalVisitors = geoLocations.reduce((sum, loc) => sum + loc.count, 0);
+                const percentage = ((location.count / totalVisitors) * 100).toFixed(1);
+
+                // Color scheme for regions
+                const colors = [
+                  'bg-blue-500',
+                  'bg-green-500',
+                  'bg-purple-500',
+                  'bg-orange-500',
+                  'bg-pink-500'
+                ];
+                const color = colors[index % colors.length];
+
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Globe size={14} className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {location.region}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-bold text-gray-900">
+                          {percentage}%
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({location.count})
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {formatPageName(page.url)}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {page.url.length > 35
-                          ? '...' + page.url.slice(-32)
-                          : page.url
-                        }
-                      </p>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${color} transition-all duration-300`}
+                        style={{ width: `${percentage}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 ml-2">
-                    <span className="text-sm font-bold text-gray-900">
-                      {page.count}
-                    </span>
-                    <span className="text-xs text-gray-500">views</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
