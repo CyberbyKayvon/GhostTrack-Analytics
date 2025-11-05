@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Globe, Plus, ChevronDown, Trash2 } from 'lucide-react';
+import { Globe, Plus, ChevronDown, Trash2, LogOut } from 'lucide-react';
 import { deleteSite } from '../../utils/siteManager';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSite, onSiteDeleted }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const currentSite = sites.find(site => site.id === currentSiteId);
+  const { logout } = useAuth();
 
   const getStatusIndicator = (siteId) => {
     const status = siteStatuses[siteId];
@@ -174,6 +176,20 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                 <span className="text-white font-semibold text-sm">Remove Site</span>
               </button>
             )}
+
+            {/* Logout Button */}
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to logout?')) {
+                  logout();
+                }
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-gray-700 hover:to-gray-800"
+              title="Logout"
+            >
+              <LogOut className="text-white" size={20} />
+              <span className="text-white font-semibold text-sm">Logout</span>
+            </button>
           </div>
         </div>
       </div>
