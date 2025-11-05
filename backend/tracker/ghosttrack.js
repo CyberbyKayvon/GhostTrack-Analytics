@@ -86,24 +86,19 @@
       ...eventData
     };
 
-    // Send to API (using sendBeacon for reliability)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon(API_ENDPOINT, blob);
-    } else {
-      // Fallback to fetch
-      fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        credentials: 'omit',  // CRITICAL: Don't send credentials for CORS wildcard
-        keepalive: true
-      }).catch(err => {
-        if (DEBUG_MODE) console.error('Tracking error:', err);
-      });
-    }
+    // Send to API using fetch with credentials: 'omit' for CORS wildcard compatibility
+    // NOTE: sendBeacon always includes credentials, so we can't use it with wildcard CORS
+    fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'omit',  // CRITICAL: Required for CORS wildcard origins
+      keepalive: true
+    }).catch(err => {
+      if (DEBUG_MODE) console.error('Tracking error:', err);
+    });
   }
 
   /**
