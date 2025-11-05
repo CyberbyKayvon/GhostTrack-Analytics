@@ -1,8 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Globe, Plus, ChevronDown, Trash2 } from 'lucide-react';
+import { deleteSite } from '../../utils/siteManager';
 
-const Navbar = () => {
+const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSite, onSiteDeleted }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // Track which site is being confirmed for deletion
+
+  const currentSite = sites.find(site => site.id === currentSiteId);
+
+  const getStatusIndicator = (siteId) => {
+    const status = siteStatuses[siteId];
+    if (status === 'active') {
+      return <span className="w-2 h-2 bg-green-400 rounded-full"></span>;
+    } else if (status === 'waiting') {
+      return <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>;
+    }
+    return <span className="w-2 h-2 bg-gray-300 rounded-full"></span>;
+  };
+
+  const handleSiteSelect = (siteId) => {
+    onSiteChange(siteId);
+    setIsDropdownOpen(false);
+    setDeleteConfirm(null);
+  };
+
+  const handleDeleteClick = (e, siteId) => {
+    e.stopPropagation(); // Prevent triggering site selection
+    setDeleteConfirm(siteId);
+  };
+
+  const handleDeleteConfirm = (e, siteId) => {
+    e.stopPropagation();
+    try {
+      deleteSite(siteId);
+      setDeleteConfirm(null);
+      onSiteDeleted(siteId);
+    } catch (error) {
+      alert(`Error deleting site: ${error.message}`);
+    }
+  };
+
+  const handleDeleteCancel = (e) => {
+    e.stopPropagation();
+    setDeleteConfirm(null);
+  };
+
   return (
-    <nav className="bg-white border-b border-gray-00 shadow-sm">
+    <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
@@ -15,9 +59,131 @@ const Navbar = () => {
             />
           </div>
 
-          {/* Right side - can add navigation items here later */}
-          <div className="flex items-center gap-4">
-            {/* Add nav items here if needed */}
+          {/* Site Selector & Add Button */}
+          <div className="flex items-center gap-3">
+            {/* Custom Dropdown */}
+            <div className="relative">
+              {/* Current Site Button */}
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-purple-600 hover:to-blue-600"
+              >
+                <Globe className="text-white" size={20} />
+                <span className="text-white font-semibold text-base">
+                  {currentSite?.name || 'Select Site'}
+                </span>
+                <ChevronDown
+                  className={`text-white transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  size={16}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <>
+                  {/* Backdrop to close dropdown */}
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setDeleteConfirm(null);
+                    }}
+                  />
+
+                  {/* Dropdown Panel */}
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border-2 border-gray-200 overflow-hidden z-20">
+                    <div className="p-2">
+                      {sites.map((site) => (
+                        <div key={site.id} className="relative">
+                          {deleteConfirm === site.id ? (
+                            // Delete Confirmation
+                            <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-2">
+                              <p className="text-sm text-red-800 font-semibold mb-2">
+                                Delete "{site.name}"?
+                              </p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={(e) => handleDeleteConfirm(e, site.id)}
+                                  className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded hover:bg-red-700"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  onClick={handleDeleteCancel}
+                                  className="flex-1 px-3 py-1.5 bg-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-400"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // Normal Site Button
+                            <div
+                              className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all mb-1 ${
+                                site.id === currentSiteId
+                                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-md'
+                                  : 'hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 text-gray-700 hover:text-gray-900'
+                              }`}
+                            >
+                              <button
+                                onClick={() => handleSiteSelect(site.id)}
+                                className="flex items-center gap-3 flex-1"
+                              >
+                                <Globe size={18} className={site.id === currentSiteId ? 'text-white' : 'text-purple-500'} />
+                                <span className="font-semibold text-sm">{site.name}</span>
+                              </button>
+
+                              <div className="flex items-center gap-2">
+                                {getStatusIndicator(site.id)}
+
+                                {/* Delete Button - Only show if more than 1 site */}
+                                {sites.length > 1 && (
+                                  <button
+                                    onClick={(e) => handleDeleteClick(e, site.id)}
+                                    className={`p-1.5 rounded hover:bg-red-500 hover:bg-opacity-20 transition-colors ${
+                                      site.id === currentSiteId ? 'text-white' : 'text-red-500'
+                                    }`}
+                                    title="Delete site"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t-2 border-gray-200"></div>
+
+                    {/* Add Site Button in Dropdown */}
+                    <button
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setDeleteConfirm(null);
+                        onAddSite();
+                      }}
+                      className="w-full flex items-center gap-3 px-6 py-3 text-purple-600 hover:bg-purple-50 transition-colors font-semibold"
+                    >
+                      <Plus size={18} />
+                      <span className="text-sm">Add New Site</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Quick Add Button */}
+            <button
+              onClick={onAddSite}
+              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-green-600 hover:to-emerald-600"
+              title="Add New Site"
+            >
+              <Plus className="text-white" size={20} />
+              <span className="text-white font-semibold text-sm hidden sm:inline">Add Site</span>
+            </button>
           </div>
         </div>
       </div>

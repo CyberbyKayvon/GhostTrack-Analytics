@@ -28,57 +28,30 @@ const SafariIcon = ({ className = "w-8 h-8" }) => (
   </svg>
 );
 
-// Firefox - ACTUAL recognizable orange fox around blue globe
+// Firefox - Official orange/red fox around purple globe
 const FirefoxIcon = ({ className = "w-8 h-8" }) => (
-  <svg className={className} viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="firefox-gradient-1" cx="50%" cy="50%">
-        <stop offset="0%" stopColor="#FFBD4F"/>
-        <stop offset="100%" stopColor="#FF9640"/>
-      </radialGradient>
-      <radialGradient id="firefox-gradient-2" cx="50%" cy="50%">
-        <stop offset="0%" stopColor="#FF9640"/>
-        <stop offset="100%" stopColor="#E63950"/>
-      </radialGradient>
-      <radialGradient id="firefox-gradient-3" cx="50%" cy="50%">
-        <stop offset="0%" stopColor="#A060FF"/>
-        <stop offset="100%" stopColor="#7542E5"/>
-      </radialGradient>
-    </defs>
-    {/* Globe base */}
-    <circle cx="44" cy="44" r="38" fill="url(#firefox-gradient-3)"/>
-    {/* Fox tail - orange gradient */}
-    <path d="M20 30 Q10 20 15 10 Q20 5 30 8 Q35 10 38 15 L44 25 Z" fill="url(#firefox-gradient-1)"/>
-    {/* Fox body - wrapping around */}
-    <path d="M44 8 Q50 5 58 8 Q70 12 75 22 Q78 30 75 38 Q72 45 65 50 L55 55 Q48 58 44 58 Z" fill="url(#firefox-gradient-2)"/>
-    {/* Fox head/face */}
-    <path d="M70 25 Q75 20 78 15 Q80 12 80 18 Q80 25 75 32 Q70 38 65 40 Z" fill="url(#firefox-gradient-1)"/>
-    {/* Inner glow */}
-    <circle cx="44" cy="44" r="28" fill="#592ACB" opacity="0.7"/>
-    <circle cx="44" cy="44" r="20" fill="#4615B2" opacity="0.8"/>
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Purple/blue globe */}
+    <circle cx="12" cy="12" r="10" fill="#6B46C1"/>
+    <circle cx="12" cy="12" r="8" fill="#5636D3"/>
+    {/* Orange fox wrapping around - tail */}
+    <path d="M 4 10 Q 2 6 4 4 Q 6 2 8 4 L 10 8 Z" fill="#FF9500"/>
+    {/* Orange/red fox body */}
+    <path d="M 12 2 Q 16 2 19 6 Q 22 10 22 14 Q 20 16 18 17 L 14 18 Q 12 17 12 15 Z" fill="#FF6611"/>
+    {/* Yellow accent */}
+    <path d="M 20 8 Q 22 6 22 10 Q 21 12 19 13 Z" fill="#FFBD4F"/>
   </svg>
 );
 
-// Edge - ACTUAL recognizable blue-green wave
+// Edge - Official blue wave with gradient
 const EdgeIcon = ({ className = "w-8 h-8" }) => (
-  <svg className={className} viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="edge-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0078D4"/>
-        <stop offset="50%" stopColor="#1E96EB"/>
-        <stop offset="100%" stopColor="#28A8EA"/>
-      </linearGradient>
-      <linearGradient id="edge-gradient-2" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#28A8EA"/>
-        <stop offset="100%" stopColor="#00D8A0"/>
-      </linearGradient>
-    </defs>
-    {/* Main wave shape */}
-    <path d="M44 8 Q70 8 78 28 Q82 38 78 50 Q74 60 62 68 Q52 74 44 74 Q30 74 20 65 Q10 56 8 44 Q6 30 16 20 Q26 10 44 10 Z" fill="url(#edge-gradient-1)"/>
-    {/* Inner wave accent */}
-    <path d="M50 20 Q65 22 70 35 Q72 42 68 50 Q64 58 54 62 Q46 65 40 62 Q35 60 32 54 Z" fill="url(#edge-gradient-2)"/>
-    {/* Highlight curve */}
-    <path d="M25 30 Q35 20 48 20 Q58 20 65 28" stroke="#B4ECF7" strokeWidth="3" fill="none" opacity="0.6"/>
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Dark blue base */}
+    <circle cx="12" cy="12" r="10" fill="#0078D4"/>
+    {/* Cyan/teal wave accent */}
+    <path d="M 12 2 Q 18 4 20 10 Q 22 14 20 18 Q 16 22 12 22 Q 10 20 10 16 Q 10 12 12 10 Q 14 8 16 8 Q 18 8 19 10" fill="#00BCF2"/>
+    {/* Light blue highlight */}
+    <path d="M 8 8 Q 12 6 16 8" stroke="#80DEEA" strokeWidth="1.5" fill="none" opacity="0.8"/>
   </svg>
 );
 
@@ -95,24 +68,28 @@ const LatestVisits = ({ siteId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (siteId) {
-      fetchVisitors();
-      const interval = setInterval(fetchVisitors, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [siteId]);
+    if (!siteId) return;
 
-  const fetchVisitors = async () => {
-    try {
-      const response = await analyticsAPI.getRecentVisitors(siteId, 10);
-      const visitors = response.data?.visitors || [];
-      setVisits(visitors);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching visitors:', error);
-      setLoading(false);
-    }
-  };
+    // Reset state immediately when siteId changes
+    setVisits([]);
+    setLoading(true);
+
+    const fetchVisitors = async () => {
+      try {
+        const response = await analyticsAPI.getRecentVisitors(siteId, 10);
+        const visitors = response.data?.visitors || [];
+        setVisits(visitors);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching visitors:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchVisitors();
+    const interval = setInterval(fetchVisitors, 10000);
+    return () => clearInterval(interval);
+  }, [siteId]);
 
   const getBrowserInfo = (visit) => {
     const userAgent = visit.user_agent || '';
@@ -131,7 +108,7 @@ const LatestVisits = ({ siteId }) => {
     if (browserName === 'Instagram' || browserName.toLowerCase().includes('instagram')) {
       browserIcon = <Instagram className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />;
       browserColor = 'bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400';
-    } else if (browserName.toLowerCase().includes('edge')) {
+    } else if (browserName.toLowerCase().includes('edge') || browserName.toLowerCase().includes('edg')) {
       browserIcon = <EdgeIcon className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" />;
       browserColor = 'bg-white';
     } else if (browserName.toLowerCase().includes('chrome')) {
@@ -302,11 +279,11 @@ const LatestVisits = ({ siteId }) => {
       ) : (
         <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '600px' }}>
           {visits.map((visit, index) => {
-            const { browserIcon, browserColor, deviceIcon, deviceType, browserName } = getBrowserInfo(visit);
+            const { browserIcon, browserColor, deviceIcon, deviceType, browserName} = getBrowserInfo(visit);
             const accentColor = accentColors[index % accentColors.length];
 
             return (
-              <div key={visit.session_id || index} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
+              <div key={`${visit.session_id}-${visit.id || visit.timestamp || index}`} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
                 {/* Mobile & Tablet Layout (< lg) */}
                 <div className="lg:hidden space-y-3">
                   {/* Browser Icon + IP + Activity */}

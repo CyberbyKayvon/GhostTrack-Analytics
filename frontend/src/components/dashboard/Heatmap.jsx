@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Flame, RefreshCw, ExternalLink } from 'lucide-react';
 import { heatmapAPI } from '../../services/api';
 
@@ -7,17 +7,9 @@ const HeatmapViewer = ({ siteId }) => {
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState(7);
 
-  useEffect(() => {
-    fetchData();
-
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000);
-
-    return () => clearInterval(interval);
-  }, [siteId, days]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!siteId) return;
+
     try {
       setLoading(true);
       const response = await heatmapAPI.getData(siteId, { days });
@@ -27,7 +19,19 @@ const HeatmapViewer = ({ siteId }) => {
       console.error('Heatmap error:', error);
       setLoading(false);
     }
-  };
+  }, [siteId, days]);
+
+  // Reset state when siteId or days changes
+  useEffect(() => {
+    setData(null);
+    setLoading(true);
+  }, [siteId, days]);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const getPageBreakdown = () => {
     if (!data?.clicks) return [];

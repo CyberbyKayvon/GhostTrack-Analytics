@@ -181,7 +181,7 @@ const EventsFeed = ({ events }) => {
     if (browserName === 'Instagram') {
       browserIcon = <Instagram className="w-3 h-3" />;
       browserColor = 'bg-pink-100 text-pink-700';
-    } else if (browserName.toLowerCase().includes('edge')) {
+    } else if (browserName.toLowerCase().includes('edge') || browserName.toLowerCase().includes('edg')) {
       browserIcon = <div className="text-sm">🌊</div>;
       browserColor = 'bg-cyan-100 text-cyan-700';
     } else if (browserName.toLowerCase().includes('chrome')) {

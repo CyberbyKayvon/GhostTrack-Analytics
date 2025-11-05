@@ -8,44 +8,49 @@ const TrafficSources = ({ siteId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (siteId) {
-      fetchData();
-      const interval = setInterval(fetchData, 30000);
-      return () => clearInterval(interval);
-    }
+    if (!siteId) return;
+
+    // Reset state immediately when siteId changes
+    setSources([]);
+    setTopPages([]);
+    setLoading(true);
+
+    const fetchData = async () => {
+      try {
+        // Fetch traffic sources
+        const sourcesResponse = await analyticsAPI.getTrafficSources(siteId);
+        setSources(sourcesResponse.data?.sources || []);
+
+        // Fetch events to calculate top pages
+        const eventsResponse = await analyticsAPI.getEvents(siteId, 100);
+        const events = eventsResponse.data?.events || [];
+
+        // Count page views by URL
+        const pageCount = {};
+        events.forEach(event => {
+          if (event.event_type === 'pageview' && event.url) {
+            pageCount[event.url] = (pageCount[event.url] || 0) + 1;
+          }
+        });
+
+        // Convert to array and sort by count
+        const topPagesArray = Object.entries(pageCount)
+          .map(([url, count]) => ({ url, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5); // Top 5 pages
+
+        setTopPages(topPagesArray);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching traffic data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [siteId]);
-
-  const fetchData = async () => {
-    try {
-      // Fetch traffic sources
-      const sourcesResponse = await analyticsAPI.getTrafficSources(siteId);
-      setSources(sourcesResponse.data?.sources || []);
-
-      // Fetch events to calculate top pages
-      const eventsResponse = await analyticsAPI.getEvents(siteId, 100);
-      const events = eventsResponse.data?.events || [];
-
-      // Count page views by URL
-      const pageCount = {};
-      events.forEach(event => {
-        if (event.event_type === 'pageview' && event.url) {
-          pageCount[event.url] = (pageCount[event.url] || 0) + 1;
-        }
-      });
-
-      // Convert to array and sort by count
-      const topPagesArray = Object.entries(pageCount)
-        .map(([url, count]) => ({ url, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5); // Top 5 pages
-
-      setTopPages(topPagesArray);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching traffic data:', error);
-      setLoading(false);
-    }
-  };
 
   const formatPageName = (url) => {
     try {
