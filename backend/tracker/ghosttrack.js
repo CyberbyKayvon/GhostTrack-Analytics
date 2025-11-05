@@ -145,19 +145,43 @@
   }
 
   /**
-   * Track all clicks
+   * Track all clicks with link destination tracking
    */
   function trackClick(event) {
-    const element = event.target;
+    let element = event.target;
     const tagName = element.tagName.toLowerCase();
 
-    // Track regular click event
+    // Find the closest link (in case they clicked a child element of <a>)
+    let linkElement = element.closest('a');
+    let linkData = {};
+
+    if (linkElement && linkElement.href) {
+      const href = linkElement.href;
+      const isPDF = href.toLowerCase().endsWith('.pdf');
+      const opensNewTab = linkElement.target === '_blank';
+      const isExternal = linkElement.hostname !== window.location.hostname;
+
+      linkData = {
+        link_url: href,
+        link_text: linkElement.innerText?.substring(0, 100) || null,
+        is_pdf: isPDF,
+        opens_new_tab: opensNewTab,
+        is_external: isExternal
+      };
+
+      if (DEBUG_MODE) {
+        console.log('Link click detected:', linkData);
+      }
+    }
+
+    // Track regular click event with link data
     trackEvent('click', {
       element_tag: tagName,
       element_id: element.id || null,
       element_class: element.className || null,
       element_text: element.innerText?.substring(0, 50) || null,
-      page_title: document.title
+      page_title: document.title,
+      ...linkData
     });
 
     // Track heatmap click

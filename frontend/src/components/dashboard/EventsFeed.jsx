@@ -121,8 +121,29 @@ const EventsFeed = ({ events }) => {
     }
   };
 
-  // IMPROVED: Show full pathname for better detail and accuracy
-  const getPageName = (url) => {
+  // IMPROVED: Show link destination for clicks, otherwise show current page
+  const getPageName = (event) => {
+    // For click events, check if there's a link_url (PDF, external link, etc.)
+    if (event.event_type === 'click' && event.link_url) {
+      try {
+        const linkUrl = new URL(event.link_url);
+        let pathname = linkUrl.pathname;
+
+        // Check if it's a PDF
+        if (pathname.toLowerCase().endsWith('.pdf')) {
+          const filename = pathname.split('/').pop();
+          return `📄 ${filename}`;
+        }
+
+        // For other links, show the full path
+        return pathname || linkUrl.href;
+      } catch (e) {
+        // If link_url is malformed, fall through to regular URL handling
+      }
+    }
+
+    // Regular page tracking
+    const url = event.url;
     if (!url) return 'Unknown';
 
     try {
@@ -318,7 +339,7 @@ const EventsFeed = ({ events }) => {
                         {formatEventType(event.event_type)}
                       </div>
                       <div className="text-xs text-gray-500 mb-1 truncate">
-                        Page: {getPageName(event.url)}
+                        Page: {getPageName(event)}
                       </div>
                       {/* Browser, Device */}
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
