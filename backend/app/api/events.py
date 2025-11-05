@@ -89,6 +89,13 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
         # Convert boolean to integer for database
         is_bot_int = 1 if is_bot else 0
 
+        # Extract link tracking data (for click events)
+        link_url = event_data.get("link_url")
+        link_text = event_data.get("link_text")
+        is_pdf = 1 if event_data.get("is_pdf") else 0
+        opens_new_tab = 1 if event_data.get("opens_new_tab") else 0
+        is_external = 1 if event_data.get("is_external") else 0
+
         # Create event
         new_event = Event(
             site_id=site_id,
@@ -99,7 +106,13 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
             ip_address=ip_address,
             session_id=session_id,
             is_bot=is_bot_int,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
+            # Link tracking fields
+            link_url=link_url,
+            link_text=link_text,
+            is_pdf=is_pdf,
+            opens_new_tab=opens_new_tab,
+            is_external=is_external
         )
 
         db.add(new_event)

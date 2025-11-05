@@ -17,6 +17,13 @@ class Event(Base):
     is_bot = Column(Integer, default=0)  # 0 or 1
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
+    # Link tracking fields (for click events on links, PDFs, external sites)
+    link_url = Column(String, nullable=True)  # Destination URL of clicked link
+    link_text = Column(String, nullable=True)  # Text content of clicked link
+    is_pdf = Column(Integer, default=0)  # 1 if link points to PDF file
+    opens_new_tab = Column(Integer, default=0)  # 1 if link has target="_blank"
+    is_external = Column(Integer, default=0)  # 1 if link goes to different domain
+
     # ✅ NEW: Geographic data
     #city = Column(String, nullable=True)
     #region = Column(String, nullable=True)
