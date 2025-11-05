@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tablet, Instagram, Calendar } from 'lucide-react';
+import { Users, Globe, Monitor, Clock, Activity, MousePointer2, Smartphone, Tablet, Instagram, Calendar, Shield } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
 import { UAParser } from 'ua-parser-js';
 
@@ -283,7 +283,17 @@ const LatestVisits = ({ siteId }) => {
             const accentColor = accentColors[index % accentColors.length];
 
             return (
-              <div key={`${visit.session_id}-${visit.id || visit.timestamp || index}`} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all`}>
+              <div key={`${visit.session_id}-${visit.id || visit.timestamp || index}`} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all relative`}>
+                {/* Bot Badge - Top Right Corner */}
+                {visit.is_bot && (
+                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
+                    <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-500 text-white shadow-md">
+                      <Shield className="w-3 h-3 mr-1" />
+                      BOT
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile & Tablet Layout (< lg) */}
                 <div className="lg:hidden space-y-3">
                   {/* Browser Icon + IP + Activity */}
