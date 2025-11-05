@@ -130,8 +130,8 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-700 font-medium">{error}</p>
+                <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 animate-pulse">
+                  <p className="text-base text-red-800 font-bold">❌ {error}</p>
                 </div>
               )}
 

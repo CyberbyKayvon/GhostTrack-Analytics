@@ -126,11 +126,29 @@ export const generateTrackingSnippet = (siteId) => {
 
 /**
  * Initialize localStorage with default sites if empty
+ * Also migrates old data if needed
  */
 export const initializeSites = () => {
-  const sites = localStorage.getItem(STORAGE_KEY);
-  if (!sites) {
+  const sitesData = localStorage.getItem(STORAGE_KEY);
+
+  if (!sitesData) {
+    // First time - set defaults
     saveSites(getDefaultSites());
+  } else {
+    // Migrate existing data - remove old courtcrate if it exists
+    try {
+      const sites = JSON.parse(sitesData);
+      const hasOldCourtCrate = sites.find(s => s.id === 'courtcrate' && s.url === 'https://courtcrate.com');
+
+      if (hasOldCourtCrate) {
+        // Remove old hardcoded courtcrate
+        const updatedSites = sites.filter(s => s.id !== 'courtcrate');
+        saveSites(updatedSites);
+        console.log('Migrated: Removed old CourtCrate from defaults');
+      }
+    } catch (error) {
+      console.error('Error migrating sites:', error);
+    }
   }
 };
 
