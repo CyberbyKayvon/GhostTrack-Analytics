@@ -98,6 +98,7 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        credentials: 'omit',  // CRITICAL: Don't send credentials for CORS wildcard
         keepalive: true
       }).catch(err => {
         if (DEBUG_MODE) console.error('Tracking error:', err);
@@ -128,6 +129,7 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      credentials: 'omit',  // CRITICAL: Don't send credentials for CORS wildcard
       keepalive: true
     }).catch(err => {
       if (DEBUG_MODE) console.error('Heatmap tracking error:', err);
