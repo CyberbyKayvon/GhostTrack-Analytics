@@ -39,20 +39,13 @@ async def startup_event():
     except Exception as e:
         print(f"Database warning: {e}")
 
-# FIXED CORS - Allow kayvontennis.com
+# CORS - Allow all origins for public tracking script (like Google Analytics)
+# This is required for the tracking script to work on any website
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "https://kayvontennis.com",
-        "http://kayvontennis.com",
-        "https://www.kayvontennis.com",
-        "http://www.kayvontennis.com",
-        "https://dashboard.ghosttrack.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],  # Allow all origins for public tracking
+    allow_credentials=False,  # Must be False when allow_origins is "*"
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
