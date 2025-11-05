@@ -301,20 +301,22 @@ const LatestVisits = ({ siteId }) => {
             return (
               <div key={`${visit.session_id}-${visit.id || visit.timestamp || index}`} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all relative`}>
                 {/* Date Badge - Top Right Corner */}
-                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 flex items-center gap-2">
-                  {/* Bot Badge */}
-                  {visit.is_bot && (
-                    <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-500 text-white shadow-md">
-                      <Shield className="w-3 h-3 mr-1" />
-                      BOT
-                    </div>
-                  )}
-                  {/* Date Badge */}
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
                   <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 shadow-sm">
                     <Calendar size={12} className="mr-1" />
                     {formatDate(visit.timestamp)}
                   </div>
                 </div>
+
+                {/* Bot Badge - Bottom Right Corner */}
+                {visit.is_bot && (
+                  <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 lg:bottom-4 lg:right-4">
+                    <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-500 text-white shadow-md">
+                      <Shield className="w-3 h-3 mr-1" />
+                      BOT
+                    </div>
+                  </div>
+                )}
 
                 {/* Mobile & Tablet Layout (< lg) */}
                 <div className="lg:hidden space-y-3">
