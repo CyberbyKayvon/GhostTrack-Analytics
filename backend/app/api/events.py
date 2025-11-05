@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -54,7 +54,7 @@ def generate_fallback_session_id(ip_address: str, user_agent: str) -> str:
 
 @router.post("/track")
 @limiter.limit("100/minute")  # Limit to 100 requests per minute per IP
-async def track_event(request: Request, event_data: dict, db: Session = Depends(get_db)):
+async def track_event(request: Request, event_data: dict = Body(...), db: Session = Depends(get_db)):
     """
     Track a new event with professional-grade accuracy
     Rate limited to 100 requests/minute per IP to prevent DoS attacks
