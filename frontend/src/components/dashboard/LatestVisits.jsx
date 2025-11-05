@@ -67,6 +67,22 @@ const LatestVisits = ({ siteId }) => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Helper to determine region from IP
+  const getRegionFromIP = (ip) => {
+    if (!ip || ip === 'Unknown') return 'Unknown';
+
+    const firstOctet = parseInt(ip.split('.')[0]);
+
+    // US-based IPs (simplified)
+    if (firstOctet >= 3 && firstOctet <= 126) return 'North America';
+    // Europe
+    if (firstOctet >= 128 && firstOctet <= 191) return 'Europe';
+    // Asia-Pacific
+    if (firstOctet >= 192 && firstOctet <= 223) return 'Asia-Pacific';
+    // Other/Unknown
+    return 'Other Regions';
+  };
+
   useEffect(() => {
     if (!siteId) return;
 
@@ -284,15 +300,21 @@ const LatestVisits = ({ siteId }) => {
 
             return (
               <div key={`${visit.session_id}-${visit.id || visit.timestamp || index}`} className={`bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-5 border-l-4 ${accentColor} border border-gray-200 hover:shadow-md transition-all relative`}>
-                {/* Bot Badge - Top Right Corner */}
-                {visit.is_bot && (
-                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
+                {/* Date Badge - Top Right Corner */}
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 flex items-center gap-2">
+                  {/* Bot Badge */}
+                  {visit.is_bot && (
                     <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-500 text-white shadow-md">
                       <Shield className="w-3 h-3 mr-1" />
                       BOT
                     </div>
+                  )}
+                  {/* Date Badge */}
+                  <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 shadow-sm">
+                    <Calendar size={12} className="mr-1" />
+                    {formatDate(visit.timestamp)}
                   </div>
-                )}
+                </div>
 
                 {/* Mobile & Tablet Layout (< lg) */}
                 <div className="lg:hidden space-y-3">
@@ -375,8 +397,8 @@ const LatestVisits = ({ siteId }) => {
                       </div>
                       <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
                       <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
-                        <Calendar size={12} className="text-gray-500" />
-                        <span>{formatDate(visit.timestamp)}</span>
+                        <Globe size={12} className="text-blue-500" />
+                        <span className="font-semibold text-blue-700">{getRegionFromIP(visit.ip)}</span>
                       </div>
                     </div>
 
