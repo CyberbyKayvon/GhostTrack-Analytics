@@ -59,10 +59,10 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
             />
           </div>
 
-          {/* Site Selector & Add Button */}
+          {/* Site Selector & Action Buttons */}
           <div className="flex items-center gap-3">
-            {/* Custom Dropdown */}
-            <div className="relative">
+            {/* Custom Dropdown (Slide Left) */}
+            <div className="relative mr-2">
               {/* Current Site Button */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -175,15 +175,31 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
               )}
             </div>
 
-            {/* Quick Add Button */}
+            {/* Add Site Button */}
             <button
               onClick={onAddSite}
               className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-green-600 hover:to-emerald-600"
               title="Add New Site"
             >
               <Plus className="text-white" size={20} />
-              <span className="text-white font-semibold text-sm hidden sm:inline">Add Site</span>
+              <span className="text-white font-semibold text-sm">Add Site</span>
             </button>
+
+            {/* Remove This Site Button - Only show if more than 1 site */}
+            {sites.length > 1 && (
+              <button
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to delete "${currentSite?.name}"?\n\nThis cannot be undone.`)) {
+                    handleDeleteConfirm(null, currentSiteId);
+                  }
+                }}
+                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-red-600 hover:to-red-700"
+                title="Remove Current Site"
+              >
+                <Trash2 className="text-white" size={20} />
+                <span className="text-white font-semibold text-sm">Remove Site</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

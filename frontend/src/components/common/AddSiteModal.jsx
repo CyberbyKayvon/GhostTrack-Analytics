@@ -16,6 +16,7 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
     e.preventDefault();
     setError('');
 
+    // Validation
     if (!siteName.trim()) {
       setError('Please enter a site name');
       return;
@@ -26,12 +27,17 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
       return;
     }
 
+    // Try to add the site
     try {
+      console.log('Adding site:', siteName.trim(), siteUrl.trim());
       const site = addSite(siteName.trim(), siteUrl.trim());
+      console.log('Site added successfully:', site);
+
       setNewSite(site);
-      setStep(2);
+      setStep(2); // Move to tracking code step
       onSiteAdded(site);
     } catch (err) {
+      console.error('Error adding site:', err);
       setError(err.message);
     }
   };
@@ -56,6 +62,9 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
   };
 
   const snippet = newSite ? generateTrackingSnippet(newSite.id) : '';
+
+  // Debug logging
+  console.log('Modal State - Step:', step, 'NewSite:', newSite, 'Error:', error);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
