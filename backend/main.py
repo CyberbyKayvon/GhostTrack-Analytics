@@ -64,7 +64,7 @@ app.include_router(threats.router, prefix="/api/v1/threats", tags=["threats"])
 app.include_router(heatmap_router, prefix="/api/v1/heatmap", tags=["heatmap"])
 
 # Serve the tracker JavaScript file
-tracker_dir = BASE_DIR.parent / "tracker"
+tracker_dir = BASE_DIR / "tracker"
 if tracker_dir.exists():
     app.mount("/tracker", StaticFiles(directory=str(tracker_dir)), name="tracker")
 
