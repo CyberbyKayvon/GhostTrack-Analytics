@@ -364,6 +364,10 @@ const LatestVisits = ({ siteId }) => {
                         <span className="text-sm font-black uppercase text-cyan-600">IP</span>
                       </div>
                       <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
+                      <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                        <Calendar size={12} className="text-gray-500" />
+                        <span>{formatDate(visit.timestamp)}</span>
+                      </div>
                     </div>
 
                     {/* Device */}
@@ -376,10 +380,6 @@ const LatestVisits = ({ siteId }) => {
                       <div className="flex items-center gap-1">
                         <span className="text-gray-600 text-sm">Browser:</span>
                         <span className="text-gray-900 text-sm font-semibold">{browserName}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
-                        <Calendar size={12} className="text-gray-500" />
-                        <span>{formatDate(visit.timestamp)}</span>
                       </div>
                     </div>
 

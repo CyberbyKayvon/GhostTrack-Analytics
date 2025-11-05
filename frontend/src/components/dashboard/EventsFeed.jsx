@@ -121,7 +121,7 @@ const EventsFeed = ({ events }) => {
     }
   };
 
-  // IMPROVED: Clean page name - shows actual page path
+  // IMPROVED: Show full pathname for better detail and accuracy
   const getPageName = (url) => {
     if (!url) return 'Unknown';
 
@@ -134,27 +134,16 @@ const EventsFeed = ({ events }) => {
         pathname = pathname.slice(0, -1);
       }
 
-      // Split path into segments and filter out empty strings
-      const segments = pathname.split('/').filter(s => s);
-
-      // If no segments (root path), return "index"
-      if (segments.length === 0) {
-        return 'index';
+      // If root path, return "/ (Home)"
+      if (pathname === '/' || pathname === '') {
+        return '/ (Home)';
       }
 
-      // Get the last segment (the actual page)
-      let pageName = segments[segments.length - 1];
+      // Remove file extensions for cleaner display
+      pathname = pathname.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
 
-      // Remove file extensions
-      pageName = pageName.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
-
-      // If the page name is empty after removing extension, use the previous segment
-      if (!pageName && segments.length > 1) {
-        pageName = segments[segments.length - 2];
-      }
-
-      // Capitalize first letter for display
-      return pageName.charAt(0).toUpperCase() + pageName.slice(1);
+      // Show the full path for clarity (e.g., "/resume", "/projects", "/about")
+      return pathname;
     } catch (e) {
       // Fallback for malformed URLs
       const cleaned = url.split('/').pop()?.split('?')[0] || 'Unknown';
