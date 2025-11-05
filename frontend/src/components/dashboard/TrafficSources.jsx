@@ -164,50 +164,52 @@ const TrafficSources = ({ siteId }) => {
               No location data yet
             </div>
           ) : (
-            <div className="space-y-3">
-              {geoLocations.map((location, index) => {
-                const totalVisitors = geoLocations.reduce((sum, loc) => sum + loc.count, 0);
-                const percentage = ((location.count / totalVisitors) * 100).toFixed(1);
+            <div className="px-6">
+              <div className="space-y-3">
+                {geoLocations.map((location, index) => {
+                  const totalVisitors = geoLocations.reduce((sum, loc) => sum + loc.count, 0);
+                  const percentage = ((location.count / totalVisitors) * 100).toFixed(1);
 
-                // Color scheme for regions
-                const colors = [
-                  'bg-blue-500',
-                  'bg-green-500',
-                  'bg-purple-500',
-                  'bg-orange-500',
-                  'bg-pink-500'
-                ];
-                const color = colors[index % colors.length];
+                  // Color scheme for regions
+                  const colors = [
+                    'bg-blue-500',
+                    'bg-green-500',
+                    'bg-purple-500',
+                    'bg-orange-500',
+                    'bg-pink-500'
+                  ];
+                  const color = colors[index % colors.length];
 
-                return (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Globe size={14} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">
-                          {location.region}
-                        </span>
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Globe size={14} className="text-gray-400" />
+                          <span className="text-sm font-medium text-gray-700">
+                            {location.region}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-bold text-gray-900">
+                            {percentage}%
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({location.count})
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-bold text-gray-900">
-                          {percentage}%
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ({location.count})
-                        </span>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${color} transition-all duration-300`}
+                          style={{ width: `${percentage}%` }}
+                        />
                       </div>
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${color} transition-all duration-300`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
