@@ -4,8 +4,6 @@ import { deleteSite } from '../../utils/siteManager';
 
 const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSite, onSiteDeleted }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // Track which site is being confirmed for deletion
-
   const currentSite = sites.find(site => site.id === currentSiteId);
 
   const getStatusIndicator = (siteId) => {
@@ -21,42 +19,45 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
   const handleSiteSelect = (siteId) => {
     onSiteChange(siteId);
     setIsDropdownOpen(false);
-    setDeleteConfirm(null);
   };
 
   const handleDeleteClick = (e, siteId) => {
     e.stopPropagation(); // Prevent triggering site selection
-    setDeleteConfirm(siteId);
-  };
 
-  const handleDeleteConfirm = (e, siteId) => {
-    e.stopPropagation();
-    try {
-      deleteSite(siteId);
-      setDeleteConfirm(null);
-      onSiteDeleted(siteId);
-    } catch (error) {
-      alert(`Error deleting site: ${error.message}`);
+    // Show confirmation popup
+    const site = sites.find(s => s.id === siteId);
+    if (window.confirm(`⚠️ Delete "${site?.name}"?\n\nThis will permanently remove this site from your dashboard.\n\nThis action cannot be undone.`)) {
+      handleDeleteConfirm(e, siteId);
     }
   };
 
-  const handleDeleteCancel = (e) => {
-    e.stopPropagation();
-    setDeleteConfirm(null);
+  const handleDeleteConfirm = (e, siteId) => {
+    if (e) e.stopPropagation();
+    try {
+      deleteSite(siteId);
+      onSiteDeleted(siteId);
+    } catch (error) {
+      alert(`❌ Error deleting site: ${error.message}`);
+    }
   };
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="flex justify-between items-center h-24">
-          {/* Logo */}
-          <div className="flex items-center">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo & Tagline */}
+          <div className="flex items-center gap-4">
             <img
               src="/ghostlogotransparent.png"
               alt="GhostTrack"
-              className="h-40 w-auto"
+              className="h-16 w-auto"
               style={{ imageRendering: 'auto' }}
             />
+            <div className="border-l-2 border-gray-300 pl-4 hidden md:block">
+              <p className="text-sm font-semibold text-gray-600 tracking-wide">
+                Security-First Web Analytics
+              </p>
+            </div>
           </div>
 
           {/* Site Selector & Action Buttons */}
@@ -84,10 +85,7 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                   {/* Backdrop to close dropdown */}
                   <div
                     className="fixed inset-0 z-10"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setDeleteConfirm(null);
-                    }}
+                    onClick={() => setIsDropdownOpen(false)}
                   />
 
                   {/* Dropdown Panel */}
@@ -95,29 +93,7 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                     <div className="p-2">
                       {sites.map((site) => (
                         <div key={site.id} className="relative">
-                          {deleteConfirm === site.id ? (
-                            // Delete Confirmation
-                            <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-2">
-                              <p className="text-sm text-red-800 font-semibold mb-2">
-                                Delete "{site.name}"?
-                              </p>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => handleDeleteConfirm(e, site.id)}
-                                  className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded hover:bg-red-700"
-                                >
-                                  Delete
-                                </button>
-                                <button
-                                  onClick={handleDeleteCancel}
-                                  className="flex-1 px-3 py-1.5 bg-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-400"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            // Normal Site Button
+                          {/* Site Button */}
                             <div
                               className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all mb-1 ${
                                 site.id === currentSiteId
@@ -150,7 +126,6 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                                 )}
                               </div>
                             </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -162,7 +137,6 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setDeleteConfirm(null);
                         onAddSite();
                       }}
                       className="w-full flex items-center gap-3 px-6 py-3 text-purple-600 hover:bg-purple-50 transition-colors font-semibold"
@@ -189,7 +163,7 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
             {sites.length > 1 && (
               <button
                 onClick={() => {
-                  if (window.confirm(`Are you sure you want to delete "${currentSite?.name}"?\n\nThis cannot be undone.`)) {
+                  if (window.confirm(`⚠️ Delete "${currentSite?.name}"?\n\nThis will permanently remove this site from your dashboard.\n\nThis action cannot be undone.`)) {
                     handleDeleteConfirm(null, currentSiteId);
                   }
                 }}
