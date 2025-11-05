@@ -50,11 +50,11 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
             <img
               src="/ghostlogotransparent.png"
               alt="GhostTrack"
-              className="h-16 w-auto"
+              className="h-20 w-auto"
               style={{ imageRendering: 'auto' }}
             />
             <div className="border-l-2 border-gray-300 pl-4 hidden md:block">
-              <p className="text-sm font-semibold text-gray-600 tracking-wide">
+              <p className="text-lg font-bold text-gray-700 tracking-wide">
                 Security-First Web Analytics
               </p>
             </div>
