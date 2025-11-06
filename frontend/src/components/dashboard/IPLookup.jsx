@@ -7,6 +7,61 @@ const IPTracker = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Derive continent from country code
+  const getContinent = (countryCode) => {
+    const continents = {
+      'AF': 'Africa', 'DZ': 'Africa', 'AO': 'Africa', 'BJ': 'Africa', 'BW': 'Africa', 'BF': 'Africa', 'BI': 'Africa',
+      'CM': 'Africa', 'CV': 'Africa', 'CF': 'Africa', 'TD': 'Africa', 'KM': 'Africa', 'CG': 'Africa', 'CD': 'Africa',
+      'CI': 'Africa', 'DJ': 'Africa', 'EG': 'Africa', 'GQ': 'Africa', 'ER': 'Africa', 'ET': 'Africa', 'GA': 'Africa',
+      'GM': 'Africa', 'GH': 'Africa', 'GN': 'Africa', 'GW': 'Africa', 'KE': 'Africa', 'LS': 'Africa', 'LR': 'Africa',
+      'LY': 'Africa', 'MG': 'Africa', 'MW': 'Africa', 'ML': 'Africa', 'MR': 'Africa', 'MU': 'Africa', 'YT': 'Africa',
+      'MA': 'Africa', 'MZ': 'Africa', 'NA': 'Africa', 'NE': 'Africa', 'NG': 'Africa', 'RE': 'Africa', 'RW': 'Africa',
+      'SH': 'Africa', 'ST': 'Africa', 'SN': 'Africa', 'SC': 'Africa', 'SL': 'Africa', 'SO': 'Africa', 'ZA': 'Africa',
+      'SS': 'Africa', 'SD': 'Africa', 'SZ': 'Africa', 'TZ': 'Africa', 'TG': 'Africa', 'TN': 'Africa', 'UG': 'Africa',
+      'EH': 'Africa', 'ZM': 'Africa', 'ZW': 'Africa',
+      'US': 'North America', 'CA': 'North America', 'MX': 'North America', 'GT': 'North America', 'BZ': 'North America',
+      'SV': 'North America', 'HN': 'North America', 'NI': 'North America', 'CR': 'North America', 'PA': 'North America',
+      'CU': 'North America', 'HT': 'North America', 'DO': 'North America', 'JM': 'North America', 'TT': 'North America',
+      'BR': 'South America', 'AR': 'South America', 'CO': 'South America', 'PE': 'South America', 'VE': 'South America',
+      'CL': 'South America', 'EC': 'South America', 'BO': 'South America', 'PY': 'South America', 'UY': 'South America',
+      'GY': 'South America', 'SR': 'South America', 'GF': 'South America',
+      'CN': 'Asia', 'IN': 'Asia', 'ID': 'Asia', 'PK': 'Asia', 'BD': 'Asia', 'JP': 'Asia', 'PH': 'Asia', 'VN': 'Asia',
+      'TR': 'Asia', 'IR': 'Asia', 'TH': 'Asia', 'MM': 'Asia', 'KR': 'Asia', 'IQ': 'Asia', 'AF': 'Asia', 'SA': 'Asia',
+      'UZ': 'Asia', 'MY': 'Asia', 'NP': 'Asia', 'YE': 'Asia', 'KP': 'Asia', 'TW': 'Asia', 'SY': 'Asia', 'LK': 'Asia',
+      'KH': 'Asia', 'JO': 'Asia', 'AZ': 'Asia', 'TJ': 'Asia', 'IL': 'Asia', 'LA': 'Asia', 'LB': 'Asia', 'KG': 'Asia',
+      'TM': 'Asia', 'SG': 'Asia', 'OM': 'Asia', 'PS': 'Asia', 'KW': 'Asia', 'GE': 'Asia', 'MN': 'Asia', 'AM': 'Asia',
+      'QA': 'Asia', 'BH': 'Asia', 'TL': 'Asia', 'BT': 'Asia', 'MV': 'Asia', 'BN': 'Asia',
+      'RU': 'Europe', 'DE': 'Europe', 'GB': 'Europe', 'FR': 'Europe', 'IT': 'Europe', 'ES': 'Europe', 'UA': 'Europe',
+      'PL': 'Europe', 'RO': 'Europe', 'NL': 'Europe', 'BE': 'Europe', 'CZ': 'Europe', 'GR': 'Europe', 'PT': 'Europe',
+      'SE': 'Europe', 'HU': 'Europe', 'BY': 'Europe', 'AT': 'Europe', 'RS': 'Europe', 'CH': 'Europe', 'BG': 'Europe',
+      'DK': 'Europe', 'FI': 'Europe', 'SK': 'Europe', 'NO': 'Europe', 'IE': 'Europe', 'HR': 'Europe', 'BA': 'Europe',
+      'LT': 'Europe', 'SI': 'Europe', 'LV': 'Europe', 'EE': 'Europe', 'MK': 'Europe', 'AL': 'Europe', 'MD': 'Europe',
+      'IS': 'Europe', 'LU': 'Europe', 'MT': 'Europe', 'MC': 'Europe', 'LI': 'Europe', 'SM': 'Europe', 'VA': 'Europe',
+      'AU': 'Oceania', 'PG': 'Oceania', 'NZ': 'Oceania', 'FJ': 'Oceania', 'SB': 'Oceania', 'NC': 'Oceania',
+      'PF': 'Oceania', 'VU': 'Oceania', 'WS': 'Oceania', 'KI': 'Oceania', 'TO': 'Oceania', 'FM': 'Oceania',
+      'MH': 'Oceania', 'PW': 'Oceania', 'NR': 'Oceania', 'TV': 'Oceania'
+    };
+    return continents[countryCode] || 'Unknown';
+  };
+
+  // Detect company type from org name
+  const getCompanyType = (org) => {
+    if (!org) return 'Unknown';
+    const orgLower = org.toLowerCase();
+
+    if (orgLower.includes('hosting') || orgLower.includes('server') || orgLower.includes('datacenter') ||
+        orgLower.includes('cloud') || orgLower.includes('vps')) return 'Hosting Provider';
+    if (orgLower.includes('telecom') || orgLower.includes('mobile') || orgLower.includes('wireless')) return 'Mobile/Telecom';
+    if (orgLower.includes('cable') || orgLower.includes('broadband') || orgLower.includes('fiber')) return 'Cable/Broadband ISP';
+    if (orgLower.includes('vpn') || orgLower.includes('proxy')) return 'VPN/Proxy Service';
+    if (orgLower.includes('university') || orgLower.includes('education') || orgLower.includes('.edu')) return 'Educational';
+    if (orgLower.includes('government') || orgLower.includes('.gov')) return 'Government';
+    if (orgLower.includes('microsoft') || orgLower.includes('amazon') || orgLower.includes('google') ||
+        orgLower.includes('azure') || orgLower.includes('aws')) return 'Cloud Provider';
+
+    return 'ISP/Network';
+  };
+
   const handleSearch = async () => {
     if (!ipAddress.trim()) {
       setError('Please enter an IP address');
@@ -106,11 +161,11 @@ const IPTracker = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Continent</p>
-                <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.continent_code || 'N/A'}</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">{getContinent(ipData.country_code)}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Company Type</p>
-                <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.org_type || ipData.company?.type || 'Unknown'}</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">{getCompanyType(ipData.org)}</p>
               </div>
             </div>
           </div>
