@@ -42,41 +42,41 @@ const IPTracker = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300">
+    <div className="bg-white rounded-xl p-6 shadow-lg transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 sm:mb-6 pb-4 border-b-2 border-gray-100">
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
         <div className="p-2 bg-blue-100 rounded-lg">
-          <MapPin className="text-blue-600" size={20} />
+          <MapPin className="text-blue-600" size={18} />
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+        <h2 className="text-xl font-bold text-gray-800">
           IP Address Tracker
         </h2>
       </div>
 
       {/* Search Input - Mobile Responsive */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <input
           type="text"
           placeholder="Enter IP address"
           value={ipAddress}
           onChange={(e) => setIpAddress(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 font-mono text-sm sm:text-base"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 font-mono text-sm"
         />
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2 text-sm"
         >
-          <Search size={20} />
+          <Search size={16} />
           {loading ? 'Searching...' : 'Search'}
         </button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 sm:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
+        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium text-sm">{error}</p>
         </div>
       )}
 
@@ -182,10 +182,10 @@ const IPTracker = () => {
         </div>
       )}
 
-      {/* Empty State - Compact */}
+      {/* Empty State - Minimal */}
       {!ipData && !error && !loading && (
-        <div className="text-center py-4">
-          <p className="text-gray-400 text-sm">Enter an IP address to view location details</p>
+        <div className="text-center py-2">
+          <p className="text-gray-400 text-xs">Enter an IP address above</p>
         </div>
       )}
     </div>
