@@ -67,21 +67,41 @@ const LatestVisits = ({ siteId }) => {
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Helper to determine region from IP
-  const getRegionFromIP = (ip) => {
-    if (!ip || ip === 'Unknown') return 'Unknown';
+  // State for IP geolocation data
+  const [geoData, setGeoData] = useState({});
 
-    const firstOctet = parseInt(ip.split('.')[0]);
+  // Helper to get accurate geolocation from IP using ip-api.com
+  const fetchGeoLocation = async (ip) => {
+    if (!ip || ip === 'Unknown' || geoData[ip]) return;
 
-    // US-based IPs (simplified)
-    if (firstOctet >= 3 && firstOctet <= 126) return 'North America';
-    // Europe
-    if (firstOctet >= 128 && firstOctet <= 191) return 'Europe';
-    // Asia-Pacific
-    if (firstOctet >= 192 && firstOctet <= 223) return 'Asia-Pacific';
-    // Other/Unknown
-    return 'Other Regions';
+    try {
+      const response = await fetch(`https://ip-api.com/json/${ip}?fields=city,region,country,countryCode,proxy`);
+      if (response.ok) {
+        const data = await response.json();
+        setGeoData(prev => ({
+          ...prev,
+          [ip]: {
+            city: data.city || 'Unknown',
+            region: data.region || 'Unknown',
+            country: data.country || 'Unknown',
+            countryCode: data.countryCode || '',
+            isVpn: data.proxy || false
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch geolocation for', ip, error);
+    }
   };
+
+  // Fetch geolocation for all visitor IPs
+  useEffect(() => {
+    visits.forEach(visit => {
+      if (visit.ip && visit.ip !== 'Unknown' && !geoData[visit.ip]) {
+        fetchGeoLocation(visit.ip);
+      }
+    });
+  }, [visits]);
 
   useEffect(() => {
     if (!siteId) return;
@@ -410,8 +430,16 @@ const LatestVisits = ({ siteId }) => {
                       <div className="text-gray-900 font-bold font-mono">{visit.ip || 'Unknown'}</div>
                       <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
                         <Globe size={12} className="text-blue-500" />
-                        <span className="font-semibold text-blue-700">{getRegionFromIP(visit.ip)}</span>
+                        <span className="font-semibold text-blue-700">
+                          {geoData[visit.ip]?.city || 'Loading...'}, {geoData[visit.ip]?.country || ''}
+                        </span>
                       </div>
+                      {geoData[visit.ip]?.isVpn && (
+                        <div className="flex items-center gap-1 text-xs mt-1">
+                          <Shield size={12} className="text-orange-500" />
+                          <span className="font-semibold text-orange-600">VPN Detected</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Device */}

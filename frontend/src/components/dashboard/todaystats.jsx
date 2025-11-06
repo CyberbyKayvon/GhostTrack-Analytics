@@ -83,21 +83,36 @@ const TodayStats = ({ siteId }) => {
 
   const { today, yesterday, hourly_breakdown } = todayData;
 
-  // Convert 24-hour format to 12-hour format (e.g., "00:00" -> "12AM", "13:00" -> "1PM")
+  // Convert UTC hour to local hour
+  const utcToLocalHour = (utcHour) => {
+    // Create a date object in UTC for today at the given hour
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), utcHour, 0, 0));
+    // Get the local hour from that UTC date
+    return utcDate.getHours();
+  };
+
+  // Convert 24-hour format to 12-hour format (e.g., 0 -> "12AM", 13 -> "1PM")
   const to12HourFormat = (hour24) => {
-    const hourNum = parseInt(hour24.split(':')[0]);
+    const hourNum = typeof hour24 === 'string' ? parseInt(hour24.split(':')[0]) : hour24;
     if (hourNum === 0) return '12AM';
     if (hourNum < 12) return `${hourNum}AM`;
     if (hourNum === 12) return '12PM';
     return `${hourNum - 12}PM`;
   };
 
-  // Prepare hourly chart data with 12-hour format
-  const hourlyChartData = hourly_breakdown.map(hour => ({
-    ...hour,
-    time: to12HourFormat(hour.hour_label),
-    isCurrentHour: hour.hour === new Date().getHours()
-  }));
+  // Prepare hourly chart data with LOCAL time (converted from UTC)
+  const hourlyChartData = hourly_breakdown.map(hour => {
+    const localHour = utcToLocalHour(hour.hour);
+    const currentLocalHour = new Date().getHours();
+
+    return {
+      ...hour,
+      localHour: localHour,
+      time: to12HourFormat(localHour),
+      isCurrentHour: localHour === currentLocalHour
+    };
+  });
 
   return (
     <div className="bg-white p-5 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-xl" style={{ height: '500px' }}>
