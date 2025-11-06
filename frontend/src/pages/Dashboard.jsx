@@ -193,7 +193,7 @@ const Dashboard = () => {
 
         {/* ROW 2 - Today's Activity (LEFT) & Recent Events (RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <TodayStats events={events} stats={stats} />
+          <TodayStats siteId={currentSiteId} />
           <EventsFeed events={events} />
         </div>
 

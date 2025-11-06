@@ -288,3 +288,105 @@ async def get_recent_visitors(
         })
 
     return {"visitors": visitors}
+
+
+@router.get("/today-stats")
+async def get_today_stats(
+        site_id: str = "ghosttrack-test-dashboard",
+        db: Session = Depends(get_db)
+):
+    """
+    Get ACCURATE today's activity stats with hourly breakdown
+    This endpoint counts ALL events from today, not just a limited sample
+    """
+    # Get today's date range in UTC
+    now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+    tomorrow_start = today_start + timedelta(days=1)
+
+    # Get yesterday's date range for comparison
+    yesterday_start = today_start - timedelta(days=1)
+
+    # Query ALL of today's events
+    today_events = db.query(Event).filter(
+        Event.site_id == site_id,
+        Event.timestamp >= today_start,
+        Event.timestamp < tomorrow_start
+    ).all()
+
+    # Query yesterday's events for comparison
+    yesterday_events = db.query(Event).filter(
+        Event.site_id == site_id,
+        Event.timestamp >= yesterday_start,
+        Event.timestamp < today_start
+    ).all()
+
+    # Calculate today's stats
+    total_events = len(today_events)
+    pageviews = len([e for e in today_events if e.event_type == 'pageview'])
+    clicks = len([e for e in today_events if e.event_type == 'click'])
+    unique_sessions = len(set(e.session_id for e in today_events if e.session_id and e.session_id != 'unknown'))
+    bots_detected = len([e for e in today_events if e.is_bot == 1])
+
+    # Calculate yesterday's stats for comparison
+    yesterday_total = len(yesterday_events)
+    yesterday_visitors = len(set(e.session_id for e in yesterday_events if e.session_id and e.session_id != 'unknown'))
+    yesterday_pageviews = len([e for e in yesterday_events if e.event_type == 'pageview'])
+
+    # Calculate percentage changes
+    def calc_change(today_val, yesterday_val):
+        if yesterday_val == 0:
+            return 100 if today_val > 0 else 0
+        return round(((today_val - yesterday_val) / yesterday_val) * 100, 1)
+
+    events_change = calc_change(total_events, yesterday_total)
+    visitors_change = calc_change(unique_sessions, yesterday_visitors)
+    pageviews_change = calc_change(pageviews, yesterday_pageviews)
+
+    # Build hourly breakdown (last 24 hours)
+    hourly_data = []
+    for hour in range(24):
+        hour_start = datetime(now.year, now.month, now.day, hour, 0, 0)
+        hour_end = hour_start + timedelta(hours=1)
+
+        hour_events = [
+            e for e in today_events
+            if hour_start <= e.timestamp < hour_end
+        ]
+
+        hourly_data.append({
+            "hour": hour,
+            "hour_label": f"{hour:02d}:00",
+            "events": len(hour_events),
+            "pageviews": len([e for e in hour_events if e.event_type == 'pageview']),
+            "visitors": len(set(e.session_id for e in hour_events if e.session_id and e.session_id != 'unknown'))
+        })
+
+    # Get top pages today
+    page_counts = {}
+    for event in today_events:
+        if event.event_type == 'pageview' and event.url:
+            page_counts[event.url] = page_counts.get(event.url, 0) + 1
+
+    top_pages = sorted(page_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    return {
+        "today": {
+            "total_events": total_events,
+            "unique_visitors": unique_sessions,
+            "pageviews": pageviews,
+            "clicks": clicks,
+            "bots_detected": bots_detected,
+            "events_change": events_change,
+            "visitors_change": visitors_change,
+            "pageviews_change": pageviews_change
+        },
+        "yesterday": {
+            "total_events": yesterday_total,
+            "unique_visitors": yesterday_visitors,
+            "pageviews": yesterday_pageviews
+        },
+        "hourly_breakdown": hourly_data,
+        "top_pages": [{"url": url, "views": count} for url, count in top_pages],
+        "last_updated": now.isoformat()
+    }
