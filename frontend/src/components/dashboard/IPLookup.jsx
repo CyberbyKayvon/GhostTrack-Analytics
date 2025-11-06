@@ -17,6 +17,7 @@ const IPTracker = () => {
     setError('');
 
     try {
+      // Fetch more detailed fields from ipapi.co
       const response = await fetch(`https://ipapi.co/${ipAddress}/json/`);
       const data = await response.json();
 
@@ -94,14 +95,18 @@ const IPTracker = () => {
                 {ipData.ip}
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Type</p>
                 <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.version || 'IPv4'}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">Organization</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">ISP</p>
                 <p className="text-base sm:text-lg font-bold text-gray-900 break-words">{ipData.org || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Continent</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.continent_code || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -128,8 +133,16 @@ const IPTracker = () => {
                 </p>
               </div>
               <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Capital</p>
+                <p className="text-base font-bold text-gray-900">{ipData.country_capital || 'N/A'}</p>
+              </div>
+              <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Postal Code</p>
                 <p className="text-base font-bold text-gray-900">{ipData.postal || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Calling Code</p>
+                <p className="text-base font-bold text-gray-900">+{ipData.country_calling_code || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -155,6 +168,10 @@ const IPTracker = () => {
                   <p className="text-sm font-semibold text-gray-500 mb-1">Timezone</p>
                   <p className="text-base font-bold text-gray-900">{ipData.timezone || 'N/A'}</p>
                 </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">UTC Offset</p>
+                  <p className="text-base font-bold text-gray-900">{ipData.utc_offset || 'N/A'}</p>
+                </div>
               </div>
             </div>
 
@@ -178,6 +195,10 @@ const IPTracker = () => {
                   <p className="text-base font-bold text-gray-900">
                     {ipData.currency ? `${ipData.currency} (${ipData.currency_name})` : 'N/A'}
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Languages</p>
+                  <p className="text-base font-bold text-gray-900">{ipData.languages || 'N/A'}</p>
                 </div>
               </div>
             </div>
