@@ -58,3 +58,44 @@ async def add_link_tracking_columns(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
+
+
+@router.post("/add-vpn-column")
+async def add_vpn_column(db: Session = Depends(get_db)):
+    """
+    Migration endpoint to add VPN detection column to events table
+    This is a one-time migration endpoint
+    """
+    try:
+        # Check if column already exists
+        result = db.execute(text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'events' AND column_name = 'is_vpn'
+        """))
+
+        if result.fetchone():
+            return {
+                "status": "success",
+                "message": "is_vpn column already exists, no migration needed",
+                "column_added": False
+            }
+
+        # Add is_vpn column
+        db.execute(text("""
+            ALTER TABLE events
+            ADD COLUMN IF NOT EXISTS is_vpn INTEGER DEFAULT 0
+        """))
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": "Migration completed successfully",
+            "column_added": True,
+            "column": "is_vpn (INTEGER DEFAULT 0)"
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")

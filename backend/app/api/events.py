@@ -52,6 +52,136 @@ def generate_fallback_session_id(ip_address: str, user_agent: str) -> str:
     return hashlib.sha256(session_string.encode()).hexdigest()[:32]
 
 
+def detect_vpn(ip_address: str) -> bool:
+    """
+    Detect if IP is from a VPN/Proxy/Hosting provider
+    Uses common VPN/hosting IP ranges and patterns
+    """
+    if not ip_address or ip_address == "unknown":
+        return False
+
+    # Known VPN/Hosting/Datacenter IP ranges (first octet patterns)
+    # These are commonly used by VPNs, cloud hosting, and data centers
+    vpn_ranges = [
+        # Major VPN providers often use these ranges
+        (104, 116),  # AWS, Google Cloud, Azure ranges
+        (13, 13),    # Amazon AWS
+        (34, 35),    # Google Cloud
+        (20, 20),    # Microsoft Azure
+        (52, 52),    # AWS
+        (54, 54),    # AWS
+        (3, 3),      # AWS
+        (18, 18),    # AWS
+        (23, 23),    # Akamai/CDN
+        (31, 31),    # Various datacenters
+        (37, 37),    # Various datacenters
+        (46, 46),    # Various datacenters
+        (62, 62),    # Various datacenters
+        (63, 63),    # Level 3/CenturyLink
+        (66, 66),    # Various datacenters
+        (67, 67),    # Various datacenters
+        (78, 78),    # European datacenters
+        (79, 79),    # European datacenters
+        (80, 80),    # European datacenters
+        (81, 81),    # European datacenters
+        (82, 82),    # European datacenters
+        (83, 83),    # European datacenters
+        (84, 84),    # European datacenters
+        (85, 85),    # European datacenters
+        (86, 86),    # European datacenters
+        (87, 87),    # European datacenters
+        (88, 88),    # European datacenters
+        (89, 89),    # European datacenters
+        (90, 90),    # European datacenters
+        (91, 91),    # European datacenters
+        (92, 92),    # European datacenters
+        (93, 93),    # European datacenters
+        (94, 94),    # European datacenters
+        (95, 95),    # European datacenters
+        (138, 139),  # Datacenters
+        (159, 159),  # DigitalOcean
+        (161, 161),  # DigitalOcean
+        (162, 162),  # DigitalOcean
+        (164, 167),  # Datacenters
+        (185, 185),  # European hosting
+        (188, 188),  # European hosting
+        (192, 192),  # Private/hosting (192.x is often private but 192.0.x.x is public hosting)
+    ]
+
+    try:
+        first_octet = int(ip_address.split('.')[0])
+
+        # Check if IP falls within known VPN/datacenter ranges
+        for range_start, range_end in vpn_ranges:
+            if range_start <= first_octet <= range_end:
+                return True
+
+    except (ValueError, IndexError):
+        pass
+
+    return False
+
+
+def enhanced_bot_detection(user_agent: str, event_data: dict) -> bool:
+    """
+    Enhanced bot detection with multiple signals
+    Returns True if detected as bot
+    """
+    if not user_agent:
+        return True  # No user agent = likely bot
+
+    ua_lower = user_agent.lower()
+
+    # Common bot indicators in user agent
+    bot_patterns = [
+        'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget', 'python',
+        'java', 'http', 'php', 'ruby', 'perl', 'go-http', 'node',
+        'axios', 'fetch', 'postman', 'insomnia', 'httpclient',
+        'selenium', 'puppeteer', 'playwright', 'headless', 'phantom',
+        'chrome-lighthouse', 'pagespeed', 'gtmetrix', 'pingdom',
+        'uptimerobot', 'monitor', 'check', 'test', 'benchmark',
+        'slurp', 'duckduckbot', 'bingbot', 'googlebot', 'baiduspider',
+        'yandexbot', 'sogou', 'exabot', 'facebot', 'ia_archiver',
+        'semrush', 'ahrefs', 'mj12bot', 'dotbot', 'rogerbot',
+        'linkedin', 'twitterbot', 'facebookexternalhit', 'whatsapp',
+        'telegram', 'discord', 'slack'
+    ]
+
+    for pattern in bot_patterns:
+        if pattern in ua_lower:
+            return True
+
+    # Check for automation tool signatures
+    automation_signals = event_data.get('automation_signals', {})
+    if automation_signals:
+        # WebDriver detection
+        if automation_signals.get('webdriver'):
+            return True
+        # Chrome headless detection
+        if automation_signals.get('headless'):
+            return True
+        # Automation flag
+        if automation_signals.get('automated'):
+            return True
+
+    # Check for suspicious screen resolutions
+    screen_width = event_data.get('screen_width')
+    screen_height = event_data.get('screen_height')
+    if screen_width and screen_height:
+        # Very small or very large resolutions are suspicious
+        if screen_width < 200 or screen_height < 200:
+            return True
+        if screen_width > 10000 or screen_height > 10000:
+            return True
+
+    # Check for missing/suspicious navigator properties
+    has_plugins = event_data.get('has_plugins')
+    if has_plugins is False:  # Explicitly False (not just missing)
+        return True
+
+    return False
+
+
 @router.post("/track")
 @limiter.limit("100/minute")  # Limit to 100 requests per minute per IP
 async def track_event(request: Request, event_data: dict = Body(...), db: Session = Depends(get_db)):
@@ -86,8 +216,18 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
         else:
             print(f"✅ Received session_id: {session_id}")
 
-        # Convert boolean to integer for database
-        is_bot_int = 1 if is_bot else 0
+        # 🔍 Enhanced bot detection
+        is_bot_detected = enhanced_bot_detection(user_agent, event_data) or is_bot
+        is_bot_int = 1 if is_bot_detected else 0
+
+        # 🛡️ VPN detection
+        is_vpn_detected = detect_vpn(ip_address)
+        is_vpn_int = 1 if is_vpn_detected else 0
+
+        if is_bot_detected:
+            print(f"🤖 BOT DETECTED: {user_agent[:50]}")
+        if is_vpn_detected:
+            print(f"🔒 VPN DETECTED: {ip_address}")
 
         # Extract link tracking data (for click events)
         link_url = event_data.get("link_url")
@@ -106,6 +246,7 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
             ip_address=ip_address,
             session_id=session_id,
             is_bot=is_bot_int,
+            is_vpn=is_vpn_int,  # VPN detection
             timestamp=datetime.utcnow(),
             # Link tracking fields
             link_url=link_url,

@@ -388,6 +388,12 @@ const EventsFeed = ({ events }) => {
                         Bot
                       </div>
                     )}
+                    {event.is_vpn && (
+                      <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                        <Shield className="w-3 h-3 mr-1" />
+                        VPN
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

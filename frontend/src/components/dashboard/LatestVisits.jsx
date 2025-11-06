@@ -310,10 +310,20 @@ const LatestVisits = ({ siteId }) => {
 
                 {/* Bot Badge - Bottom Right Corner */}
                 {visit.is_bot && (
-                  <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 lg:bottom-4 lg:right-4">
+                  <div className={`absolute right-2 sm:right-3 lg:right-4 ${visit.is_vpn ? 'bottom-11 sm:bottom-12 lg:bottom-14' : 'bottom-2 sm:bottom-3 lg:bottom-4'}`}>
                     <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-red-500 text-white shadow-md">
                       <Shield className="w-3 h-3 mr-1" />
                       BOT
+                    </div>
+                  </div>
+                )}
+
+                {/* VPN Badge - Bottom Right Corner (below BOT if both exist) */}
+                {visit.is_vpn && (
+                  <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 lg:bottom-4 lg:right-4">
+                    <div className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-orange-500 text-white shadow-md">
+                      <Shield className="w-3 h-3 mr-1" />
+                      VPN
                     </div>
                   </div>
                 )}
