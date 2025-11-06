@@ -7,7 +7,7 @@ import EventsFeed from '../components/dashboard/EventsFeed';
 import LatestVisits from '../components/dashboard/LatestVisits';
 import TrafficSources from '../components/dashboard/TrafficSources';
 import IPLookup from '../components/dashboard/IPLookup';
-import TodayStats from '../components/dashboard/TodayStats';
+import TodayStats from '../components/dashboard/todaystats';
 import { analyticsAPI } from '../services/api';
 import HeatmapViewer from '../components/dashboard/Heatmap';
 import { getAllSites, initializeSites, setLastViewedSite, getLastViewedSite } from '../utils/siteManager';
