@@ -83,10 +83,19 @@ const TodayStats = ({ siteId }) => {
 
   const { today, yesterday, hourly_breakdown } = todayData;
 
-  // Prepare hourly chart data
+  // Convert 24-hour format to 12-hour format (e.g., "00:00" -> "12AM", "13:00" -> "1PM")
+  const to12HourFormat = (hour24) => {
+    const hourNum = parseInt(hour24.split(':')[0]);
+    if (hourNum === 0) return '12AM';
+    if (hourNum < 12) return `${hourNum}AM`;
+    if (hourNum === 12) return '12PM';
+    return `${hourNum - 12}PM`;
+  };
+
+  // Prepare hourly chart data with 12-hour format
   const hourlyChartData = hourly_breakdown.map(hour => ({
     ...hour,
-    time: hour.hour_label,
+    time: to12HourFormat(hour.hour_label),
     isCurrentHour: hour.hour === new Date().getHours()
   }));
 
@@ -199,10 +208,10 @@ const TodayStats = ({ siteId }) => {
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={220}>
+        <ResponsiveContainer width="100%" height={170}>
           <LineChart
             data={hourlyChartData}
-            margin={{ top: 5, right: 10, left: -15, bottom: 5 }}
+            margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
             <XAxis
