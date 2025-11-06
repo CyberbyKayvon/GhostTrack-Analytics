@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Globe, Plus, ChevronDown, Trash2, LogOut } from 'lucide-react';
+import { Globe, Plus, ChevronDown, Trash2, LogOut, Code } from 'lucide-react';
 import { deleteSite } from '../../utils/siteManager';
 import { useAuth } from '../../context/AuthContext';
+import ViewTrackingCodeModal from './ViewTrackingCodeModal';
 
 const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSite, onSiteDeleted }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isViewCodeModalOpen, setIsViewCodeModalOpen] = useState(false);
   const currentSite = sites.find(site => site.id === currentSiteId);
   const { logout } = useAuth();
 
@@ -56,8 +58,11 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
               style={{ imageRendering: 'auto' }}
             />
             <div className="border-l-2 border-gray-400 pl-6 hidden md:block">
-              <p className="text-2xl font-bold text-gray-800 tracking-wide">
-                Security-First Web Analytics
+              <p className="text-lg font-bold text-gray-800 tracking-wide leading-tight">
+                Security-First
+              </p>
+              <p className="text-lg font-bold text-gray-800 tracking-wide leading-tight">
+                Web Analytics
               </p>
             </div>
           </div>
@@ -66,18 +71,18 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
           <div className="flex items-center gap-3">
             {/* Custom Dropdown (Slide Left) */}
             <div className="relative mr-2">
-              {/* Current Site Button */}
+              {/* Current Site Button - Fixed Width */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-purple-600 hover:to-blue-600"
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg transition-all hover:from-purple-600 hover:to-blue-600 w-48"
               >
-                <Globe className="text-white" size={20} />
-                <span className="text-white font-semibold text-base">
+                <Globe className="text-white flex-shrink-0" size={18} />
+                <span className="text-white font-semibold text-sm flex-1 truncate text-left">
                   {currentSite?.name || 'Select Site'}
                 </span>
                 <ChevronDown
-                  className={`text-white transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                  size={16}
+                  className={`text-white transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  size={14}
                 />
               </button>
 
@@ -151,14 +156,14 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
               )}
             </div>
 
-            {/* Add Site Button */}
+            {/* View Tracking Code Button */}
             <button
-              onClick={onAddSite}
-              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-green-600 hover:to-emerald-600"
-              title="Add New Site"
+              onClick={() => setIsViewCodeModalOpen(true)}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg transition-all hover:from-blue-600 hover:to-cyan-600"
+              title="View Tracking Code"
             >
-              <Plus className="text-white" size={20} />
-              <span className="text-white font-semibold text-sm">Add Site</span>
+              <Code className="text-white" size={18} />
+              <span className="text-white font-semibold text-xs whitespace-nowrap">View Code</span>
             </button>
 
             {/* Remove This Site Button - Only show if more than 1 site */}
@@ -169,13 +174,23 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                     handleDeleteConfirm(null, currentSiteId);
                   }
                 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-red-600 hover:to-red-700"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-red-600 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg transition-all hover:from-red-600 hover:to-red-700"
                 title="Remove Current Site"
               >
-                <Trash2 className="text-white" size={20} />
-                <span className="text-white font-semibold text-sm">Remove Site</span>
+                <Trash2 className="text-white" size={18} />
+                <span className="text-white font-semibold text-xs whitespace-nowrap">Remove</span>
               </button>
             )}
+
+            {/* Add Site Button */}
+            <button
+              onClick={onAddSite}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg transition-all hover:from-green-600 hover:to-emerald-600"
+              title="Add New Site"
+            >
+              <Plus className="text-white" size={18} />
+              <span className="text-white font-semibold text-xs whitespace-nowrap">Add Site</span>
+            </button>
 
             {/* Logout Button */}
             <button
@@ -184,15 +199,22 @@ const Navbar = ({ currentSiteId, onSiteChange, sites, siteStatuses = {}, onAddSi
                   logout();
                 }
               }}
-              className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg px-4 py-3 shadow-md hover:shadow-lg transition-all hover:from-gray-700 hover:to-gray-800"
+              className="flex items-center gap-1.5 bg-gradient-to-r from-gray-600 to-gray-700 rounded-lg px-3 py-2.5 shadow-md hover:shadow-lg transition-all hover:from-gray-700 hover:to-gray-800"
               title="Logout"
             >
-              <LogOut className="text-white" size={20} />
-              <span className="text-white font-semibold text-sm">Logout</span>
+              <LogOut className="text-white" size={18} />
+              <span className="text-white font-semibold text-xs whitespace-nowrap">Logout</span>
             </button>
           </div>
         </div>
       </div>
+
+      {/* View Tracking Code Modal */}
+      <ViewTrackingCodeModal
+        isOpen={isViewCodeModalOpen}
+        onClose={() => setIsViewCodeModalOpen(false)}
+        site={currentSite}
+      />
     </nav>
   );
 };

@@ -1,12 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(py -3.12 -m venv venv)",
-      "Bash(./venv/Scripts/python.exe:*)",
-      "Bash(curl:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(cat:*)",
+      "Bash(identify:*)",
+      "Bash(npx vercel:*)",
+      "Bash(railway variables set:*)",
+      "Bash(git rm:*)",
+      "Bash(xargs git rm --cached --)",
+      "Bash(python -m json.tool:*)",
+      "Bash(NUL)"
     ],
     "deny": [],
     "ask": []

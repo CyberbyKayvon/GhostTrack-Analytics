@@ -35,7 +35,7 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
 
       setNewSite(site);
       setStep(2); // Move to tracking code step
-      onSiteAdded(site);
+      // DON'T switch dashboard yet - wait until user clicks "Done"
     } catch (err) {
       console.error('Error adding site:', err);
       setError(err.message);
@@ -52,6 +52,12 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
   };
 
   const handleClose = () => {
+    // If we're on step 2 with a new site, notify dashboard to switch to it
+    if (step === 2 && newSite) {
+      onSiteAdded(newSite);
+    }
+
+    // Reset modal state
     setSiteName('');
     setSiteUrl('');
     setError('');
@@ -158,35 +164,56 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
               {/* Success Message */}
               <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
                 <p className="text-green-800 font-medium">
-                  Site added successfully! Copy the tracking code below and paste it into your website's HTML.
+                  🎉 Site added successfully! Copy the tracking code below and paste it into your website's HTML.
                 </p>
               </div>
 
-              {/* Site Info */}
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Site Name:</span>
-                    <span className="text-sm font-bold text-gray-900">{newSite?.name}</span>
+              {/* Site Preview Card - Enhanced */}
+              <div className="bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl p-6 text-white shadow-xl">
+                <div className="flex items-start gap-4">
+                  {/* Website Icon/Thumbnail */}
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm border-2 border-white border-opacity-30">
+                      <Globe size={40} className="text-white" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Site ID:</span>
-                    <span className="text-sm font-mono font-bold text-purple-700">{newSite?.id}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-600">URL:</span>
-                    <span className="text-sm text-gray-900">{newSite?.url}</span>
+
+                  {/* Site Details */}
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-1">{newSite?.name}</h3>
+                      <a
+                        href={newSite?.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-white text-opacity-90 hover:text-opacity-100 hover:underline flex items-center gap-1"
+                      >
+                        <LinkIcon size={14} />
+                        {newSite?.url}
+                      </a>
+                    </div>
+
+                    <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-white text-opacity-75">Site ID:</span>
+                        <code className="text-sm font-mono font-bold">{newSite?.id}</code>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Tracking Snippet */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-gray-700">Tracking Code</label>
+              <div className="border-2 border-purple-200 rounded-xl overflow-hidden">
+                {/* Header with copy button */}
+                <div className="bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-3 flex items-center justify-between border-b-2 border-purple-200">
+                  <div className="flex items-center gap-2">
+                    <Code size={20} className="text-purple-600" />
+                    <label className="text-base font-bold text-gray-900">Your Tracking Code</label>
+                  </div>
                   <button
                     onClick={handleCopySnippet}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-lg hover:bg-purple-700 transition-all shadow-md hover:shadow-lg"
                   >
                     {copied ? (
                       <>
@@ -201,8 +228,10 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
                     )}
                   </button>
                 </div>
-                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap break-all">
+
+                {/* Code block */}
+                <div className="bg-gray-900 p-5 overflow-x-auto">
+                  <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap break-all leading-relaxed">
                     {snippet}
                   </pre>
                 </div>
@@ -220,12 +249,17 @@ const AddSiteModal = ({ isOpen, onClose, onSiteAdded }) => {
               </div>
 
               {/* Done Button */}
-              <button
-                onClick={handleClose}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-md hover:shadow-lg"
-              >
-                Done
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={handleClose}
+                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-lg rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl"
+                >
+                  ✓ Done - View Dashboard
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Clicking "Done" will close this window and switch to your new site's dashboard
+                </p>
+              </div>
             </div>
           )}
         </div>

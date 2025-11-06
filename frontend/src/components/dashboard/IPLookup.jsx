@@ -42,7 +42,7 @@ const IPTracker = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg" style={{ minHeight: '500px' }}>
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 sm:mb-6 pb-4 border-b-2 border-gray-100">
         <div className="p-2 bg-blue-100 rounded-lg">
@@ -182,14 +182,10 @@ const IPTracker = () => {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State - Compact */}
       {!ipData && !error && !loading && (
-        <div className="text-center py-12">
-          <div className="inline-block p-6 bg-gray-100 rounded-2xl mb-4">
-            <MapPin className="text-gray-300" size={48} />
-          </div>
-          <p className="text-gray-900 font-bold text-lg sm:text-xl mb-2">Search for an IP Address</p>
-          <p className="text-gray-500 text-sm sm:text-base">Enter an IP address above to view detailed information</p>
+        <div className="text-center py-4">
+          <p className="text-gray-400 text-sm">Enter an IP address to view location details</p>
         </div>
       )}
     </div>

@@ -29,16 +29,19 @@ const Login = () => {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <img
-              src="/ghostlogotransparent.png"
-              alt="GhostTrack"
-              className="h-20 w-auto"
-            />
+            {/* White rounded background card for logo - Instagram style */}
+            <div className="bg-white rounded-3xl px-8 py-4 shadow-2xl">
+              <img
+                src="/ghostlogotransparent.png"
+                alt="GhostTrack"
+                className="h-20 w-auto"
+              />
+            </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">
             GhostTrack Analytics
           </h1>
-          <p className="text-purple-100 text-lg">
+          <p className="text-cyan-400 text-lg font-bold">
             Security-First Web Analytics
           </p>
         </div>
