@@ -95,18 +95,22 @@ const IPTracker = () => {
                 {ipData.ip}
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Type</p>
                 <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.version || 'IPv4'}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">ISP</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">ISP Provider</p>
                 <p className="text-base sm:text-lg font-bold text-gray-900 break-words">{ipData.org || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Continent</p>
                 <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.continent_code || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Company Type</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">{ipData.org_type || ipData.company?.type || 'Unknown'}</p>
               </div>
             </div>
           </div>
@@ -183,12 +187,20 @@ const IPTracker = () => {
               </div>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-semibold text-gray-500 mb-1">ASN</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">ASN Number</p>
                   <p className="text-base font-bold text-gray-900 font-mono break-all">{ipData.asn || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-500 mb-1">Network</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Network Range</p>
                   <p className="text-base font-bold text-gray-900 font-mono break-all">{ipData.network || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Abuse Contact</p>
+                  <p className="text-base font-bold text-gray-900 text-xs break-all">{ipData.abuse_email || ipData.org_abuse || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 mb-1">Domain</p>
+                  <p className="text-base font-bold text-gray-900 font-mono text-xs break-all">{ipData.org_domain || ipData.domain || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-500 mb-1">Currency</p>
