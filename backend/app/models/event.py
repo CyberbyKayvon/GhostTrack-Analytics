@@ -15,7 +15,6 @@ class Event(Base):
     ip_address = Column(String, nullable=True)
     session_id = Column(String, index=True, nullable=True)
     is_bot = Column(Integer, default=0)  # 0 or 1
-    is_vpn = Column(Integer, default=0)  # 0 or 1 - VPN detection
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
     # Link tracking fields (for click events on links, PDFs, external sites)

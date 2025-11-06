@@ -220,14 +220,8 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
         is_bot_detected = enhanced_bot_detection(user_agent, event_data) or is_bot
         is_bot_int = 1 if is_bot_detected else 0
 
-        # 🛡️ VPN detection
-        is_vpn_detected = detect_vpn(ip_address)
-        is_vpn_int = 1 if is_vpn_detected else 0
-
         if is_bot_detected:
             print(f"🤖 BOT DETECTED: {user_agent[:50]}")
-        if is_vpn_detected:
-            print(f"🔒 VPN DETECTED: {ip_address}")
 
         # Extract link tracking data (for click events)
         link_url = event_data.get("link_url")
@@ -246,7 +240,6 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
             ip_address=ip_address,
             session_id=session_id,
             is_bot=is_bot_int,
-            is_vpn=is_vpn_int,  # VPN detection
             timestamp=datetime.utcnow(),
             # Link tracking fields
             link_url=link_url,
