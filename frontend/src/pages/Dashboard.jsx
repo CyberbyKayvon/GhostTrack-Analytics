@@ -202,15 +202,16 @@ const Dashboard = () => {
           <LatestVisits siteId={currentSiteId} />
         </div>
 
-        {/* ROW 4 - Traffic Sources (LEFT HALF) & IP Tracker (RIGHT HALF) - EQUAL HEIGHT */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          <TrafficSources siteId={currentSiteId} />
-          <IPLookup />
-        </div>
+        {/* ROW 4 - LEFT COLUMN (Traffic Sources + Heatmap) | RIGHT COLUMN (IP Tracker) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column: Traffic Sources and Heatmap stacked */}
+          <div className="space-y-6">
+            <TrafficSources siteId={currentSiteId} />
+            <HeatmapViewer siteId={currentSiteId} />
+          </div>
 
-        {/* ROW 5 - Heatmap (FULL WIDTH) */}
-        <div className="grid grid-cols-1 gap-6 mt-6">
-          <HeatmapViewer siteId={currentSiteId} />
+          {/* Right Column: IP Tracker */}
+          <IPLookup />
         </div>
       </div>
     </div>
