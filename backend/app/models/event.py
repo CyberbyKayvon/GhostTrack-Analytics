@@ -24,18 +24,14 @@ class Event(Base):
     opens_new_tab = Column(Integer, default=0)  # 1 if link has target="_blank"
     is_external = Column(Integer, default=0)  # 1 if link goes to different domain
 
-    # ✅ NEW: Geographic data
-    #city = Column(String, nullable=True)
-    #region = Column(String, nullable=True)
-    #country = Column(String, nullable=True)
-    #country_code = Column(String, nullable=True)
+    # Geographic data
+    city = Column(String, nullable=True)
+    region = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    country_code = Column(String, nullable=True)
 
-    # ✅ NEW: Device and browser detection
-    #device_type = Column(String, nullable=True)  # mobile, desktop, tablet
-    #browser = Column(String, nullable=True)  # Chrome, Safari, Firefox, etc.
-
-    # ✅ NEW: Referrer source categorization
-    #referrer_source = Column(String, nullable=True)  # direct, organic, social, referral
+    # VPN/Proxy detection
+    is_vpn = Column(Integer, default=0)  # 0 or 1
 
     def __repr__(self):
         return f"<Event {self.id} - {self.event_type} - {self.site_id}>"

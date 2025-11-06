@@ -100,7 +100,7 @@ const TodayStats = ({ siteId }) => {
   }));
 
   return (
-    <div className="bg-white p-5 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-xl" style={{ height: '550px' }}>
+    <div className="bg-white p-5 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-xl" style={{ height: '500px' }}>
       {/* Header with Auto-Refresh */}
       <div className="mb-4 flex items-center justify-between">
         <div>
@@ -208,10 +208,10 @@ const TodayStats = ({ siteId }) => {
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={170}>
+        <ResponsiveContainer width="100%" height={140}>
           <LineChart
             data={hourlyChartData}
-            margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+            margin={{ top: 0, right: 5, left: -20, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
             <XAxis

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 import hashlib
+import requests
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.core.database import get_db
@@ -50,6 +51,37 @@ def generate_fallback_session_id(ip_address: str, user_agent: str) -> str:
     """
     session_string = f"{ip_address}_{user_agent}_{datetime.utcnow().date()}"
     return hashlib.sha256(session_string.encode()).hexdigest()[:32]
+
+
+def get_geolocation(ip_address: str) -> dict:
+    """
+    Get geolocation data from IP address using ip-api.com (free, no key required)
+    Returns dict with city, region, country, country_code, and proxy detection
+    """
+    if not ip_address or ip_address == "unknown":
+        return {"city": None, "region": None, "country": None, "country_code": None, "proxy": False}
+
+    try:
+        # ip-api.com provides free geolocation with VPN/proxy detection
+        # Fields: city,region,country,countryCode,proxy (proxy=true if VPN/datacenter)
+        response = requests.get(
+            f"http://ip-api.com/json/{ip_address}?fields=city,region,country,countryCode,proxy",
+            timeout=2  # 2 second timeout to avoid blocking
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "city": data.get("city"),
+                "region": data.get("region"),
+                "country": data.get("country"),
+                "country_code": data.get("countryCode"),
+                "proxy": data.get("proxy", False)
+            }
+    except Exception as e:
+        print(f"⚠️  Geolocation lookup failed for {ip_address}: {str(e)}")
+
+    return {"city": None, "region": None, "country": None, "country_code": None, "proxy": False}
 
 
 def detect_vpn(ip_address: str) -> bool:
@@ -228,6 +260,13 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
         opens_new_tab = 1 if event_data.get("opens_new_tab") else 0
         is_external = 1 if event_data.get("is_external") else 0
 
+        # 🌍 Get geolocation data (includes VPN/proxy detection)
+        geo_data = get_geolocation(ip_address)
+        is_vpn_int = 1 if geo_data.get("proxy", False) else 0
+
+        if is_vpn_int:
+            print(f"🔒 VPN/PROXY DETECTED: {ip_address} -> {geo_data.get('country', 'Unknown')}")
+
         # Create event
         new_event = Event(
             site_id=site_id,
@@ -244,7 +283,14 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
             link_text=link_text,
             is_pdf=is_pdf,
             opens_new_tab=opens_new_tab,
-            is_external=is_external
+            is_external=is_external,
+            # Geographic data
+            city=geo_data.get("city"),
+            region=geo_data.get("region"),
+            country=geo_data.get("country"),
+            country_code=geo_data.get("country_code"),
+            # VPN detection
+            is_vpn=is_vpn_int
         )
 
         db.add(new_event)
