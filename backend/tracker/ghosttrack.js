@@ -258,18 +258,30 @@
     setupAddToCartTracking();
     setupSuspiciousActivityDetection();
 
-    // Track page visibility changes (user leaving)
-    document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        trackEvent('page_hidden', {
-          page_title: document.title,
-          time_on_page: performance.now()
-        });
-      }
-    });
+    // Track page visibility changes (user leaving) - REMOVED to reduce duplicate events
+    // The page_exit event below is sufficient, and click tracking captures link navigation
 
-    // Track before page unload
+    // Track before page unload (only track actual page exits, not link clicks)
+    let lastClickWasLink = false;
+    let lastClickTime = 0;
+
+    // Listen to clicks to detect if user clicked a link
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a');
+      if (link && link.href) {
+        lastClickWasLink = true;
+        lastClickTime = Date.now();
+      }
+    }, true); // Use capture phase to run before other handlers
+
     window.addEventListener('beforeunload', function() {
+      // Don't track page_exit if user just clicked a link (we already tracked the click)
+      const timeSinceClick = Date.now() - lastClickTime;
+      if (lastClickWasLink && timeSinceClick < 500) {
+        // Skip tracking - the link click event already captured this navigation
+        return;
+      }
+
       trackEvent('page_exit', {
         page_title: document.title,
         time_on_page: performance.now()
