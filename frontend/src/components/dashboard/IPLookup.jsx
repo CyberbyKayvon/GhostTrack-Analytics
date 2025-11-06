@@ -42,7 +42,10 @@ const IPTracker = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg transition-all duration-300">
+    <div
+      className="bg-white rounded-xl p-6 shadow-lg transition-all duration-300"
+      style={!ipData && !loading ? { height: '250px' } : {}}
+    >
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
         <div className="p-2 bg-blue-100 rounded-lg">
