@@ -174,10 +174,8 @@ def enhanced_bot_detection(user_agent: str, event_data: dict) -> bool:
         if screen_width > 10000 or screen_height > 10000:
             return True
 
-    # Check for missing/suspicious navigator properties
-    has_plugins = event_data.get('has_plugins')
-    if has_plugins is False:  # Explicitly False (not just missing)
-        return True
+    # NOTE: Removed has_plugins check - mobile browsers legitimately don't have plugins
+    # This was causing false positives for real mobile users
 
     return False
 
