@@ -294,14 +294,45 @@ const LatestVisits = ({ siteId }) => {
     return `${hours}h ${mins}m`;
   };
 
+  // Extract meaningful page names from URLs (handles reports intelligently)
   const formatPageUrl = (url) => {
-    if (!url || url === 'Unknown') return 'Homepage';
+    if (!url || url === 'Unknown') return 'Home';
+
     try {
       const urlObj = new URL(url);
-      const path = urlObj.pathname.split('/').pop() || 'Homepage';
-      return path.replace(/\.(html|htm|php)$/i, '') || 'Homepage';
+      let pathname = urlObj.pathname;
+
+      // Remove trailing slash
+      if (pathname.endsWith('/') && pathname.length > 1) {
+        pathname = pathname.slice(0, -1);
+      }
+
+      // Remove file extensions
+      pathname = pathname.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
+
+      // If root path
+      if (pathname === '/' || pathname === '') {
+        return 'Home';
+      }
+
+      // Split into segments
+      const segments = pathname.split('/').filter(s => s);
+
+      // If last segment is "index", use parent folder name
+      let lastSegment = segments[segments.length - 1];
+      if (lastSegment === 'index' && segments.length > 1) {
+        lastSegment = segments[segments.length - 2];
+      }
+
+      // Convert to readable format
+      const readable = lastSegment
+        .split(/[-_]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      return readable;
     } catch {
-      return 'Homepage';
+      return 'Home';
     }
   };
 

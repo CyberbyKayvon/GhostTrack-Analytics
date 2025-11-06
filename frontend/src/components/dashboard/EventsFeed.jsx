@@ -121,6 +121,48 @@ const EventsFeed = ({ events }) => {
     }
   };
 
+  // IMPROVED: Extract meaningful names from URLs, especially for reports
+  const extractMeaningfulName = (pathname) => {
+    // Remove trailing slash
+    if (pathname.endsWith('/') && pathname.length > 1) {
+      pathname = pathname.slice(0, -1);
+    }
+
+    // Remove file extensions
+    pathname = pathname.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
+
+    // If root path, return "Home"
+    if (pathname === '/' || pathname === '') {
+      return 'Home';
+    }
+
+    // Split path into segments
+    const segments = pathname.split('/').filter(s => s);
+
+    // If last segment is "index" or empty, use the parent folder name
+    let lastSegment = segments[segments.length - 1];
+    if (lastSegment === 'index' && segments.length > 1) {
+      lastSegment = segments[segments.length - 2];
+    }
+
+    // Convert to readable format (e.g., "resume" → "Resume", "security-audit" → "Security Audit")
+    const readable = lastSegment
+      .split(/[-_]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    // Check for common report types and add icon
+    const lowerPath = pathname.toLowerCase();
+    if (lowerPath.includes('resume') || lowerPath.includes('cv')) return '📄 Resume';
+    if (lowerPath.includes('analytics') || lowerPath.includes('report') || lowerPath.includes('analysis')) return '📊 ' + readable;
+    if (lowerPath.includes('audit') || lowerPath.includes('security')) return '🔒 ' + readable;
+    if (lowerPath.includes('portfolio') || lowerPath.includes('projects')) return '💼 ' + readable;
+    if (lowerPath.includes('contact')) return '📧 Contact';
+    if (lowerPath.includes('about')) return '👤 About';
+
+    return readable;
+  };
+
   // IMPROVED: Show link destination for clicks, otherwise show current page
   const getPageName = (event) => {
     // For click events, check if there's a link_url (PDF, external link, etc.)
@@ -131,12 +173,16 @@ const EventsFeed = ({ events }) => {
 
         // Check if it's a PDF
         if (pathname.toLowerCase().endsWith('.pdf')) {
-          const filename = pathname.split('/').pop();
-          return `📄 ${filename}`;
+          const filename = pathname.split('/').pop().replace('.pdf', '');
+          const readable = filename
+            .split(/[-_]/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          return `📄 ${readable}`;
         }
 
-        // For other links, show the full path
-        return pathname || linkUrl.href;
+        // Extract meaningful name from link path
+        return '🔗 ' + extractMeaningfulName(pathname);
       } catch (e) {
         // If link_url is malformed, fall through to regular URL handling
       }
@@ -148,23 +194,7 @@ const EventsFeed = ({ events }) => {
 
     try {
       const urlObj = new URL(url);
-      let pathname = urlObj.pathname;
-
-      // Remove trailing slash for consistency
-      if (pathname.endsWith('/') && pathname.length > 1) {
-        pathname = pathname.slice(0, -1);
-      }
-
-      // If root path, return "/ (Home)"
-      if (pathname === '/' || pathname === '') {
-        return '/ (Home)';
-      }
-
-      // Remove file extensions for cleaner display
-      pathname = pathname.replace(/\.(html|htm|php|asp|aspx|jsp)$/i, '');
-
-      // Show the full path for clarity (e.g., "/resume", "/projects", "/about")
-      return pathname;
+      return extractMeaningfulName(urlObj.pathname);
     } catch (e) {
       // Fallback for malformed URLs
       const cleaned = url.split('/').pop()?.split('?')[0] || 'Unknown';
