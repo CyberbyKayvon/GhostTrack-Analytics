@@ -204,36 +204,40 @@ const IPTracker = () => {
             </div>
           </div>
 
-          {/* Additional Country Info */}
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 sm:p-6 border-2 border-purple-200">
+          {/* Threat Intelligence & Security Analysis */}
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-4 sm:p-6 border-2 border-red-200">
             <div className="flex items-center gap-2 mb-4">
-              <Globe className="text-purple-600" size={20} />
-              <h3 className="text-lg sm:text-xl font-black text-gray-900">Country Details</h3>
+              <Server className="text-red-600" size={20} />
+              <h3 className="text-lg sm:text-xl font-black text-gray-900">Threat Intelligence</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">Area</p>
-                <p className="text-base font-bold text-gray-900">{ipData.country_area ? `${ipData.country_area.toLocaleString()} km²` : 'N/A'}</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Anonymizer Detected</p>
+                <p className={`text-base font-bold ${ipData.threat === 'Tor' || ipData.threat === 'Proxy' ? 'text-red-600' : 'text-green-600'}`}>
+                  {ipData.threat === 'Tor' ? 'TOR Exit Node' : ipData.threat === 'Proxy' ? 'Proxy/VPN' : 'Clean'}
+                </p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">Population</p>
-                <p className="text-base font-bold text-gray-900">{ipData.country_population ? ipData.country_population.toLocaleString() : 'N/A'}</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Connection Type</p>
+                <p className="text-base font-bold text-gray-900">{ipData.org?.includes('Hosting') || ipData.org?.includes('Cloud') || ipData.org?.includes('Server') ? 'Datacenter/Hosting' : 'Residential ISP'}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">TLD</p>
-                <p className="text-base font-bold text-gray-900 font-mono">{ipData.country_tld || 'N/A'}</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Hosting Provider</p>
+                <p className={`text-base font-bold ${ipData.org?.toLowerCase().includes('amazon') || ipData.org?.toLowerCase().includes('google') || ipData.org?.toLowerCase().includes('microsoft') || ipData.org?.toLowerCase().includes('digitalocean') || ipData.org?.toLowerCase().includes('ovh') ? 'text-orange-600' : 'text-gray-900'}`}>
+                  {ipData.org?.toLowerCase().includes('amazon') || ipData.org?.toLowerCase().includes('google') || ipData.org?.toLowerCase().includes('microsoft') || ipData.org?.toLowerCase().includes('digitalocean') || ipData.org?.toLowerCase().includes('ovh') ? 'Cloud/VPS Provider' : 'Standard ISP'}
+                </p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">In European Union</p>
-                <p className="text-base font-bold text-gray-900">{ipData.in_eu ? 'Yes' : 'No'}</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">Reverse DNS</p>
+                <p className="text-base font-bold text-gray-900 font-mono text-xs break-all">{ipData.hostname || 'Not Available'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500 mb-1">Region Code</p>
                 <p className="text-base font-bold text-gray-900">{ipData.region_code || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500 mb-1">Threat Level</p>
-                <p className="text-base font-bold text-gray-900">{ipData.threat || 'Unknown'}</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">EU Member</p>
+                <p className="text-base font-bold text-gray-900">{ipData.in_eu ? 'Yes' : 'No'}</p>
               </div>
             </div>
           </div>
