@@ -260,13 +260,6 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
         opens_new_tab = 1 if event_data.get("opens_new_tab") else 0
         is_external = 1 if event_data.get("is_external") else 0
 
-        # 🌍 Get geolocation data (includes VPN/proxy detection)
-        geo_data = get_geolocation(ip_address)
-        is_vpn_int = 1 if geo_data.get("proxy", False) else 0
-
-        if is_vpn_int:
-            print(f"🔒 VPN/PROXY DETECTED: {ip_address} -> {geo_data.get('country', 'Unknown')}")
-
         # Create event
         new_event = Event(
             site_id=site_id,
@@ -283,14 +276,7 @@ async def track_event(request: Request, event_data: dict = Body(...), db: Sessio
             link_text=link_text,
             is_pdf=is_pdf,
             opens_new_tab=opens_new_tab,
-            is_external=is_external,
-            # Geographic data
-            city=geo_data.get("city"),
-            region=geo_data.get("region"),
-            country=geo_data.get("country"),
-            country_code=geo_data.get("country_code"),
-            # VPN detection
-            is_vpn=is_vpn_int
+            is_external=is_external
         )
 
         db.add(new_event)
