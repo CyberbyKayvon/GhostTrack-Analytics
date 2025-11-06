@@ -69,15 +69,20 @@ const LatestVisits = ({ siteId }) => {
 
   // State for IP geolocation data
   const [geoData, setGeoData] = useState({});
+  const [geoLoading, setGeoLoading] = useState({});
 
   // Helper to get accurate geolocation from IP using ip-api.com
   const fetchGeoLocation = async (ip) => {
-    if (!ip || ip === 'Unknown' || geoData[ip]) return;
+    if (!ip || ip === 'Unknown' || geoData[ip] || geoLoading[ip]) return;
+
+    // Mark as loading
+    setGeoLoading(prev => ({ ...prev, [ip]: true }));
 
     try {
       const response = await fetch(`https://ip-api.com/json/${ip}?fields=city,region,country,countryCode,proxy`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Geolocation fetched for', ip, data); // Debug log
         setGeoData(prev => ({
           ...prev,
           [ip]: {
@@ -88,16 +93,40 @@ const LatestVisits = ({ siteId }) => {
             isVpn: data.proxy || false
           }
         }));
+      } else {
+        console.error('Geolocation API failed with status', response.status);
+        setGeoData(prev => ({
+          ...prev,
+          [ip]: {
+            city: 'Unknown',
+            region: 'Unknown',
+            country: 'Unknown',
+            countryCode: '',
+            isVpn: false
+          }
+        }));
       }
     } catch (error) {
       console.error('Failed to fetch geolocation for', ip, error);
+      setGeoData(prev => ({
+        ...prev,
+        [ip]: {
+          city: 'Error',
+          region: 'Error',
+          country: 'Unknown',
+          countryCode: '',
+          isVpn: false
+        }
+      }));
+    } finally {
+      setGeoLoading(prev => ({ ...prev, [ip]: false }));
     }
   };
 
   // Fetch geolocation for all visitor IPs
   useEffect(() => {
     visits.forEach(visit => {
-      if (visit.ip && visit.ip !== 'Unknown' && !geoData[visit.ip]) {
+      if (visit.ip && visit.ip !== 'Unknown') {
         fetchGeoLocation(visit.ip);
       }
     });
