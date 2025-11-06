@@ -163,39 +163,39 @@ const TodayStats = ({ siteId }) => {
       {/* Today's Stats Grid - Single Row of Squares */}
       <div className="grid grid-cols-4 gap-2 mb-3">
         {/* Total Events */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-2 rounded-lg border border-purple-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
-          <Activity className="w-4 h-4 text-purple-500 mb-1" />
-          <div className="text-xs text-purple-600 font-semibold mb-1">Events</div>
-          <div className="text-2xl font-bold text-purple-700 leading-none">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 rounded-lg border border-purple-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
+          <div className="text-3xl font-bold text-purple-700 leading-none mb-2">
             {today.total_events.toLocaleString()}
           </div>
+          <div className="text-xs text-purple-600 font-semibold">Events</div>
+          <Activity className="w-4 h-4 text-purple-500 mt-1" />
         </div>
 
         {/* Unique Visitors */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-2 rounded-lg border border-blue-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
-          <Users className="w-4 h-4 text-blue-500 mb-1" />
-          <div className="text-xs text-blue-600 font-semibold mb-1">Visitors</div>
-          <div className="text-2xl font-bold text-blue-700 leading-none">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
+          <div className="text-3xl font-bold text-blue-700 leading-none mb-2">
             {today.unique_visitors}
           </div>
+          <div className="text-xs text-blue-600 font-semibold">Visitors</div>
+          <Users className="w-4 h-4 text-blue-500 mt-1" />
         </div>
 
         {/* Pageviews */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-2 rounded-lg border border-green-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
-          <Eye className="w-4 h-4 text-green-500 mb-1" />
-          <div className="text-xs text-green-600 font-semibold mb-1">Pages</div>
-          <div className="text-2xl font-bold text-green-700 leading-none">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
+          <div className="text-3xl font-bold text-green-700 leading-none mb-2">
             {today.pageviews}
           </div>
+          <div className="text-xs text-green-600 font-semibold">Pages</div>
+          <Eye className="w-4 h-4 text-green-500 mt-1" />
         </div>
 
         {/* Clicks */}
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-2 rounded-lg border border-orange-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
-          <MousePointer className="w-4 h-4 text-orange-500 mb-1" />
-          <div className="text-xs text-orange-600 font-semibold mb-1">Clicks</div>
-          <div className="text-2xl font-bold text-orange-700 leading-none">
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-3 rounded-lg border border-orange-200 transform transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center aspect-square">
+          <div className="text-3xl font-bold text-orange-700 leading-none mb-2">
             {today.clicks}
           </div>
+          <div className="text-xs text-orange-600 font-semibold">Clicks</div>
+          <MousePointer className="w-4 h-4 text-orange-500 mt-1" />
         </div>
       </div>
 

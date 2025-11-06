@@ -71,7 +71,7 @@ const LatestVisits = ({ siteId }) => {
   const [geoData, setGeoData] = useState({});
   const [geoLoading, setGeoLoading] = useState({});
 
-  // Helper to get accurate geolocation from IP using ip-api.com
+  // Helper to get accurate geolocation from IP using backend proxy
   const fetchGeoLocation = async (ip) => {
     if (!ip || ip === 'Unknown' || geoData[ip] || geoLoading[ip]) return;
 
@@ -79,7 +79,7 @@ const LatestVisits = ({ siteId }) => {
     setGeoLoading(prev => ({ ...prev, [ip]: true }));
 
     try {
-      const response = await fetch(`https://ip-api.com/json/${ip}?fields=city,region,country,countryCode,proxy`);
+      const response = await fetch(`https://ghosttrack-analytics-production.up.railway.app/api/v1/geolocation/lookup/${ip}`);
       if (response.ok) {
         const data = await response.json();
         console.log('Geolocation fetched for', ip, data); // Debug log
