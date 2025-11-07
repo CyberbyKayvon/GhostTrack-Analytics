@@ -123,6 +123,8 @@ const EventsFeed = ({ events }) => {
 
   // IMPROVED: Extract meaningful names from URLs, especially for reports
   const extractMeaningfulName = (pathname) => {
+    if (!pathname) return 'Home';
+
     // Remove trailing slash
     if (pathname.endsWith('/') && pathname.length > 1) {
       pathname = pathname.slice(0, -1);
@@ -139,10 +141,20 @@ const EventsFeed = ({ events }) => {
     // Split path into segments
     const segments = pathname.split('/').filter(s => s);
 
+    // If no segments, return Home
+    if (segments.length === 0) {
+      return 'Home';
+    }
+
     // If last segment is "index" or empty, use the parent folder name
     let lastSegment = segments[segments.length - 1];
     if (lastSegment === 'index' && segments.length > 1) {
       lastSegment = segments[segments.length - 2];
+    }
+
+    // Safety check - if still no lastSegment, return Home
+    if (!lastSegment) {
+      return 'Home';
     }
 
     // Convert to readable format (e.g., "resume" → "Resume", "security-audit" → "Security Audit")
