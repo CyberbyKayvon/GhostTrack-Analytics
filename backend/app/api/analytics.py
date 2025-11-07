@@ -105,7 +105,13 @@ async def get_events(
                 "user_agent": event.user_agent,
                 # ✅ NEW: Include IP and referrer
                 "ip_address": event.ip_address or "N/A",
-                "referrer": event.referrer or "Direct"
+                "referrer": event.referrer or "Direct",
+                # ✅ NEW: Include link tracking fields for click events
+                "link_url": event.link_url,
+                "link_text": event.link_text,
+                "is_pdf": event.is_pdf,
+                "opens_new_tab": event.opens_new_tab,
+                "is_external": event.is_external
             }
             for event in events
         ]
