@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, MousePointer, Eye, ShoppingCart, AlertTriangle, Shield, Search, Smartphone, Tablet, Monitor, Instagram } from 'lucide-react';
+import { Activity, MousePointer, Eye, ShoppingCart, AlertTriangle, Shield, Search, Smartphone, Tablet, Monitor, Instagram, FileText } from 'lucide-react';
 import { UAParser } from 'ua-parser-js';
 
 // Chrome SVG Icon Component
@@ -43,6 +43,8 @@ const EventsFeed = ({ events }) => {
         return <Activity className="w-4 h-4" />;
       case 'search':
         return <Search className="w-4 h-4" />;
+      case 'resume_view':
+        return <FileText className="w-4 h-4" />;
       default:
         return <Activity className="w-4 h-4" />;
     }
@@ -63,6 +65,8 @@ const EventsFeed = ({ events }) => {
         return 'bg-orange-100 text-orange-600';
       case 'search':
         return 'bg-indigo-100 text-indigo-600';
+      case 'resume_view':
+        return 'bg-amber-100 text-amber-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
