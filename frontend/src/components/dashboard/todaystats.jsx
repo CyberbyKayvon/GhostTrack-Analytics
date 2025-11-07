@@ -101,18 +101,35 @@ const TodayStats = ({ siteId }) => {
     return `${hourNum - 12}PM`;
   };
 
-  // Prepare hourly chart data with LOCAL time (converted from UTC)
-  const hourlyChartData = hourly_breakdown.map(hour => {
-    const localHour = utcToLocalHour(hour.hour);
-    const currentLocalHour = new Date().getHours();
+  // Prepare hourly chart data - REORDER to show last 24 hours with current hour on the right
+  const now = new Date();
+  const currentLocalHour = now.getHours();
 
-    return {
-      ...hour,
-      localHour: localHour,
-      time: to12HourFormat(localHour),
-      isCurrentHour: localHour === currentLocalHour
-    };
-  });
+  // Create array of 24 hours starting from (current hour + 1) going backwards
+  const sortedHourlyData = [];
+
+  for (let i = 0; i < 24; i++) {
+    // Calculate which hour this position represents (going backwards from current hour)
+    const hoursAgo = 23 - i;
+    const targetHour = (currentLocalHour - hoursAgo + 24) % 24;
+
+    // Find the data for this hour from the backend
+    const hourData = hourly_breakdown.find(h => {
+      const localHour = utcToLocalHour(h.hour);
+      return localHour === targetHour;
+    });
+
+    sortedHourlyData.push({
+      hour: targetHour,
+      events: hourData?.events || 0,
+      visitors: hourData?.visitors || 0,
+      time: to12HourFormat(targetHour),
+      isCurrentHour: targetHour === currentLocalHour,
+      hoursAgo: hoursAgo
+    });
+  }
+
+  const hourlyChartData = sortedHourlyData;
 
   return (
     <div className="bg-white p-5 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-xl" style={{ height: '500px' }}>
